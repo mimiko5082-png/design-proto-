@@ -166,6 +166,49 @@ button {
   box-shadow: 0 7px 0 rgba(168, 63, 31, 0.12);
 }
 
+.art-panel {
+  width: min(100%, 300px);
+  height: 228px;
+  margin: 16px auto 14px;
+  overflow: hidden;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  background-color: #fff3cf;
+  background-position: center 24%;
+  background-size: cover;
+  box-shadow: 0 10px 0 rgba(137, 50, 22, 0.12), 0 16px 26px rgba(151, 50, 24, 0.14);
+}
+
+.art-home {
+  background-image: url("./assets/art-home.png");
+  background-position: center 25%;
+}
+
+.art-break {
+  background-image: url("./assets/art-break.png");
+  background-position: center 24%;
+}
+
+.art-progress {
+  background-image: url("./assets/art-progress.png");
+  background-position: center 40%;
+}
+
+.art-rest {
+  background-image: url("./assets/art-rest.png");
+  background-position: center 42%;
+}
+
+.art-arrival {
+  background-image: url("./assets/art-arrival.png");
+  background-position: center 36%;
+}
+
+.art-get {
+  background-image: url("./assets/art-get.png");
+  background-position: center 24%;
+}
+
 .card,
 .schedule-card,
 .time-box,
@@ -387,6 +430,10 @@ button {
   padding: 12px;
 }
 
+.time-edit {
+  cursor: pointer;
+}
+
 .time-icon {
   display: grid;
   place-items: center;
@@ -413,6 +460,25 @@ button {
   font-size: 30px;
   font-weight: 1000;
   line-height: 1;
+}
+
+.time-input {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 2px;
+  border: 0;
+  background: transparent;
+  color: #32150f;
+  font-size: 30px;
+  font-weight: 1000;
+  line-height: 1;
+  outline: none;
+}
+
+.time-input:focus {
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px rgba(245, 41, 64, 0.16);
 }
 
 .total-time {

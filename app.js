@@ -103,12 +103,15 @@ function escapeHtml(value) {
 function minutesBetween(start, end) {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
-  return eh * 60 + em - (sh * 60 + sm);
+  const startMinutes = sh * 60 + sm;
+  let endMinutes = eh * 60 + em;
+  if (endMinutes <= startMinutes) endMinutes += 24 * 60;
+  return endMinutes - startMinutes;
 }
 
 function addMinutes(time, minutes) {
   const [hour, minute] = time.split(":").map(Number);
-  const total = hour * 60 + minute + minutes;
+  const total = (hour * 60 + minute + minutes) % (24 * 60);
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
@@ -130,6 +133,26 @@ function shiftLeftText() {
   const hours = Math.floor(state.leftMinutes / 60);
   const minutes = state.leftMinutes % 60;
   return `${hours}時間${minutes}分`;
+}
+
+function syncShiftProgress(resetProgress = false) {
+  const total = minutesBetween(state.shiftStart, state.shiftEnd);
+  if (resetProgress) {
+    state.progressPercent = 0;
+    state.leftMinutes = total;
+    state.claimedToday = false;
+    return;
+  }
+  state.leftMinutes = Math.max(0, Math.round(total * (1 - state.progressPercent / 100)));
+}
+
+function buildBreakSlots() {
+  const total = minutesBetween(state.shiftStart, state.shiftEnd);
+  const latestOffset = Math.max(15, total - state.selectedBreak);
+  const firstOffset = Math.min(latestOffset, Math.max(30, Math.round(total * 0.38)));
+  const secondOffset = Math.min(latestOffset, Math.max(firstOffset + state.selectedBreak, Math.round(total * 0.72)));
+  const slots = [addMinutes(state.shiftStart, firstOffset), addMinutes(state.shiftStart, secondOffset)];
+  return [...new Set(slots)];
 }
 
 function tickRestTimer() {
@@ -181,6 +204,10 @@ function mascot(extraClass = "") {
   `;
 }
 
+function artPanel(name, label) {
+  return `<figure class="art-panel art-${name}" role="img" aria-label="${escapeHtml(label)}"></figure>`;
+}
+
 function screenTitle(title, kicker = "") {
   return `
     <h1 class="screen-title">${title}</h1>
@@ -193,25 +220,23 @@ function renderHome() {
   return `
     <article class="page">
       <h1 class="hero-title">今日の<br />バイト予定</h1>
-      <div class="mascot-stage">
-        ${mascot()}
-      </div>
+      ${artPanel("home", "今日のバイト予定のイラスト")}
 
       <section class="schedule-card" aria-label="バイト予定">
-        <div class="time-box">
+        <label class="time-box time-edit">
           <span class="time-icon">◷</span>
           <span>
             <span class="time-label">バイト開始</span>
-            <span class="time-value">${state.shiftStart}</span>
+            <input class="time-input" type="time" data-field="shiftStart" value="${state.shiftStart}" />
           </span>
-        </div>
-        <div class="time-box">
+        </label>
+        <label class="time-box time-edit">
           <span class="time-icon">◴</span>
           <span>
             <span class="time-label">バイト終了</span>
-            <span class="time-value">${state.shiftEnd}</span>
+            <input class="time-input" type="time" data-field="shiftEnd" value="${state.shiftEnd}" />
           </span>
-        </div>
+        </label>
         <div class="total-time">
           <span>予定時間</span>
           <span>${formatDuration(plannedMinutes)}</span>
@@ -227,6 +252,11 @@ function renderHome() {
 }
 
 function renderBreakChoice() {
+  const breakSlots = buildBreakSlots();
+  if (!breakSlots.includes(state.selectedSlot)) {
+    state.selectedSlot = breakSlots[0];
+  }
+
   const optionButtons = breakOptions
     .map(
       (minutes) => `
@@ -237,7 +267,7 @@ function renderBreakChoice() {
     )
     .join("");
 
-  const slots = ["12:00", "15:00"]
+  const slots = breakSlots
     .map(
       (slot) => `
         <button class="slot-button ${slot === state.selectedSlot ? "active" : ""}" type="button" data-action="select-slot" data-slot="${slot}">
@@ -252,6 +282,7 @@ function renderBreakChoice() {
   return `
     <article class="page">
       ${screenTitle("休憩時間をえらぶ", "自分のペースで、快適に進みます")}
+      ${artPanel("break", "休憩時間をえらぶイラスト")}
       <p class="pill">自分のペースでがんばろう！</p>
       <div class="break-options" aria-label="休憩時間">${optionButtons}</div>
       <div class="slot-grid">${slots}</div>
@@ -276,13 +307,7 @@ function renderProgress() {
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      <div class="red-carpet" aria-hidden="true">
-        <div class="arch"></div>
-        <div class="cake-goal"></div>
-        <div class="worker"></div>
-        ${mascot("small")}
-        <div class="speech">あと<br /><strong>${shiftLeftText()}</strong>！</div>
-      </div>
+      ${artPanel("progress", "レッドカーペット進行中のイラスト")}
 
       <section class="route-card">
         <div class="route-head">
@@ -316,18 +341,7 @@ function renderRest() {
   return `
     <article class="page">
       ${screenTitle("休憩中", "リフレッシュしよう！")}
-      <div class="rest-room" aria-hidden="true">
-        <div class="coffee"></div>
-        ${mascot()}
-        <div class="speech">休憩中も<br />遊んでるよ！</div>
-        <div class="chat-card card">
-          <div class="avatar">😊</div>
-          <div>
-            <strong>あと少し、えらい！</strong>
-            <p>しっかり休んで、またがんばろうね♪</p>
-          </div>
-        </div>
-      </div>
+      ${artPanel("rest", "休憩中のイラスト")}
 
       <section class="timer-card card">
         <strong>休憩時間残り</strong>
@@ -358,10 +372,7 @@ function renderArrival() {
       </section>
 
       <h1 class="hero-title">バイト<br />おつかれさま！</h1>
-      <div class="arrival-scene" aria-hidden="true">
-        <div class="worker"></div>
-        ${mascot("small")}
-      </div>
+      ${artPanel("arrival", "ごほうび到着のイラスト")}
 
       <section class="ticket-card">
         <strong>ごほうび到着！</strong>
@@ -383,7 +394,7 @@ function renderGet() {
     <article class="page">
       <h1 class="get-title">ごほうびGET!</h1>
       <p class="pill">レッドカーペット会場に到着しました！</p>
-      <div class="mascot-stage short">${mascot("small")}</div>
+      ${artPanel("get", "ごほうびGETのイラスト")}
 
       <section class="ticket-card ticket-large">
         <strong>ケーキ券</strong>
@@ -493,11 +504,14 @@ screen.addEventListener("click", (event) => {
 
   if (action === "select-break") {
     state.selectedBreak = Number(button.dataset.minutes);
+    state.selectedSlot = buildBreakSlots()[0];
+    saveState();
     render();
   }
 
   if (action === "select-slot") {
     state.selectedSlot = button.dataset.slot;
+    saveState();
     render();
   }
 
@@ -573,6 +587,24 @@ screen.addEventListener("click", (event) => {
     render();
     showToast("今日の記録をリセットしました");
   }
+});
+
+screen.addEventListener("change", (event) => {
+  const input = event.target.closest("[data-field]");
+  if (!input) return;
+
+  const field = input.dataset.field;
+  if (field !== "shiftStart" && field !== "shiftEnd") return;
+  if (!input.value) return;
+
+  state[field] = input.value;
+  syncShiftProgress(true);
+  state.selectedSlot = buildBreakSlots()[0];
+  state.restSeconds = Math.max(60, state.selectedBreak * 60 - 270);
+  state.claimedToday = false;
+  saveState();
+  render();
+  showToast("バイト時間を更新しました");
 });
 
 tabbar.addEventListener("click", (event) => {
