@@ -1,4 +1,5 @@
 const SAVE_KEY = "baito_reward_carpet_v1";
+const MINUTES_FOR_BREAK = 360;
 
 const breakOptions = [15, 30, 45, 60];
 const cheerCards = [
@@ -31,6 +32,7 @@ const state = {
   ticketCount: 0,
   cheerIndex: 0,
   claimedToday: false,
+  claimedDate: "",
 };
 
 const navToView = {
@@ -57,6 +59,7 @@ const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
 
 loadState();
+normalizeState();
 render();
 setInterval(tickRestTimer, 1000);
 
@@ -85,6 +88,9 @@ function showToast(message) {
 }
 
 function setView(view) {
+  if (!canTakeBreak() && (view === "break" || view === "rest")) {
+    view = "progress";
+  }
   state.view = view;
   saveState();
   render();
@@ -135,12 +141,42 @@ function shiftLeftText() {
   return `${hours}時間${minutes}分`;
 }
 
+function todayKey() {
+  const today = new Date();
+  return [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function canTakeBreak() {
+  return minutesBetween(state.shiftStart, state.shiftEnd) >= MINUTES_FOR_BREAK;
+}
+
+function hasClaimedCakeToday() {
+  return state.claimedDate === todayKey();
+}
+
+function normalizeState() {
+  if (!state.claimedDate && state.claimedToday) {
+    state.claimedDate = todayKey();
+  }
+
+  if (!canTakeBreak() && (state.view === "break" || state.view === "rest")) {
+    state.view = "progress";
+  }
+
+  if (hasClaimedCakeToday()) {
+    state.claimedToday = true;
+  }
+}
+
 function syncShiftProgress(resetProgress = false) {
   const total = minutesBetween(state.shiftStart, state.shiftEnd);
   if (resetProgress) {
     state.progressPercent = 0;
     state.leftMinutes = total;
-    state.claimedToday = false;
     return;
   }
   state.leftMinutes = Math.max(0, Math.round(total * (1 - state.progressPercent / 100)));
@@ -217,6 +253,7 @@ function screenTitle(title, kicker = "") {
 
 function renderHome() {
   const plannedMinutes = minutesBetween(state.shiftStart, state.shiftEnd);
+  const breakAvailable = canTakeBreak();
   return `
     <article class="page">
       <h1 class="hero-title">今日の<br />バイト予定</h1>
@@ -244,8 +281,12 @@ function renderHome() {
       </section>
 
       <div class="button-stack">
-        <button class="main-button" type="button" data-action="start">★ レッドカーペット開始</button>
-        <button class="sub-button" type="button" data-action="open-break">休憩時間をえらぶ</button>
+        <button class="main-button" type="button" data-action="${breakAvailable ? "start" : "go-progress"}">★ レッドカーペット開始</button>
+        ${
+          breakAvailable
+            ? '<button class="sub-button" type="button" data-action="open-break">休憩時間をえらぶ</button>'
+            : '<p class="pill">6時間未満なので休憩なしで進みます</p>'
+        }
       </div>
     </article>
   `;
@@ -304,6 +345,7 @@ function renderBreakChoice() {
 }
 
 function renderProgress() {
+  const breakAvailable = canTakeBreak();
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
@@ -330,7 +372,9 @@ function renderProgress() {
       </section>
 
       <div class="button-stack">
-        <button class="main-button" type="button" data-action="enter-rest">休憩に入る</button>
+        <button class="main-button" type="button" data-action="${breakAvailable ? "enter-rest" : "finish-no-break"}">
+          ${breakAvailable ? "休憩に入る" : "ごほうび会場へ"}
+        </button>
         <button class="sub-button" type="button" data-action="advance">10分進める</button>
       </div>
     </article>
@@ -360,6 +404,7 @@ function renderRest() {
 }
 
 function renderArrival() {
+  const claimed = hasClaimedCakeToday();
   return `
     <article class="page">
       <section class="notice-card">
@@ -377,11 +422,11 @@ function renderArrival() {
       <section class="ticket-card">
         <strong>ごほうび到着！</strong>
         <div class="cake-ticket"></div>
-        <p>ケーキ券 <strong>1枚</strong></p>
+        <p>今日のケーキ券 <strong>${claimed ? "受け取り済み" : "1枚"}</strong></p>
       </section>
 
       <div class="button-stack">
-        <button class="main-button" type="button" data-action="claim">ケーキ券を受け取る</button>
+        <button class="main-button" type="button" data-action="claim">${claimed ? "今日は受け取り済み" : "ケーキ券を受け取る"}</button>
         <button class="ghost-button" type="button" data-action="cards">応援カードを見る</button>
       </div>
     </article>
@@ -399,6 +444,7 @@ function renderGet() {
       <section class="ticket-card ticket-large">
         <strong>ケーキ券</strong>
         <div class="ticket-count">${state.ticketCount}枚</div>
+        <p>今日の受け取り ${hasClaimedCakeToday() ? "1/1" : "0/1"}</p>
         <div class="cake-ticket"></div>
       </section>
 
@@ -467,6 +513,10 @@ function renderProfile() {
           <span>${state.ticketCount}枚</span>
         </div>
         <div class="profile-row">
+          <strong>今日の受け取り</strong>
+          <span>${hasClaimedCakeToday() ? "1/1" : "0/1"}</span>
+        </div>
+        <div class="profile-row">
           <strong>応援カード</strong>
           <span>${cheerCards[state.cheerIndex].title}</span>
         </div>
@@ -498,8 +548,14 @@ screen.addEventListener("click", (event) => {
   const action = button.dataset.action;
 
   if (action === "start" || action === "open-break") {
-    setView("break");
-    showToast("休憩時間をえらびましょう");
+    if (canTakeBreak()) {
+      setView("break");
+      showToast("休憩時間をえらびましょう");
+    } else {
+      advanceShift(0);
+      setView("progress");
+      showToast("6時間未満なので休憩なしで進みます");
+    }
   }
 
   if (action === "select-break") {
@@ -529,9 +585,19 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "enter-rest") {
-    prepareRestTimer();
-    setView("rest");
-    showToast("休憩に入りました");
+    if (canTakeBreak()) {
+      prepareRestTimer();
+      setView("rest");
+      showToast("休憩に入りました");
+    } else {
+      setView("arrival");
+      showToast("ごほうび会場に到着しました！");
+    }
+  }
+
+  if (action === "finish-no-break") {
+    setView("arrival");
+    showToast("ごほうび会場に到着しました！");
   }
 
   if (action === "add-rest-minute") {
@@ -548,13 +614,16 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "claim") {
-    if (!state.claimedToday) {
+    let message = "ケーキ券は今日は受け取り済みです";
+    if (!hasClaimedCakeToday()) {
       state.ticketCount += 1;
       state.claimedToday = true;
+      state.claimedDate = todayKey();
+      message = "ケーキ券を受け取りました！";
     }
     state.cheerIndex = Math.floor(Math.random() * cheerCards.length);
     setView("get");
-    showToast("ケーキ券を受け取りました！");
+    showToast(message);
   }
 
   if (action === "new-card") {
@@ -580,9 +649,7 @@ screen.addEventListener("click", (event) => {
     state.progressPercent = 58;
     state.leftMinutes = 260;
     state.restSeconds = 1530;
-    state.ticketCount = 0;
     state.cheerIndex = 0;
-    state.claimedToday = false;
     saveState();
     render();
     showToast("今日の記録をリセットしました");
@@ -601,7 +668,6 @@ screen.addEventListener("change", (event) => {
   syncShiftProgress(true);
   state.selectedSlot = buildBreakSlots()[0];
   state.restSeconds = Math.max(60, state.selectedBreak * 60 - 270);
-  state.claimedToday = false;
   saveState();
   render();
   showToast("バイト時間を更新しました");
@@ -610,5 +676,10 @@ screen.addEventListener("change", (event) => {
 tabbar.addEventListener("click", (event) => {
   const button = event.target.closest("[data-nav]");
   if (!button) return;
+  if (button.dataset.nav === "nominate" && !canTakeBreak()) {
+    showToast("6時間未満なので休憩はありません");
+    setView("progress");
+    return;
+  }
   setView(navToView[button.dataset.nav] || "home");
 });
