@@ -1,421 +1,388 @@
-const TOTAL_STEPS = 3;
-const NAMES_KEY = "undiscovered_names_v1";
-const LAST_PLACE_KEY = "undiscovered_last_place_v1";
+const SAVE_KEY = "reward_carpet_proto_v1";
 
-const places = [
+const awards = [
   {
-    id: "quiet-cafe",
-    distance: "徒歩6分",
-    open: "営業中",
-    safe: "安全にいける",
-    kind: "昔ながらの喫茶店",
-    seedNames: ["午後が好きになる場所", "帰り道が少し遅くなる場所"],
+    id: "smile",
+    title: "笑顔使い切り賞",
+    body: "ニコニコしすぎて、もう笑顔の在庫ゼロ！",
+    medal: "★",
+    color: "gold",
   },
   {
-    id: "book-room",
-    distance: "徒歩9分",
-    open: "営業中",
-    safe: "安全にいける",
-    kind: "小さな本屋",
-    seedNames: ["知らない棚に呼ばれる場所", "雨の日を待ちたくなる場所"],
+    id: "patience",
+    title: "理不尽耐久賞",
+    body: "理不尽にも負けず、よくがんばったで賞！",
+    medal: "♛",
+    color: "blue",
   },
   {
-    id: "corner-gallery",
-    distance: "徒歩13分",
-    open: "営業中",
-    safe: "安全にいける",
-    kind: "小さな個展",
-    seedNames: ["誰かの午後をのぞく場所", "白い壁が静かな場所"],
-  },
-  {
-    id: "evening-seat",
-    distance: "徒歩5分",
-    open: "営業中",
-    safe: "安全にいける",
-    kind: "夕方に寄れる場所",
-    seedNames: ["帰る前に呼吸する場所", "空の色を持ち帰る場所"],
+    id: "human",
+    title: "5分で人間に戻った賞",
+    body: "切り替えはやっ！さすがあなた！",
+    medal: "♥",
+    color: "red",
   },
 ];
 
+const cheers = [
+  "笑顔増量剤",
+  "理不尽耐久茶",
+  "なんとか乗り切れ",
+  "スーパーほうち賞",
+  "すみません金メダル賞",
+  "5分で人間に戻った賞",
+];
+
 const state = {
-  current: 1,
-  locationStatus: "idle",
-  selectedPlaceIndex: -1,
-  lastPlaceId: loadLastPlaceId(),
-  notificationTime: makeRandomNotificationTime(),
-  declined: false,
-  proposedName: "",
-  photoData: "",
-  photoName: "",
-  savedEntryId: "",
-  names: loadNames(),
+  view: "home",
+  level: 12,
+  exp: 340,
+  goal: 600,
+  streak: 7,
+  totalSteps: 2680,
+  restSteps: 320,
+  selectedAwardId: "smile",
+  rouletteRotation: 0,
+  rouletteResult: "",
+  cakeClaimed: false,
 };
 
 const screen = document.getElementById("screen");
-const progress = document.getElementById("progress");
 const toast = document.getElementById("toast");
+const tabbar = document.querySelector(".tabbar");
 
-function loadNames() {
+loadState();
+render();
+
+function loadState() {
   try {
-    const raw = window.localStorage.getItem(NAMES_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((item) => item && item.placeId && item.name) : [];
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
+    Object.assign(state, saved);
   } catch {
-    return [];
+    // This prototype still works without saved data.
   }
 }
 
-function saveNames() {
+function saveState() {
   try {
-    window.localStorage.setItem(NAMES_KEY, JSON.stringify(state.names));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   } catch {
-    state.names = state.names.map((item) => ({ ...item, photoData: "" }));
-    try {
-      window.localStorage.setItem(NAMES_KEY, JSON.stringify(state.names));
-    } catch {
-      // The prototype still works if browser storage is unavailable.
-    }
+    // Ignore storage limits in the prototype.
   }
-}
-
-function loadLastPlaceId() {
-  try {
-    return window.localStorage.getItem(LAST_PLACE_KEY) || "";
-  } catch {
-    return "";
-  }
-}
-
-function saveLastPlaceId(placeId) {
-  state.lastPlaceId = placeId;
-  try {
-    window.localStorage.setItem(LAST_PLACE_KEY, placeId);
-  } catch {
-    // The next candidate still changes within the current session.
-  }
-}
-
-function makeRandomNotificationTime() {
-  const hour = 8 + Math.floor(Math.random() * 14);
-  const minute = Math.floor(Math.random() * 60);
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function getTodayLabel() {
-  return new Intl.DateTimeFormat("ja-JP", {
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-  }).format(new Date());
-}
-
-function getPlace() {
-  if (state.selectedPlaceIndex < 0) return null;
-  return places[state.selectedPlaceIndex];
-}
-
-function chooseCandidate() {
-  const pool = places.filter((place) => place.id !== state.lastPlaceId);
-  const choices = pool.length ? pool : places;
-  const picked = choices[Math.floor(Math.random() * choices.length)];
-  state.selectedPlaceIndex = places.findIndex((place) => place.id === picked.id);
-  saveLastPlaceId(picked.id);
-  return picked;
-}
-
-function getNamesForPlace(place) {
-  const seeds = place.seedNames.map((name, index) => ({
-    id: `seed-${place.id}-${index}`,
-    name,
-    photoData: "",
-    mine: false,
-  }));
-
-  const added = state.names
-    .filter((item) => item.placeId === place.id)
-    .map((item) => ({ ...item, mine: item.id === state.savedEntryId }));
-
-  return [...seeds, ...added];
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
-  window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2200);
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
-function renderProgress() {
-  progress.innerHTML = Array.from({ length: TOTAL_STEPS }, (_, index) => {
-    const step = index + 1;
-    return `<span><i style="width:${step <= state.current ? "100%" : "0%"}"></i></span>`;
-  }).join("");
+function setView(view) {
+  state.view = view;
+  saveState();
+  render();
+  screen.scrollTop = 0;
 }
 
-function header(step, title, text) {
-  const mark = step === 1 ? "?" : step === 2 ? "名" : "店";
-  return `
-    <div class="screen-head">
-      <div>
-        <div class="step-label">PAGE ${step} / ${TOTAL_STEPS}</div>
-        <h2>${escapeHtml(title)}</h2>
-      </div>
-      <div class="mark" aria-hidden="true">${mark}</div>
-    </div>
-    <p class="whisper">${escapeHtml(text)}</p>
-  `;
+function selectedAward() {
+  return awards.find((award) => award.id === state.selectedAwardId) || awards[0];
 }
 
-function renderGate() {
-  const place = getPlace();
-  const hasCandidate = Boolean(place) && state.locationStatus === "ready";
-  const statusText = {
-    idle: "アプリ使用中のみ現在地を許可すると、候補を1つだけ決めます。",
-    locating: "アプリ使用中の現在地を確認しています。",
-    ready: "候補を1つ決めました。ここでは場所の名前を表示しません。",
-    blocked: "アプリ使用中のみ現在地を許可しないと、このアプリは使えません。",
-  }[state.locationStatus];
-
-  const candidate = hasCandidate
-    ? `
-      <div class="secret-card">
-        <span class="tiny-label">${escapeHtml(getTodayLabel())}</span>
-        <strong>${escapeHtml(place.distance)}</strong>
-        <p>まだ誰かの特別になってない場所です。</p>
-      </div>
-
-      <div class="status-row" aria-label="表示される情報">
-        <span>${escapeHtml(place.distance)}</span>
-        <span>${escapeHtml(place.open)}</span>
-        <span>${escapeHtml(place.safe)}</span>
-      </div>
-    `
-    : "";
-
-  const decline = state.declined
-    ? `
-      <div class="quiet-reply">
-        <strong>今日は見送りました。</strong>
-        <p>また別のタイミングで、候補を1つだけ決められます。</p>
-        <button class="btn subtle" data-action="reset" type="button">通知を待つ</button>
-      </div>
-    `
-    : "";
-
-  return `
-    ${header(1, "今日の候補", "アプリ使用中のみ現在地を許可すると、候補を1つ決めます。")}
-    <article class="panel">
-      <div class="notice">
-        <span class="eyebrow">UNDISCOVERED</span>
-        <strong>今日の通知が届きました</strong>
-        <p>${escapeHtml(state.notificationTime)} / ランダム通知</p>
-      </div>
-
-      ${candidate}
-
-      <div class="location-card">
-        <span class="tiny-label">現在地</span>
-        <strong>${escapeHtml(statusText)}</strong>
-        <button class="btn subtle" data-action="locate" type="button">
-          ${hasCandidate ? "候補を決め直す" : "現在地のアプリ使用中のみ許可してはじめる"}
-        </button>
-      </div>
-
-      <div class="place-card">
-        <span class="tiny-label">名前</span>
-        <strong>まだありません</strong>
-      </div>
-
-      ${decline}
-
-      <div class="actions">
-        <button class="btn primary" data-action="${hasCandidate ? "go-name" : "locate"}" type="button">
-          ${hasCandidate ? "行ってみる" : "現在地のアプリ使用中のみ許可してはじめる"}
-        </button>
-        <button class="btn secondary" data-action="decline" type="button">また今度</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderNaming() {
-  const place = getPlace();
-  if (!place) return renderGate();
-
-  const remaining = 20 - state.proposedName.length;
-  const photo = state.photoData
-    ? `<img class="photo-preview" src="${escapeHtml(state.photoData)}" alt="選んだ写真" />`
-    : `<div class="photo-empty">写真1枚</div>`;
-
-  return `
-    ${header(2, "名前を付ける", "レビューの代わりに、ひとつだけ名前を残します。")}
-    <article class="panel">
-      <div class="place-card">
-        <span class="tiny-label">到着した場所</span>
-        <strong>未発見の場所</strong>
-        <p>${escapeHtml(place.kind)}</p>
-      </div>
-
-      <label class="field-card">
-        <span class="tiny-label">この場所の名前</span>
-        <input data-field="name" maxlength="20" value="${escapeHtml(state.proposedName)}" placeholder="午後が好きになる場所" />
-        <small>あと${remaining}字</small>
-      </label>
-
-      <label class="photo-card">
-        <span class="tiny-label">写真は1枚だけ</span>
-        ${photo}
-        <input data-field="photo" accept="image/*" type="file" />
-      </label>
-
-      <div class="rule-row">
-        <span>理由なし</span>
-        <span>評価なし</span>
-        <span>点数なし</span>
-      </div>
-
-      <div class="actions">
-        <button class="btn primary" data-action="save-name" type="button">名前を残す</button>
-        <button class="btn secondary" data-action="back" type="button">戻る</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderShop() {
-  const place = getPlace();
-  if (!place) return renderGate();
-
-  const names = getNamesForPlace(place);
-  const cards = names.map((entry) => `
-    <article class="name-card ${entry.mine ? "mine" : ""}">
-      ${entry.photoData ? `<img src="${escapeHtml(entry.photoData)}" alt="" />` : `<div class="name-thumb">名</div>`}
-      <div>
-        <span class="tiny-label">${entry.mine ? "あなたが付けた名前" : "誰かが付けた名前"}</span>
-        <strong>${escapeHtml(entry.name)}</strong>
-      </div>
-    </article>
-  `).join("");
-
-  return `
-    ${header(3, "お店を開く", "見えるのは、評価ではなく誰かが付けた名前です。")}
-    <article class="panel">
-      <div class="place-card">
-        <span class="tiny-label">${escapeHtml(place.kind)}</span>
-        <strong>未発見の場所</strong>
-      </div>
-
-      <div class="name-count">
-        <span class="tiny-label">この場所に付いた名前</span>
-        <strong>${names.length}個</strong>
-      </div>
-
-      <div class="name-list">${cards}</div>
-
-      <div class="actions">
-        <button class="btn primary" data-action="add-name" type="button">新しい名前を付ける</button>
-        <button class="btn secondary" data-action="reset" type="button">次の通知</button>
-      </div>
-    </article>
-  `;
+function percent(value, max) {
+  return Math.max(0, Math.min(100, Math.round((value / max) * 100)));
 }
 
 function render() {
-  renderProgress();
   const views = {
-    1: renderGate,
-    2: renderNaming,
-    3: renderShop,
-  };
-  screen.innerHTML = views[state.current]();
-}
-
-function goTo(step) {
-  state.current = Math.max(1, Math.min(TOTAL_STEPS, step));
-  render();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function locate() {
-  if (!navigator.geolocation) {
-    state.locationStatus = "blocked";
-    render();
-    showToast("現在地が使えない環境では利用できません。");
-    return;
-  }
-
-  state.locationStatus = "locating";
-  state.selectedPlaceIndex = -1;
-  render();
-
-  navigator.geolocation.getCurrentPosition(
-    () => {
-      const picked = chooseCandidate();
-      state.locationStatus = "ready";
-      render();
-      showToast(`${picked.distance}の候補を1つ決めました。`);
-    },
-    () => {
-      state.locationStatus = "blocked";
-      state.selectedPlaceIndex = -1;
-      render();
-      showToast("アプリ使用中のみ現在地を許可しないと利用できません。");
-    },
-    { enableHighAccuracy: false, maximumAge: 300000, timeout: 6000 },
-  );
-}
-
-function resetCandidate() {
-  state.current = 1;
-  state.locationStatus = "idle";
-  state.selectedPlaceIndex = -1;
-  state.declined = false;
-  state.notificationTime = makeRandomNotificationTime();
-  state.proposedName = "";
-  state.photoData = "";
-  state.photoName = "";
-  state.savedEntryId = "";
-  render();
-}
-
-function saveName() {
-  const place = getPlace();
-  const name = state.proposedName.trim();
-
-  if (!place) {
-    showToast("アプリ使用中のみ現在地を許可して候補を決めてください。");
-    goTo(1);
-    return;
-  }
-
-  if (!name) {
-    showToast("20字までで名前を付けてください。");
-    return;
-  }
-
-  const entry = {
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    placeId: place.id,
-    name: name.slice(0, 20),
-    photoData: state.photoData,
-    photoName: state.photoName,
-    createdAt: new Date().toISOString(),
+    home: renderHome,
+    rest: renderRest,
+    nominate: renderNominate,
+    cheer: renderCheer,
+    roulette: renderRoulette,
+    profile: renderProfile,
+    ceremony: renderCeremony,
   };
 
-  state.names.push(entry);
-  state.savedEntryId = entry.id;
-  saveNames();
-  goTo(3);
-  showToast("名前がひとつ増えました。");
+  screen.innerHTML = views[state.view] ? views[state.view]() : renderHome();
+  updateTabs();
+}
+
+function updateTabs() {
+  document.querySelectorAll(".tab").forEach((tab) => {
+    const isActive = tab.dataset.nav === state.view;
+    tab.classList.toggle("active", isActive);
+  });
+}
+
+function title(text, sub = "") {
+  return `
+    <h1 class="big-title"><span class="sparkle">✦</span> ${text} <span class="sparkle">✦</span></h1>
+    ${sub ? `<p class="subtitle">${sub}</p>` : ""}
+  `;
+}
+
+function characterScene() {
+  return `
+    <div class="red-carpet" aria-hidden="true">
+      <div class="stage"></div>
+      <div class="rail left"></div>
+      <div class="rail right"></div>
+      <div class="hero-row">
+        <div class="runner"></div>
+        <div class="cake-pal"><div class="cape"></div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHome() {
+  return `
+    <article class="page">
+      <h1 class="hero-title">レッドカーペット<br />進行中</h1>
+      <p class="subtitle">あと少しでごほうび！</p>
+
+      ${characterScene()}
+
+      <section class="progress-card" aria-label="レベル進行">
+        <div class="progress-head">
+          <span class="progress-title">レッドカーペット Lv.${state.level}</span>
+          <span class="progress-number">${state.exp} / ${state.goal} XP</span>
+        </div>
+        <div class="meter">
+          <div class="meter-fill" style="width: ${percent(state.exp, state.goal)}%"></div>
+        </div>
+      </section>
+
+      <div class="home-grid">
+        <section class="mini-card">
+          <strong>${state.streak}日目！</strong>
+          <span>連続ごほうび日数</span>
+        </section>
+        <section class="mini-card">
+          <strong>ベリーGOOD!</strong>
+          <span>今日の気分スタンプ</span>
+        </section>
+      </div>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="walk">休憩会場へ進む</button>
+        <button class="sub-button" type="button" data-action="nominate">今日のノミネートを見る</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderRest() {
+  return `
+    <article class="page">
+      ${title("休憩中", "ケーキ会場へ移動中")}
+      ${characterScene()}
+
+      <section class="path-card">
+        <div class="path-title">
+          <span>目的地まで</span>
+          <span class="flag">⚑</span>
+        </div>
+        <div class="meter">
+          <div class="meter-fill" style="width: ${percent(1000 - state.restSteps, 1000)}%"></div>
+        </div>
+        <p class="subtitle">あと <strong>${state.restSteps}</strong> 歩 / 1,000歩</p>
+      </section>
+
+      <div class="home-grid">
+        <section class="mini-card">
+          <strong>${state.totalSteps.toLocaleString()}歩</strong>
+          <span>今日の移動距離</span>
+        </section>
+        <section class="mini-card">
+          <strong>あと${state.restSteps}歩</strong>
+          <span>目標達成まで</span>
+        </section>
+      </div>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="step-more">100歩すすむ</button>
+        <button class="sub-button" type="button" data-action="nominate">ノミネートへ</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderNominate() {
+  const cards = awards
+    .map(
+      (award) => `
+        <button class="nominee-card" type="button" data-action="select-award" data-award="${award.id}">
+          <span class="medal ${award.color}">${award.medal}</span>
+          <span>
+            <h2>${award.title}</h2>
+            <p>${award.body}</p>
+          </span>
+        </button>
+      `,
+    )
+    .join("");
+
+  return `
+    <article class="page">
+      ${title("今日のノミネート", "がんばったあなたに、ぴったりの賞をどうぞ！")}
+      <div class="nominee-list">${cards}</div>
+      <p class="speech">どの賞もぜーんぶすごいよー！</p>
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="roulette">応援ルーレットへ</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderCheer() {
+  const award = selectedAward();
+  return `
+    <article class="page">
+      ${title("変な応援", "がんばり方は、ちょっと変でもいい")}
+      ${characterScene()}
+
+      <section class="wheel-card">
+        <strong>${award.title}</strong>
+        <p>${award.body}</p>
+      </section>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="roulette">ルーレットを回す</button>
+        <button class="sub-button" type="button" data-action="ceremony">授賞式へ進む</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderRoulette() {
+  const labels = cheers.map((label) => `<span class="wheel-label">${label}</span>`).join("");
+  return `
+    <article class="page">
+      ${title("変な応援<br />ルーレット", "運だめし！どの応援が出るかな？")}
+      <div class="roulette-wrap">
+        <div class="pointer"></div>
+        <div class="wheel" style="transform: rotate(${state.rouletteRotation}deg)">
+          ${labels}
+        </div>
+      </div>
+
+      <section class="wheel-card">
+        <strong>${state.rouletteResult || "まだ回していません"}</strong>
+        <p>${state.rouletteResult ? "今日のあなたに届いた応援です。" : "ボタンを押すと、今日の応援がひとつ届きます。"}</p>
+      </section>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="spin">回して応援を受け取る！</button>
+        <button class="sub-button" type="button" data-action="ceremony">授賞式へ</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderCeremony() {
+  const award = selectedAward();
+  return `
+    <article class="page ceremony">
+      <div class="ribbon">授賞式</div>
+      <p class="subtitle">本日の主役:</p>
+      <h1 class="hero-you">あなた</h1>
+
+      <div class="award-pal" aria-hidden="true">
+        <div class="trophy">★</div>
+        <div class="cake-pal"><div class="cape"></div></div>
+      </div>
+
+      <section class="ticket">
+        <h2>ごほうびケーキ券</h2>
+        <p>おつかれさまでした！<br />本日のごほうびケーキはこちら！</p>
+        <div class="cake-icon"></div>
+        <p><strong>${award.title}</strong></p>
+      </section>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="claim-cake">
+          ${state.cakeClaimed ? "受け取り済み！" : "ケーキを受け取る！"}
+        </button>
+        <button class="link-button" type="button" data-action="reset-day">あとで受け取る</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderProfile() {
+  return `
+    <article class="page">
+      ${title("マイページ", "今日のごほうび記録")}
+      <section class="profile-card">
+        <div class="profile-row">
+          <strong>レベル</strong>
+          <span>Lv.${state.level}</span>
+        </div>
+        <div class="profile-row">
+          <strong>連続ごほうび</strong>
+          <span>${state.streak}日</span>
+        </div>
+        <div class="profile-row">
+          <strong>今日の歩数</strong>
+          <span>${state.totalSteps.toLocaleString()}歩</span>
+        </div>
+        <div class="profile-row">
+          <strong>今日の賞</strong>
+          <span>${selectedAward().title}</span>
+        </div>
+        <div class="profile-row">
+          <strong>ケーキ券</strong>
+          <span>${state.cakeClaimed ? "受け取り済み" : "未受け取り"}</span>
+        </div>
+      </section>
+
+      <div class="button-stack">
+        <button class="main-button" type="button" data-action="ceremony">授賞式を見る</button>
+        <button class="sub-button" type="button" data-action="reset-day">今日をリセット</button>
+      </div>
+    </article>
+  `;
+}
+
+function stepMore() {
+  state.restSteps = Math.max(0, state.restSteps - 100);
+  state.totalSteps += 100;
+  state.exp = Math.min(state.goal, state.exp + 35);
+  if (state.restSteps === 0) {
+    state.level += state.exp >= state.goal ? 1 : 0;
+    state.exp = Math.min(state.goal, state.exp);
+    state.view = "nominate";
+    showToast("目的地に到着！ノミネート発表です");
+  } else {
+    showToast(`あと${state.restSteps}歩！休憩中も進んでる！`);
+  }
+  saveState();
+  render();
+}
+
+function spinRoulette() {
+  const index = Math.floor(Math.random() * cheers.length);
+  state.rouletteResult = cheers[index];
+  state.rouletteRotation += 1440 + index * 60 + Math.floor(Math.random() * 24);
+  saveState();
+  render();
+  setTimeout(() => showToast(`${state.rouletteResult} が出ました！`), 650);
+}
+
+function resetDay() {
+  state.view = "home";
+  state.exp = 340;
+  state.restSteps = 320;
+  state.totalSteps = 2680;
+  state.selectedAwardId = "smile";
+  state.rouletteRotation = 0;
+  state.rouletteResult = "";
+  state.cakeClaimed = false;
+  saveState();
+  render();
+  showToast("今日のごほうびをリセットしました");
 }
 
 screen.addEventListener("click", (event) => {
@@ -423,50 +390,40 @@ screen.addEventListener("click", (event) => {
   if (!button) return;
 
   const action = button.dataset.action;
-  if (action === "locate") locate();
-  if (action === "go-name") goTo(2);
-  if (action === "decline") {
-    state.declined = true;
+
+  if (action === "walk") {
+    state.view = "rest";
+    saveState();
     render();
-    showToast("今日はまた今度にしました。");
+    showToast("休憩会場へ移動中！");
   }
-  if (action === "save-name") saveName();
-  if (action === "back") goTo(1);
-  if (action === "add-name") {
-    state.proposedName = "";
-    state.photoData = "";
-    state.photoName = "";
-    goTo(2);
-  }
-  if (action === "reset") resetCandidate();
-});
 
-screen.addEventListener("input", (event) => {
-  const input = event.target.closest("[data-field='name']");
-  if (!input) return;
+  if (action === "step-more") stepMore();
+  if (action === "nominate") setView("nominate");
+  if (action === "roulette") setView("roulette");
+  if (action === "ceremony") setView("ceremony");
+  if (action === "spin") spinRoulette();
+  if (action === "reset-day") resetDay();
 
-  state.proposedName = input.value.slice(0, 20);
-  input.value = state.proposedName;
-  const counter = input.parentElement.querySelector("small");
-  if (counter) counter.textContent = `あと${20 - state.proposedName.length}字`;
-});
-
-screen.addEventListener("change", (event) => {
-  const input = event.target.closest("[data-field='photo']");
-  if (!input || !input.files || !input.files[0]) return;
-
-  const file = input.files[0];
-  const reader = new FileReader();
-  reader.onload = () => {
-    state.photoData = String(reader.result || "");
-    state.photoName = file.name;
+  if (action === "select-award") {
+    state.selectedAwardId = button.dataset.award;
+    state.view = "cheer";
+    saveState();
     render();
-  };
-  reader.readAsDataURL(file);
+    showToast(`${selectedAward().title} に決まり！`);
+  }
+
+  if (action === "claim-cake") {
+    state.cakeClaimed = true;
+    state.exp = Math.min(state.goal, state.exp + 80);
+    saveState();
+    render();
+    showToast("ごほうびケーキを受け取りました！");
+  }
 });
 
-render();
-
-window.setTimeout(() => {
-  showToast(`UNDISCOVERED ${state.notificationTime} に通知が届きました。`);
-}, 800 + Math.floor(Math.random() * 1200));
+tabbar.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-nav]");
+  if (!button) return;
+  setView(button.dataset.nav);
+});

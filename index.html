@@ -3,27 +3,47 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#102b2a" />
+    <meta name="theme-color" content="#ff3d4f" />
     <meta
       name="description"
-      content="現在地の許可がある時だけ候補を1つ決め、行った人が20字までの名前と写真1枚だけを残すWebアプリ。"
+      content="がんばった一日をレッドカーペットでほめる、ごほうびケーキ型のスマホWebアプリプロトタイプです。"
     />
-    <title>UNDISCOVERED</title>
+    <title>ごほうびレッドカーペット</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="phone" aria-label="UNDISCOVERED">
-        <header class="topbar">
-          <div>
-            <p>NO STARS, JUST NAMES</p>
-            <h1>UNDISCOVERED</h1>
-          </div>
-          <span class="brand-mark" aria-hidden="true">U</span>
-        </header>
+    <main class="app-shell" aria-label="ごほうびレッドカーペット">
+      <section class="phone" aria-live="polite">
+        <div class="status-bar" aria-hidden="true">
+          <span>9:41</span>
+          <span>●●● 5G ▰</span>
+        </div>
 
-        <nav class="progress" aria-label="進行状況" id="progress"></nav>
+        <div class="confetti-layer" aria-hidden="true"></div>
         <section class="screen" id="screen"></section>
+
+        <nav class="tabbar" aria-label="メインメニュー">
+          <button class="tab active" type="button" data-nav="home">
+            <span>⌂</span>
+            ホーム
+          </button>
+          <button class="tab" type="button" data-nav="nominate">
+            <span>♕</span>
+            ノミネート
+          </button>
+          <button class="tab" type="button" data-nav="cheer">
+            <span>♥</span>
+            応援
+          </button>
+          <button class="tab" type="button" data-nav="roulette">
+            <span>◉</span>
+            ルーレット
+          </button>
+          <button class="tab" type="button" data-nav="profile">
+            <span>●</span>
+            マイページ
+          </button>
+        </nav>
       </section>
 
       <div class="toast" id="toast" role="status"></div>
