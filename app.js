@@ -26,6 +26,7 @@ const state = {
   shiftEnd: "17:00",
   selectedBreak: 30,
   selectedSlot: "12:00",
+  breakEnd: "12:30",
   progressPercent: 58,
   leftMinutes: 260,
   restSeconds: 1530,
@@ -62,6 +63,7 @@ loadState();
 normalizeState();
 render();
 setInterval(tickRestTimer, 1000);
+setInterval(tickShiftMinute, 1000);
 
 function loadState() {
   try {
@@ -159,6 +161,12 @@ function hasClaimedCakeToday() {
 }
 
 function normalizeState() {
+  if (!state.breakEnd) {
+    syncBreakEndFromDuration();
+  } else {
+    syncBreakDurationFromTimes();
+  }
+
   if (!state.claimedDate && state.claimedToday) {
     state.claimedDate = todayKey();
   }
@@ -191,6 +199,24 @@ function buildBreakSlots() {
   return [...new Set(slots)];
 }
 
+function breakEndTime() {
+  return state.breakEnd || addMinutes(state.selectedSlot, state.selectedBreak);
+}
+
+function syncBreakEndFromDuration() {
+  state.breakEnd = addMinutes(state.selectedSlot, state.selectedBreak);
+}
+
+function syncBreakDurationFromTimes() {
+  const duration = minutesBetween(state.selectedSlot, breakEndTime());
+  state.selectedBreak = Math.max(1, Math.min(240, duration));
+  state.breakEnd = addMinutes(state.selectedSlot, state.selectedBreak);
+}
+
+function hasShiftTimeLeft() {
+  return state.leftMinutes > 0;
+}
+
 function tickRestTimer() {
   if (state.view !== "rest" || state.restSeconds <= 0) return;
   state.restSeconds -= 1;
@@ -202,11 +228,24 @@ function tickRestTimer() {
     fill.style.width = `${Math.max(0, Math.min(100, (state.restSeconds / total) * 100))}%`;
   }
   if (state.restSeconds === 0) {
-    showToast("休憩時間が終わりました。会場へ向かいます！");
-    state.view = "arrival";
+    finishRestAndContinue();
+  }
+}
+
+function tickShiftMinute() {
+  if (state.view !== "progress" || !hasShiftTimeLeft()) return;
+
+  advanceShift(1);
+  if (hasShiftTimeLeft()) {
     saveState();
     render();
+    return;
   }
+
+  state.progressPercent = 100;
+  saveState();
+  setView("arrival");
+  showToast("バイト終了！ごほうび会場に到着しました");
 }
 
 function render() {
@@ -293,28 +332,11 @@ function renderHome() {
 }
 
 function renderBreakChoice() {
-  const breakSlots = buildBreakSlots();
-  if (!breakSlots.includes(state.selectedSlot)) {
-    state.selectedSlot = breakSlots[0];
-  }
-
   const optionButtons = breakOptions
     .map(
       (minutes) => `
         <button class="break-option ${minutes === state.selectedBreak ? "active" : ""}" type="button" data-action="select-break" data-minutes="${minutes}">
           <span>${minutes}</span>分
-        </button>
-      `,
-    )
-    .join("");
-
-  const slots = breakSlots
-    .map(
-      (slot) => `
-        <button class="slot-button ${slot === state.selectedSlot ? "active" : ""}" type="button" data-action="select-slot" data-slot="${slot}">
-          休憩の開始
-          <span>${slot}</span>
-          休憩の終了 ${addMinutes(slot, state.selectedBreak)}
         </button>
       `,
     )
@@ -326,13 +348,28 @@ function renderBreakChoice() {
       ${artPanel("break", "休憩時間をえらぶイラスト")}
       <p class="pill">自分のペースでがんばろう！</p>
       <div class="break-options" aria-label="休憩時間">${optionButtons}</div>
-      <div class="slot-grid">${slots}</div>
+      <div class="slot-grid break-time-grid">
+        <label class="time-box time-edit">
+          <span class="time-icon">◷</span>
+          <span>
+            <span class="time-label">休憩開始</span>
+            <input class="time-input" type="time" data-field="breakStart" value="${state.selectedSlot}" />
+          </span>
+        </label>
+        <label class="time-box time-edit">
+          <span class="time-icon">◴</span>
+          <span>
+            <span class="time-label">休憩終了</span>
+            <input class="time-input" type="time" data-field="breakEnd" value="${breakEndTime()}" />
+          </span>
+        </label>
+      </div>
 
       <section class="rest-summary card">
         <div class="clock-face">⏰</div>
         <div>
           <strong>休憩時間</strong>
-          <p>${state.selectedSlot}〜${addMinutes(state.selectedSlot, state.selectedBreak)} / ${state.selectedBreak}分</p>
+          <p>${state.selectedSlot}〜${breakEndTime()} / ${state.selectedBreak}分</p>
         </div>
       </section>
 
@@ -375,7 +412,7 @@ function renderProgress() {
         <button class="main-button" type="button" data-action="${breakAvailable ? "enter-rest" : "finish-no-break"}">
           ${breakAvailable ? "休憩に入る" : "ごほうび会場へ"}
         </button>
-        <button class="sub-button" type="button" data-action="advance">10分進める</button>
+        <button class="sub-button" type="button" data-action="advance">1分進める</button>
       </div>
     </article>
   `;
@@ -541,6 +578,19 @@ function advanceShift(minutes) {
   state.progressPercent = Math.max(0, Math.min(100, Math.round((worked / minutesBetween(state.shiftStart, state.shiftEnd)) * 100)));
 }
 
+function finishRestAndContinue() {
+  advanceShift(state.selectedBreak);
+
+  if (hasShiftTimeLeft()) {
+    setView("progress");
+    showToast("休憩終了。バイトに戻ります");
+    return;
+  }
+
+  setView("arrival");
+  showToast("バイト終了！ごほうび会場に到着しました");
+}
+
 screen.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
@@ -560,13 +610,14 @@ screen.addEventListener("click", (event) => {
 
   if (action === "select-break") {
     state.selectedBreak = Number(button.dataset.minutes);
-    state.selectedSlot = buildBreakSlots()[0];
+    syncBreakEndFromDuration();
     saveState();
     render();
   }
 
   if (action === "select-slot") {
     state.selectedSlot = button.dataset.slot;
+    syncBreakEndFromDuration();
     saveState();
     render();
   }
@@ -578,10 +629,16 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "advance") {
-    advanceShift(10);
+    advanceShift(1);
     saveState();
-    render();
-    showToast("10分進みました");
+    if (hasShiftTimeLeft()) {
+      render();
+      showToast("1分進みました");
+    } else {
+      state.progressPercent = 100;
+      setView("arrival");
+      showToast("バイト終了！ごほうび会場に到着しました");
+    }
   }
 
   if (action === "enter-rest") {
@@ -601,6 +658,8 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "add-rest-minute") {
+    state.selectedBreak += 1;
+    syncBreakEndFromDuration();
     state.restSeconds += 60;
     saveState();
     render();
@@ -608,9 +667,7 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "finish-rest") {
-    advanceShift(state.selectedBreak);
-    setView("arrival");
-    showToast("ごほうび会場に到着しました！");
+    finishRestAndContinue();
   }
 
   if (action === "claim") {
@@ -661,16 +718,30 @@ screen.addEventListener("change", (event) => {
   if (!input) return;
 
   const field = input.dataset.field;
-  if (field !== "shiftStart" && field !== "shiftEnd") return;
+  if (!["shiftStart", "shiftEnd", "breakStart", "breakEnd"].includes(field)) return;
   if (!input.value) return;
 
-  state[field] = input.value;
-  syncShiftProgress(true);
-  state.selectedSlot = buildBreakSlots()[0];
-  state.restSeconds = Math.max(60, state.selectedBreak * 60 - 270);
+  if (field === "shiftStart" || field === "shiftEnd") {
+    state[field] = input.value;
+    syncShiftProgress(true);
+    state.selectedSlot = buildBreakSlots()[0];
+    syncBreakEndFromDuration();
+  }
+
+  if (field === "breakStart") {
+    state.selectedSlot = input.value;
+    syncBreakDurationFromTimes();
+  }
+
+  if (field === "breakEnd") {
+    state.breakEnd = input.value;
+    syncBreakDurationFromTimes();
+  }
+
+  state.restSeconds = Math.max(60, state.selectedBreak * 60);
   saveState();
   render();
-  showToast("バイト時間を更新しました");
+  showToast(field === "breakStart" || field === "breakEnd" ? "休憩時間を更新しました" : "バイト時間を更新しました");
 });
 
 tabbar.addEventListener("click", (event) => {

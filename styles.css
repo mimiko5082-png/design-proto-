@@ -567,6 +567,14 @@ button {
   gap: 10px;
 }
 
+.break-time-grid {
+  margin-top: 12px;
+}
+
+.break-time-grid .time-box {
+  min-height: 88px;
+}
+
 .slot-button {
   min-height: 72px;
   padding: 10px;
