@@ -61,12 +61,17 @@ const viewToNav = {
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
+let progressTickStartedAt = 0;
+let restTickStartedAt = 0;
+let restShiftMinutesAdvanced = 0;
 
 loadState();
 normalizeState();
 render();
+if (state.view === "progress") startProgressClock();
+if (state.view === "rest") startRestClock();
 setInterval(tickRestTimer, 1000);
-setInterval(tickShiftMinute, 60000);
+setInterval(tickShiftMinute, 1000);
 
 function loadState() {
   try {
@@ -93,10 +98,17 @@ function showToast(message) {
 }
 
 function setView(view) {
+  const previousView = state.view;
   if (!canTakeBreak() && (view === "break" || view === "rest")) {
     view = "progress";
   }
   state.view = view;
+  if (view === "progress" && previousView !== "progress") startProgressClock();
+  if (view !== "progress") progressTickStartedAt = 0;
+  if (view !== "rest") {
+    restTickStartedAt = 0;
+    restShiftMinutesAdvanced = 0;
+  }
   saveState();
   render();
   screen.scrollTop = 0;
@@ -144,6 +156,12 @@ function shiftLeftText() {
   const hours = Math.floor(state.leftMinutes / 60);
   const minutes = state.leftMinutes % 60;
   return `${hours}時間${minutes}分`;
+}
+
+function speechLeftText() {
+  const hours = Math.floor(state.leftMinutes / 60);
+  const minutes = state.leftMinutes % 60;
+  return `あと${hours}時間${minutes}分！`;
 }
 
 function todayKey() {
@@ -269,13 +287,29 @@ function markActiveBreakDone() {
   }
 }
 
+function startProgressClock() {
+  progressTickStartedAt = Date.now();
+}
+
+function startRestClock() {
+  restTickStartedAt = Date.now();
+  restShiftMinutesAdvanced = 0;
+}
+
 function tickRestTimer() {
   if (state.view !== "rest" || state.restSeconds <= 0) return;
-  state.restSeconds -= 1;
-  state.restElapsedSeconds += 1;
+  if (!restTickStartedAt) startRestClock();
 
-  if (state.restElapsedSeconds % 60 === 0) {
-    advanceShift(1);
+  const total = Math.max(60, activeBreakDuration() * 60);
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - restTickStartedAt) / 1000));
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  const minutesToAdvance = elapsedMinutes - restShiftMinutesAdvanced;
+  state.restElapsedSeconds = elapsedSeconds;
+  state.restSeconds = Math.max(0, total - elapsedSeconds);
+
+  if (minutesToAdvance > 0) {
+    advanceShift(minutesToAdvance);
+    restShiftMinutesAdvanced = elapsedMinutes;
     if (!hasShiftTimeLeft()) {
       state.progressPercent = 100;
       finishRestAndContinue();
@@ -287,7 +321,6 @@ function tickRestTimer() {
   const fill = document.querySelector("[data-rest-fill]");
   if (timer) timer.textContent = formatTimer(state.restSeconds);
   if (fill) {
-    const total = Math.max(60, activeBreakDuration() * 60);
     fill.style.width = `${Math.max(0, Math.min(100, (state.restSeconds / total) * 100))}%`;
   }
   if (state.restSeconds === 0) {
@@ -299,8 +332,14 @@ function tickRestTimer() {
 
 function tickShiftMinute() {
   if (state.view !== "progress" || !hasShiftTimeLeft()) return;
+  if (!progressTickStartedAt) startProgressClock();
 
-  advanceShift(1);
+  const elapsedMs = Date.now() - progressTickStartedAt;
+  const minutesToAdvance = Math.floor(elapsedMs / 60000);
+  if (minutesToAdvance < 1) return;
+
+  advanceShift(minutesToAdvance);
+  progressTickStartedAt += minutesToAdvance * 60000;
   if (hasShiftTimeLeft()) {
     saveState();
     render();
@@ -482,11 +521,14 @@ function renderProgress() {
   const breakIndex = nextBreakIndex();
   const breakButton = breakIndex >= 0
     ? `<button class="main-button" type="button" data-action="enter-rest" data-break-index="${breakIndex}">休憩${breakIndex + 1}に入る</button>`
-    : '<p class="pill">バイト中は60秒ごとに1分進みます</p>';
+    : "";
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      ${artPanel("progress", "レッドカーペット進行中のイラスト")}
+      <div class="progress-art-wrap">
+        ${artPanel("progress", "レッドカーペット進行中のイラスト")}
+        <div class="progress-speech" aria-label="バイト終了までの残り時間">${speechLeftText()}</div>
+      </div>
 
       <section class="route-card">
         <div class="route-head">
@@ -510,6 +552,7 @@ function renderProgress() {
 
       <div class="button-stack">
         ${breakButton}
+        <p class="pill">バイト中は60秒ごとに１歩進むよ！</p>
       </div>
     </article>
   `;
@@ -641,6 +684,7 @@ function prepareRestTimer(index = 0) {
   state.activeBreakIndex = index === 1 ? 1 : 0;
   state.restElapsedSeconds = 0;
   state.restSeconds = Math.max(60, activeBreakDuration() * 60);
+  startRestClock();
 }
 
 function advanceShift(minutes) {
@@ -744,6 +788,9 @@ screen.addEventListener("click", (event) => {
     state.break2Done = false;
     state.activeBreakIndex = 0;
     state.restElapsedSeconds = 0;
+    progressTickStartedAt = 0;
+    restTickStartedAt = 0;
+    restShiftMinutesAdvanced = 0;
     syncShiftProgress(true);
     state.restSeconds = 0;
     state.cheerIndex = 0;

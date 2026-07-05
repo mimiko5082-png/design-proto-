@@ -217,8 +217,9 @@ button {
 }
 
 .art-get.art-large {
-  height: 330px;
-  background-position: center 18%;
+  width: min(100%, 312px);
+  height: 286px;
+  background-position: center 24%;
 }
 
 .card,
@@ -683,6 +684,48 @@ button {
 
 .route-card {
   padding: 14px;
+}
+
+.progress-art-wrap {
+  position: relative;
+  width: min(100%, 300px);
+  margin: 16px auto 14px;
+}
+
+.progress-art-wrap .art-panel {
+  width: 100%;
+  margin: 0;
+}
+
+.progress-speech {
+  position: absolute;
+  right: 8px;
+  bottom: 72px;
+  min-width: 126px;
+  max-width: 150px;
+  padding: 11px 12px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.96);
+  color: var(--red);
+  text-align: center;
+  font-size: 19px;
+  font-weight: 1000;
+  line-height: 1.1;
+  box-shadow: 0 7px 0 rgba(142, 33, 18, 0.16), 0 12px 20px rgba(126, 33, 18, 0.14);
+}
+
+.progress-speech::after {
+  content: "";
+  position: absolute;
+  right: 28px;
+  bottom: -12px;
+  width: 20px;
+  height: 20px;
+  border-right: 3px solid rgba(255, 255, 255, 0.95);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.95);
+  background: rgba(255, 250, 240, 0.96);
+  transform: rotate(45deg);
 }
 
 .route-head {
