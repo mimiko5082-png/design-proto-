@@ -697,25 +697,23 @@ button {
   margin: 0;
 }
 
-.progress-speech {
+.progress-bubble-cover {
   position: absolute;
-  right: 8px;
-  bottom: 72px;
-  min-width: 126px;
-  max-width: 150px;
-  padding: 11px 12px;
+  right: 6px;
+  bottom: 58px;
+  z-index: 2;
+  width: 142px;
+  height: 74px;
   border: 3px solid rgba(255, 255, 255, 0.95);
-  border-radius: 999px;
-  background: rgba(255, 250, 240, 0.96);
-  color: var(--red);
-  text-align: center;
-  font-size: 19px;
-  font-weight: 1000;
-  line-height: 1.1;
+  border-radius: 28px 28px 12px 28px;
+  background:
+    radial-gradient(circle at 28% 34%, rgba(255, 198, 59, 0.55) 0 5px, transparent 6px),
+    radial-gradient(circle at 70% 42%, rgba(255, 111, 134, 0.5) 0 5px, transparent 6px),
+    rgba(255, 250, 240, 0.97);
   box-shadow: 0 7px 0 rgba(142, 33, 18, 0.16), 0 12px 20px rgba(126, 33, 18, 0.14);
 }
 
-.progress-speech::after {
+.progress-bubble-cover::after {
   content: "";
   position: absolute;
   right: 28px;
@@ -726,6 +724,52 @@ button {
   border-bottom: 3px solid rgba(255, 255, 255, 0.95);
   background: rgba(255, 250, 240, 0.96);
   transform: rotate(45deg);
+}
+
+.progress-walker {
+  position: absolute;
+  left: 48px;
+  bottom: 18px;
+  z-index: 3;
+  width: 54px;
+  height: 84px;
+  transform: translate(var(--walk-x, 0), var(--walk-y, 0));
+  transition: transform 520ms cubic-bezier(0.18, 0.84, 0.34, 1.18);
+  animation: tinyWalk 760ms ease-in-out infinite alternate;
+}
+
+@keyframes tinyWalk {
+  to {
+    filter: drop-shadow(0 8px 0 rgba(112, 20, 17, 0.12));
+  }
+}
+
+.progress-walker::before {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffd0a1;
+  box-shadow: 0 -7px 0 #241610;
+}
+
+.progress-walker::after {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 36px;
+  width: 34px;
+  height: 38px;
+  border-radius: 10px 10px 8px 8px;
+  background:
+    linear-gradient(90deg, transparent 0 44%, #241610 45% 56%, transparent 57%),
+    linear-gradient(180deg, #fffaf0 0 46%, #2b211d 47%);
+  box-shadow:
+    -8px 32px 0 -5px #241713,
+    13px 32px 0 -5px #241713;
 }
 
 .route-head {
@@ -902,6 +946,11 @@ button {
 .red-arrival-wrap .art-panel {
   margin: 0 auto;
   box-shadow: 0 10px 0 rgba(90, 6, 16, 0.22), 0 18px 28px rgba(72, 5, 16, 0.26);
+}
+
+.get-carpet-wrap {
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .arrival-scene {

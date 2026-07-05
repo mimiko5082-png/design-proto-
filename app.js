@@ -36,6 +36,7 @@ const state = {
   progressPercent: 58,
   leftMinutes: 260,
   restSeconds: 1530,
+  progressWalkSteps: 0,
   ticketCount: 0,
   cheerIndex: 0,
   claimedToday: false,
@@ -156,12 +157,6 @@ function shiftLeftText() {
   const hours = Math.floor(state.leftMinutes / 60);
   const minutes = state.leftMinutes % 60;
   return `${hours}時間${minutes}分`;
-}
-
-function speechLeftText() {
-  const hours = Math.floor(state.leftMinutes / 60);
-  const minutes = state.leftMinutes % 60;
-  return `あと${hours}時間${minutes}分！`;
 }
 
 function todayKey() {
@@ -339,6 +334,7 @@ function tickShiftMinute() {
   if (minutesToAdvance < 1) return;
 
   advanceShift(minutesToAdvance);
+  state.progressWalkSteps = (state.progressWalkSteps || 0) + minutesToAdvance;
   progressTickStartedAt += minutesToAdvance * 60000;
   if (hasShiftTimeLeft()) {
     saveState();
@@ -385,6 +381,13 @@ function mascot(extraClass = "") {
 function artPanel(name, label, extraClass = "") {
   const classes = ["art-panel", `art-${name}`, extraClass].filter(Boolean).join(" ");
   return `<figure class="${classes}" role="img" aria-label="${escapeHtml(label)}"></figure>`;
+}
+
+function progressWalkerStyle() {
+  const step = Math.min(30, state.progressWalkSteps || 0);
+  const x = Math.round(step * 3.2);
+  const y = Math.round(step * -3.8);
+  return `--walk-x: ${x}px; --walk-y: ${y}px;`;
 }
 
 function screenTitle(title, kicker = "") {
@@ -447,6 +450,15 @@ function renderBreakChoice() {
       `,
     )
     .join("");
+  const secondOptionButtons = breakOptions
+    .map(
+      (minutes) => `
+        <button class="break-option ${minutes === secondDuration ? "active" : ""}" type="button" data-action="select-second-break" data-minutes="${minutes}">
+          <span>${minutes}</span>分
+        </button>
+      `,
+    )
+    .join("");
 
   return `
     <article class="page">
@@ -483,6 +495,7 @@ function renderBreakChoice() {
           <strong>休憩2</strong>
           <span>${secondDuration}分</span>
         </div>
+        <div class="break-options" aria-label="休憩2の長さ">${secondOptionButtons}</div>
         <div class="slot-grid break-time-grid">
           <label class="time-box time-edit">
             <span class="time-icon">◷</span>
@@ -527,7 +540,8 @@ function renderProgress() {
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
       <div class="progress-art-wrap">
         ${artPanel("progress", "レッドカーペット進行中のイラスト")}
-        <div class="progress-speech" aria-label="バイト終了までの残り時間">${speechLeftText()}</div>
+        <div class="progress-bubble-cover" aria-hidden="true"></div>
+        <div class="progress-walker" style="${progressWalkerStyle()}" aria-hidden="true"></div>
       </div>
 
       <section class="route-card">
@@ -623,7 +637,9 @@ function renderGet() {
     <article class="page">
       <h1 class="get-title">ごほうびGET!</h1>
       <p class="pill">レッドカーペット会場に到着しました！</p>
-      ${artPanel("get", "ごほうびGETのイラスト", "art-large")}
+      <div class="red-arrival-wrap get-carpet-wrap">
+        ${artPanel("get", "ごほうびGETのイラスト", "art-large")}
+      </div>
 
       <section class="ticket-card ticket-large">
         <strong>ごほうびケーキ券</strong>
@@ -732,6 +748,12 @@ screen.addEventListener("click", (event) => {
     render();
   }
 
+  if (action === "select-second-break") {
+    state.secondBreakEnd = addMinutes(state.secondBreakStart, Number(button.dataset.minutes));
+    saveState();
+    render();
+  }
+
   if (action === "select-slot") {
     state.selectedSlot = button.dataset.slot;
     syncBreakEndFromDuration();
@@ -788,6 +810,7 @@ screen.addEventListener("click", (event) => {
     state.break2Done = false;
     state.activeBreakIndex = 0;
     state.restElapsedSeconds = 0;
+    state.progressWalkSteps = 0;
     progressTickStartedAt = 0;
     restTickStartedAt = 0;
     restShiftMinutesAdvanced = 0;
