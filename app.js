@@ -33,8 +33,8 @@ const state = {
   break1Done: false,
   break2Done: false,
   restElapsedSeconds: 0,
-  progressPercent: 58,
-  leftMinutes: 260,
+  progressPercent: 0,
+  leftMinutes: 480,
   restSeconds: 1530,
   progressWalkSteps: 0,
   ticketCount: 0,
@@ -384,10 +384,11 @@ function artPanel(name, label, extraClass = "") {
 }
 
 function progressWalkerStyle() {
-  const step = Math.min(30, state.progressWalkSteps || 0);
-  const x = Math.round(step * 3.2);
-  const y = Math.round(step * -3.8);
-  return `--walk-x: ${x}px; --walk-y: ${y}px;`;
+  const total = Math.max(1, minutesBetween(state.shiftStart, state.shiftEnd));
+  const worked = Math.max(0, total - state.leftMinutes);
+  const ratio = Math.max(0, Math.min(1, worked / total));
+  const x = Math.round(ratio * 226);
+  return `--walk-x: ${x}px;`;
 }
 
 function screenTitle(title, kicker = "") {
@@ -735,7 +736,8 @@ screen.addEventListener("click", (event) => {
       setView("break");
       showToast("休憩時間をえらびましょう");
     } else {
-      advanceShift(0);
+      syncShiftProgress(true);
+      state.progressWalkSteps = 0;
       setView("progress");
       showToast("6時間未満なので休憩なしで進みます");
     }
@@ -762,7 +764,8 @@ screen.addEventListener("click", (event) => {
   }
 
   if (action === "go-progress") {
-    advanceShift(0);
+    syncShiftProgress(true);
+    state.progressWalkSteps = 0;
     setView("progress");
     showToast("レッドカーペットへ向かっています！");
   }
