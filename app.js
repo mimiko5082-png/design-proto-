@@ -539,18 +539,10 @@ function renderProgress() {
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      <section class="red-carpet progress-stage" role="img" aria-label="レッドカーペットを歩くキャラクター">
+      <section class="red-carpet progress-stage" role="img" aria-label="王冠マントのキャラクターがレッドカーペットを歩く">
         <div class="arch"></div>
         <div class="cake-goal"></div>
-        <div class="walking-worker" style="${progressCharacterStyle()}" aria-hidden="true">
-          <span class="walk-head"></span>
-          <span class="walk-cap"></span>
-          <span class="walk-body"></span>
-          <span class="walk-arm walk-arm-left"></span>
-          <span class="walk-arm walk-arm-right"></span>
-          <span class="walk-leg walk-leg-left"></span>
-          <span class="walk-leg walk-leg-right"></span>
-        </div>
+        <div class="walking-worker" style="${progressCharacterStyle()}" aria-hidden="true"></div>
         <div class="progress-stage-copy">レッドカーペットへ向かおう！</div>
       </section>
 
@@ -576,7 +568,6 @@ function renderProgress() {
 
       <div class="button-stack">
         ${breakButton}
-        <p class="pill">バイト中は60秒ごとに１歩進むよ！</p>
       </div>
     </article>
   `;
