@@ -381,6 +381,16 @@ function artPanel(name, label, extraClass = "") {
   return `<figure class="${classes}" role="img" aria-label="${escapeHtml(label)}"></figure>`;
 }
 
+function progressCharacterStyle() {
+  const total = Math.max(1, minutesBetween(state.shiftStart, state.shiftEnd));
+  const worked = Math.max(0, total - state.leftMinutes);
+  const ratio = Math.max(0, Math.min(1, worked / total));
+  const x = Math.round(ratio * 110);
+  const y = Math.round(ratio * -84);
+  const scale = (1 - ratio * 0.14).toFixed(2);
+  return `--walk-x: ${x}px; --walk-y: ${y}px; --walk-scale: ${scale};`;
+}
+
 function screenTitle(title, kicker = "") {
   return `
     <h1 class="screen-title">${title}</h1>
@@ -529,9 +539,18 @@ function renderProgress() {
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      <section class="red-carpet progress-stage" role="img" aria-label="キャラクターのいないレッドカーペット会場">
+      <section class="red-carpet progress-stage" role="img" aria-label="レッドカーペットを歩くキャラクター">
         <div class="arch"></div>
         <div class="cake-goal"></div>
+        <div class="walking-worker" style="${progressCharacterStyle()}" aria-hidden="true">
+          <span class="walk-head"></span>
+          <span class="walk-cap"></span>
+          <span class="walk-body"></span>
+          <span class="walk-arm walk-arm-left"></span>
+          <span class="walk-arm walk-arm-right"></span>
+          <span class="walk-leg walk-leg-left"></span>
+          <span class="walk-leg walk-leg-right"></span>
+        </div>
         <div class="progress-stage-copy">レッドカーペットへ向かおう！</div>
       </section>
 
