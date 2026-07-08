@@ -36,7 +36,6 @@ const state = {
   progressPercent: 0,
   leftMinutes: 480,
   restSeconds: 1530,
-  progressWalkSteps: 0,
   ticketCount: 0,
   cheerIndex: 0,
   claimedToday: false,
@@ -334,7 +333,6 @@ function tickShiftMinute() {
   if (minutesToAdvance < 1) return;
 
   advanceShift(minutesToAdvance);
-  state.progressWalkSteps = (state.progressWalkSteps || 0) + minutesToAdvance;
   progressTickStartedAt += minutesToAdvance * 60000;
   if (hasShiftTimeLeft()) {
     saveState();
@@ -381,14 +379,6 @@ function mascot(extraClass = "") {
 function artPanel(name, label, extraClass = "") {
   const classes = ["art-panel", `art-${name}`, extraClass].filter(Boolean).join(" ");
   return `<figure class="${classes}" role="img" aria-label="${escapeHtml(label)}"></figure>`;
-}
-
-function progressWalkerStyle() {
-  const total = Math.max(1, minutesBetween(state.shiftStart, state.shiftEnd));
-  const worked = Math.max(0, total - state.leftMinutes);
-  const ratio = Math.max(0, Math.min(1, worked / total));
-  const x = Math.round(ratio * 226);
-  return `--walk-x: ${x}px;`;
 }
 
 function screenTitle(title, kicker = "") {
@@ -539,11 +529,11 @@ function renderProgress() {
   return `
     <article class="page">
       ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      <div class="progress-art-wrap">
-        ${artPanel("progress", "レッドカーペット進行中のイラスト")}
-        <div class="progress-bubble-cover" aria-hidden="true"></div>
-        <div class="progress-walker" style="${progressWalkerStyle()}" aria-hidden="true"></div>
-      </div>
+      <section class="red-carpet progress-stage" role="img" aria-label="キャラクターのいないレッドカーペット会場">
+        <div class="arch"></div>
+        <div class="cake-goal"></div>
+        <div class="progress-stage-copy">レッドカーペットへ向かおう！</div>
+      </section>
 
       <section class="route-card">
         <div class="route-head">
@@ -737,7 +727,6 @@ screen.addEventListener("click", (event) => {
       showToast("休憩時間をえらびましょう");
     } else {
       syncShiftProgress(true);
-      state.progressWalkSteps = 0;
       setView("progress");
       showToast("6時間未満なので休憩なしで進みます");
     }
@@ -765,7 +754,6 @@ screen.addEventListener("click", (event) => {
 
   if (action === "go-progress") {
     syncShiftProgress(true);
-    state.progressWalkSteps = 0;
     setView("progress");
     showToast("レッドカーペットへ向かっています！");
   }
@@ -813,7 +801,6 @@ screen.addEventListener("click", (event) => {
     state.break2Done = false;
     state.activeBreakIndex = 0;
     state.restElapsedSeconds = 0;
-    state.progressWalkSteps = 0;
     progressTickStartedAt = 0;
     restTickStartedAt = 0;
     restShiftMinutesAdvanced = 0;

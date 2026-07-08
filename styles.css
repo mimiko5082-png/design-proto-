@@ -686,88 +686,25 @@ button {
   padding: 14px;
 }
 
-.progress-art-wrap {
-  position: relative;
-  width: min(100%, 300px);
-  margin: 16px auto 14px;
+.progress-stage {
+  min-height: 270px;
 }
 
-.progress-art-wrap .art-panel {
-  width: 100%;
-  margin: 0;
-}
-
-.progress-bubble-cover {
+.progress-stage-copy {
   position: absolute;
-  right: 0;
-  bottom: 50px;
-  z-index: 4;
-  width: 158px;
-  height: 86px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 20% 18%, #ffd252 0 4px, transparent 5px),
-    radial-gradient(circle at 80% 22%, #fffaf0 0 3px, transparent 4px),
-    linear-gradient(112deg, rgba(255, 255, 255, 0.2) 0 16%, transparent 17% 100%),
-    linear-gradient(180deg, #ff4b58 0%, #df152e 62%, #a80d1e 100%);
-  box-shadow:
-    inset 0 0 0 3px rgba(255, 214, 74, 0.42),
-    0 8px 0 rgba(114, 19, 20, 0.13);
-}
-
-.progress-walker {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  z-index: 5;
-  width: 54px;
-  height: 56px;
-  border-radius: 46% 48% 45% 45%;
-  background:
-    radial-gradient(circle at 34% 43%, #2a1711 0 2px, transparent 3px),
-    radial-gradient(circle at 60% 43%, #2a1711 0 2px, transparent 3px),
-    radial-gradient(circle at 47% 59%, #ff8fa0 0 4px, transparent 5px),
-    radial-gradient(circle at 24% 57%, #ffb2be 0 5px, transparent 6px),
-    radial-gradient(circle at 72% 57%, #ffb2be 0 5px, transparent 6px),
-    #fffaf2;
-  transform: translateX(var(--walk-x, 0));
-  transition: transform 520ms cubic-bezier(0.18, 0.84, 0.34, 1.18);
-  animation: rabbitHop 760ms ease-in-out infinite alternate;
-  box-shadow: 0 7px 0 rgba(115, 26, 16, 0.14);
-}
-
-@keyframes rabbitHop {
-  to {
-    margin-bottom: 4px;
-  }
-}
-
-.progress-walker::before {
-  content: "";
-  position: absolute;
-  left: 14px;
-  top: -23px;
-  width: 11px;
-  height: 34px;
-  border: 3px solid #f4d8ce;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #fffaf2 0 66%, #ffcdd4 67%);
-  box-shadow: 18px 1px 0 -1px #fffaf2, 18px 1px 0 2px #f4d8ce;
-  transform: rotate(-10deg);
-}
-
-.progress-walker::after {
-  content: "";
-  position: absolute;
-  right: -8px;
-  bottom: 16px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fffaf2;
-  box-shadow:
-    -34px 29px 0 -6px #fffaf2,
-    -10px 29px 0 -6px #fffaf2;
+  left: 50%;
+  bottom: 30px;
+  width: min(230px, calc(100% - 40px));
+  padding: 12px 14px;
+  border: 3px solid rgba(255, 255, 255, 0.86);
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.94);
+  color: var(--red);
+  text-align: center;
+  font-size: 18px;
+  font-weight: 1000;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 0 rgba(128, 38, 16, 0.13);
 }
 
 .route-head {
