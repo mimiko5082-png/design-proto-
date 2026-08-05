@@ -1,873 +1,667 @@
-const SAVE_KEY = "baito_reward_carpet_v1";
-const MINUTES_FOR_BREAK = 360;
+﻿const STORAGE_KEY = "kotoba_forest_v1";
+const screen = document.getElementById("screen");
+const toast = document.getElementById("toast");
+const tabbar = document.querySelector(".tabbar");
 
-const breakOptions = [15, 30, 45, 60];
-const cheerCards = [
+const words = [
   {
-    title: "会場に到着しました",
-    body: "今日のがんばりを、ちゃんとごほうびに変換しました。",
-    stars: 1,
+    id: "akane",
+    word: "茜色",
+    reading: "あかねいろ",
+    image: "./assets/kotoba-sunset.png",
+    place: "夕暮れの川辺",
+    short: "夕暮れの空が、やわらかな赤に染まる色。",
+    origin:
+      "茜は、古くから赤い染料として使われてきた植物の名です。日が沈む前の空や雲に残る、深くやさしい赤を表す言葉になりました。",
+    works: [
+      ["夏目漱石『三四郎』", "茜色の空が、山の端を染めていた。"],
+      ["宮沢賢治『銀河鉄道の夜』", "西の空の光が、頬を追いかけていた。"],
+    ],
   },
   {
-    title: "休憩をえらべたカード",
-    body: "忙しい日でも、自分のペースを選べたのがえらい。",
-    stars: 2,
+    id: "kouka",
+    word: "紅霞",
+    reading: "こうか",
+    image: "./assets/kotoba-sunset.png",
+    place: "夕方の橋",
+    short: "夕焼けにたなびく、あざやかな霞。",
+    origin:
+      "紅は赤く美しい色、霞は遠くの景色をやわらかく包むもの。空全体が一枚の布のように染まる時に似合う言葉です。",
+    works: [
+      ["与謝野晶子『みだれ髪』", "紅い雲が、遠い町を静かに包んだ。"],
+      ["北原白秋『思ひ出』", "暮れゆく空の色を、胸にしまった。"],
+    ],
   },
   {
-    title: "レッドカーペット歩行賞",
-    body: "出勤から退勤まで、あなたは今日も主役でした。",
-    stars: 3,
+    id: "tasogare",
+    word: "黄昏",
+    reading: "たそがれ",
+    image: "./assets/kotoba-lake.png",
+    place: "水辺の帰り道",
+    short: "日は沈み、昼と夜のあいだにある時間。",
+    origin:
+      "顔が見えにくくなり、誰そ彼とたずねたことに由来するといわれます。景色も気持ちも少しだけ境目に立つ言葉です。",
+    works: [
+      ["太宰治『津軽』", "町は黄昏の色に沈んでいた。"],
+      ["島崎藤村『千曲川のスケッチ』", "川面に夕べの光が残っていた。"],
+    ],
   },
+  {
+    id: "hakumei",
+    word: "薄明",
+    reading: "はくめい",
+    image: "./assets/kotoba-mist.png",
+    place: "朝の坂道",
+    short: "夜明けや夕暮れの、かすかな光。",
+    origin:
+      "太陽が地平線の下にあっても、空に淡く残る明るさのこと。はっきりしないからこそ、景色の輪郭をやさしく見せます。",
+    works: [
+      ["堀辰雄『風立ちぬ』", "薄明のなかで、窓だけが静かに光った。"],
+      ["梶井基次郎『檸檬』", "淡い明るさが街の角に残った。"],
+    ],
+  },
+  {
+    id: "yoin",
+    word: "余韻",
+    reading: "よいん",
+    image: "./assets/kotoba-forest.png",
+    place: "木漏れ日の道",
+    short: "残された光や気配が、心に残る感覚。",
+    origin:
+      "音が鳴り終わったあとにも残る響きから、できごとや景色のあとに心へ残るものも表すようになりました。",
+    works: [
+      ["川端康成『雪国』", "景色のあとに、静かな気配だけが残った。"],
+      ["中原中也『在りし日の歌』", "消えた光のあとにも、胸の奥で響いた。"],
+    ],
+  },
+];
+
+const pollRows = [
+  { id: "seihitsu", word: "静謐", reading: "せいひつ", text: "静かで、心が落ち着く。", percent: 38, image: "./assets/kotoba-mist.png" },
+  { id: "yoin", word: "余韻", reading: "よいん", text: "あとに残る、やさしい響き。", percent: 26, image: "./assets/kotoba-forest.png" },
+  { id: "kyoshu", word: "郷愁", reading: "きょうしゅう", text: "なつかしく、胸があたたかくなる。", percent: 20, image: "./assets/kotoba-lake.png" },
+  { id: "yakudo", word: "躍動", reading: "やくどう", text: "いのちが動き出すような感じ。", percent: 16, image: "./assets/kotoba-sunset.png" },
+];
+
+const notificationMessages = [
+  "いま見ている景色に、まだ知らない言葉があるかもしれません。",
+  "森からの合図です。少しだけ空を見上げてみませんか。",
+  "今日の景色を、ひとつの言葉で残してみましょう。",
+  "いつもの道に、まだ名前のない色があるかもしれません。",
 ];
 
 const state = {
   view: "home",
-  shiftStart: "09:00",
-  shiftEnd: "17:00",
-  selectedBreak: 30,
-  selectedSlot: "12:00",
-  breakEnd: "12:30",
-  secondBreakStart: "15:00",
-  secondBreakEnd: "15:15",
-  activeBreakIndex: 0,
-  break1Done: false,
-  break2Done: false,
-  restElapsedSeconds: 0,
-  progressPercent: 0,
-  leftMinutes: 480,
-  restSeconds: 1530,
-  ticketCount: 0,
-  cheerIndex: 0,
-  claimedToday: false,
-  claimedDate: "",
+  selectedWordId: "akane",
+  entries: [],
+  notifications: {
+    enabled: false,
+    date: "",
+    times: [],
+    sent: [],
+    permission: "default",
+  },
 };
-
-const navToView = {
-  home: "home",
-  nominate: "break",
-  profile: "profile",
-};
-
-const viewToNav = {
-  home: "home",
-  break: "nominate",
-  progress: "home",
-  rest: "nominate",
-  arrival: "home",
-  get: "home",
-  profile: "profile",
-};
-
-const screen = document.getElementById("screen");
-const toast = document.getElementById("toast");
-const tabbar = document.querySelector(".tabbar");
-let progressTickStartedAt = 0;
-let restTickStartedAt = 0;
-let restShiftMinutesAdvanced = 0;
 
 loadState();
-normalizeState();
+ensureDailySchedule();
 render();
-if (state.view === "progress") startProgressClock();
-if (state.view === "rest") startRestClock();
-setInterval(tickRestTimer, 1000);
-setInterval(tickShiftMinute, 1000);
+setInterval(checkDueNotifications, 15000);
+document.addEventListener("visibilitychange", checkDueNotifications);
+
+screen.addEventListener("click", (event) => {
+  const actionTarget = event.target.closest("[data-action]");
+  if (actionTarget) {
+    handleAction(actionTarget);
+    return;
+  }
+
+  const navTarget = event.target.closest("[data-nav]");
+  if (navTarget) {
+    navigate(navTarget.dataset.nav);
+  }
+});
+
+tabbar.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-nav]");
+  if (!target) return;
+  navigate(target.dataset.nav);
+});
 
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}");
-    Object.assign(state, saved);
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if (Array.isArray(saved.entries)) state.entries = saved.entries;
+    if (saved.notifications && typeof saved.notifications === "object") {
+      state.notifications = {
+        ...state.notifications,
+        ...saved.notifications,
+        times: Array.isArray(saved.notifications.times) ? saved.notifications.times : [],
+        sent: Array.isArray(saved.notifications.sent) ? saved.notifications.sent : [],
+      };
+    }
+    if (typeof saved.selectedWordId === "string") state.selectedWordId = saved.selectedWordId;
+    if (typeof saved.view === "string") state.view = saved.view;
   } catch {
-    // The prototype can run without stored state.
+    state.view = "home";
   }
+
+  if (!isKnownView(state.view)) state.view = "home";
+  if (!getWord(state.selectedWordId)) state.selectedWordId = words[0].id;
 }
 
 function saveState() {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  } catch {
-    // Ignore private browsing or storage limits.
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      view: state.view,
+      selectedWordId: state.selectedWordId,
+      entries: state.entries,
+      notifications: state.notifications,
+    })
+  );
+}
+
+function isKnownView(view) {
+  return ["home", "camera", "choose", "detail", "poll", "notebook", "map"].includes(view);
+}
+
+function navigate(view) {
+  if (!isKnownView(view)) return;
+  state.view = view;
+  saveState();
+  render();
+}
+
+function render() {
+  ensureDailySchedule(false);
+  const views = {
+    home: renderHome,
+    camera: renderCamera,
+    choose: renderChoose,
+    detail: renderDetail,
+    poll: renderPoll,
+    notebook: renderNotebook,
+    map: renderMap,
+  };
+
+  screen.innerHTML = views[state.view]();
+  updateTabbar();
+}
+
+function updateTabbar() {
+  tabbar.hidden = state.view === "camera";
+  tabbar.querySelectorAll(".tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.nav === state.view || (state.view === "choose" && tab.dataset.nav === "home") || (state.view === "detail" && tab.dataset.nav === "home") || (state.view === "poll" && tab.dataset.nav === "home"));
+  });
+}
+
+function renderHome() {
+  const recent = state.entries.slice(0, 3);
+  const recentSection = recent.length
+    ? `<section class="recent-section">
+        <div class="section-head">
+          <h2>最近見つけたことば</h2>
+          <button class="link-button" type="button" data-nav="notebook">すべて見る</button>
+        </div>
+        <div class="recent-grid">
+          ${recent.map(renderRecentCard).join("")}
+        </div>
+      </section>`
+    : "";
+
+  return `<div class="view home-view">
+    <header class="app-header">
+      <button class="icon-button" type="button" aria-label="メニュー">☰</button>
+      <div class="brand">
+        <span class="brand-kana">ことばの森</span>
+        <span class="brand-title">世界を、美しく読む。</span>
+      </div>
+      <button class="icon-button" type="button" data-action="request-notifications" aria-label="通知">⌁</button>
+    </header>
+
+    <section class="hero">
+      <img src="./assets/kotoba-hero.png" alt="大きな木と空が広がる森の景色" />
+      <div class="hero-content">
+        <div class="hero-copy">
+          <h1>言葉に出会う</h1>
+          <p>写真を撮って、言葉を見つけよう</p>
+        </div>
+        <button class="primary-button" type="button" data-action="open-camera">景色を撮る</button>
+      </div>
+    </section>
+
+    ${renderNotificationCard()}
+    ${recentSection}
+  </div>`;
+}
+
+function renderNotificationCard() {
+  const times = state.notifications.times.length === 2 ? state.notifications.times : ["--:--", "--:--"];
+  const enabled = state.notifications.enabled;
+  return `<section class="notification-card">
+    <div class="notification-row">
+      <div>
+        <strong>${enabled ? "今日の森からの合図" : "通知は1日2回ランダム"}</strong>
+        <p>${enabled ? "今日のどこかで2回、景色を見る合図が届きます。" : "許可すると、毎日ランダムな2回だけ合図が届きます。"}</p>
+        <div class="time-chips" aria-label="今日の通知予定">
+          <span class="time-chip">${times[0]}</span>
+          <span class="time-chip">${times[1]}</span>
+        </div>
+      </div>
+      <button class="ghost-button" type="button" data-action="request-notifications">${enabled ? "ON" : "受け取る"}</button>
+    </div>
+  </section>`;
+}
+
+function renderRecentCard(entry) {
+  return `<button class="recent-card" type="button" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+    <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
+    <span>${escapeHtml(entry.word)}</span>
+  </button>`;
+}
+
+function renderCamera() {
+  return `<div class="view full-camera">
+    <img class="camera-photo" src="./assets/kotoba-sunset.png" alt="撮影している夕暮れの景色" />
+    <div class="camera-overlay">
+      <div>
+        <div class="camera-top">
+          <button class="close-button" type="button" data-nav="home" aria-label="閉じる">×</button>
+          <button class="camera-flash" type="button" aria-label="フラッシュ">⌁</button>
+        </div>
+        <div class="camera-prompt">この景色に、どんな言葉があるだろう？</div>
+      </div>
+      <div class="focus-frame" aria-hidden="true">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      </div>
+      <div class="camera-bottom">
+        <img class="camera-thumb" src="./assets/kotoba-sunset.png" alt="直前の景色" />
+        <button class="shutter" type="button" data-action="capture" aria-label="撮影する"></button>
+        <span class="camera-icon" aria-hidden="true">▢</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderChoose() {
+  const selectedId = state.selectedWordId || words[0].id;
+  return `<div class="view choose-view">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="camera" aria-label="戻る">‹</button>
+      <h1 class="page-title">この景色を表す言葉</h1>
+      <span class="icon-button" aria-hidden="true">5</span>
+    </header>
+    <div class="photo-card">
+      <img src="./assets/kotoba-sunset.png" alt="夕暮れの川辺の景色" />
+    </div>
+    <div class="word-list">
+      ${words.map((word) => renderWordOption(word, selectedId)).join("")}
+    </div>
+    <div class="action-area">
+      <button class="primary-button" type="button" data-action="open-detail">いちばん近い言葉を選ぶ</button>
+    </div>
+  </div>`;
+}
+
+function renderWordOption(word, selectedId) {
+  const selected = word.id === selectedId;
+  return `<button class="word-option ${selected ? "selected" : ""}" type="button" data-action="select-word" data-word-id="${word.id}">
+    <img src="${word.image}" alt="${word.word}の景色" />
+    <span>
+      <strong>${word.word}<small>（${word.reading}）</small></strong>
+      <small>${word.short}</small>
+    </span>
+    <span class="checkmark" aria-hidden="true">✓</span>
+  </button>`;
+}
+
+function renderDetail() {
+  const word = getSelectedWord();
+  return `<div class="view detail-view">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="choose" aria-label="戻る">‹</button>
+      <h1 class="page-title">ことばの世界</h1>
+      <button class="icon-button" type="button" data-action="share-word" aria-label="共有">↗</button>
+    </header>
+
+    <section class="word-detail-top">
+      <img class="detail-photo" src="${word.image}" alt="${word.word}に近い景色" />
+      <div class="word-heading">
+        <h1>${word.word}</h1>
+        <p>${word.reading}　${word.short}</p>
+      </div>
+    </section>
+
+    <section class="origin-card">
+      <div class="card-label">ことばの由来</div>
+      <p>${word.origin}</p>
+    </section>
+
+    <section class="work-card">
+      <div class="card-label">この言葉が使われた作品</div>
+      <div class="work-list">
+        ${word.works.map((item) => renderWorkItem(item, word.image)).join("")}
+      </div>
+    </section>
+
+    <div class="action-area">
+      <button class="primary-button" type="button" data-action="save-word">このことばを手帳に残す</button>
+    </div>
+  </div>`;
+}
+
+function renderWorkItem(item, image) {
+  return `<div class="work-item">
+    <img src="${image}" alt="作品に添える景色" />
+    <span><strong>${item[0]}</strong><small>「${item[1]}」</small></span>
+  </div>`;
+}
+
+function renderPoll() {
+  return `<div class="view poll-view">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="detail" aria-label="戻る">‹</button>
+      <h1 class="page-title">みんなは、どう感じた？</h1>
+      <span class="icon-button" aria-hidden="true">%</span>
+    </header>
+    <p class="poll-intro">この景色に対して、みんなはどんな言葉を選んでいるでしょう。</p>
+    <div class="poll-list">
+      ${pollRows.map(renderPollRow).join("")}
+    </div>
+    <section class="origin-card">
+      <div class="card-label">同じ景色でも、感じ方は人それぞれ。</div>
+      <p>言葉が増えるほど、世界の見え方が少しずつ豊かになります。</p>
+    </section>
+    <div class="action-area">
+      <button class="primary-button" type="button" data-nav="notebook">ことば帳を見る</button>
+    </div>
+  </div>`;
+}
+
+function renderPollRow(row) {
+  return `<div class="poll-row" style="--pct:${row.percent}%">
+    <img src="${row.image}" alt="${row.word}の景色" />
+    <span><strong>${row.word}<small>（${row.reading}）</small></strong><small>${row.text}</small></span>
+    <span class="percent">${row.percent}%</span>
+  </div>`;
+}
+
+function renderNotebook() {
+  const entries = state.entries;
+  const list = entries.length
+    ? `<div class="book-list">${entries.map(renderBookRow).join("")}</div>`
+    : `<section class="empty-card"><p>まだ手帳に残した言葉はありません。</p></section>`;
+
+  return `<div class="view notebook-view">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
+      <h1 class="page-title">ことば帳</h1>
+      <span class="icon-button" aria-hidden="true">⌕</span>
+    </header>
+    <div class="filter-pills" aria-label="分類">
+      <span class="filter-pill active">すべて</span>
+      <span class="filter-pill">自然</span>
+      <span class="filter-pill">心</span>
+      <span class="filter-pill">時間</span>
+      <span class="filter-pill">色</span>
+    </div>
+    ${list}
+  </div>`;
+}
+
+function renderBookRow(entry) {
+  return `<button class="book-row" type="button" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+    <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
+    <span>
+      <strong>${escapeHtml(entry.word)}<small>（${escapeHtml(entry.reading)}）</small></strong>
+      <small>${escapeHtml(entry.short)}<br />${escapeHtml(formatEntryDate(entry.createdAt))}</small>
+    </span>
+    <span class="leaf-mark" aria-hidden="true">◇</span>
+  </button>`;
+}
+
+function renderMap() {
+  const pins = state.entries.slice(0, 4).map((entry, index) => {
+    const positions = [
+      ["50%", "33%"],
+      ["67%", "51%"],
+      ["34%", "58%"],
+      ["56%", "70%"],
+    ];
+    const [x, y] = positions[index];
+    return `<button class="map-pin" type="button" style="--x:${x};--y:${y}" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+      ${escapeHtml(entry.word)}<small>${escapeHtml(entry.place)}</small>
+    </button>`;
+  });
+
+  return `<div class="view map-view">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
+      <h1 class="page-title">ことばの地図</h1>
+      <span class="icon-button" aria-hidden="true">⌖</span>
+    </header>
+    <p class="poll-intro">あなたが出会ったことばが、地図の上に咲いていきます。</p>
+    <section class="map-card">
+      <img src="./assets/kotoba-map.png" alt="ことばが咲いていく地図" />
+      ${pins.join("")}
+      ${pins.length ? "" : `<div class="map-empty">まだ地図には何もありません。景色を撮ると、ここに言葉が増えていきます。</div>`}
+    </section>
+  </div>`;
+}
+
+function handleAction(target) {
+  const action = target.dataset.action;
+  if (action === "open-camera") navigate("camera");
+  if (action === "capture") captureScene();
+  if (action === "select-word") selectWord(target.dataset.wordId);
+  if (action === "open-detail") navigate("detail");
+  if (action === "save-word") saveSelectedWord();
+  if (action === "open-entry") openEntry(target.dataset.wordId);
+  if (action === "request-notifications") requestNotifications();
+  if (action === "share-word") shareSelectedWord();
+}
+
+function captureScene() {
+  state.selectedWordId = "akane";
+  saveState();
+  if (navigator.vibrate) navigator.vibrate(35);
+  navigate("choose");
+}
+
+function selectWord(wordId) {
+  if (!getWord(wordId)) return;
+  state.selectedWordId = wordId;
+  saveState();
+  render();
+}
+
+function openEntry(wordId) {
+  if (!getWord(wordId)) return;
+  state.selectedWordId = wordId;
+  navigate("detail");
+}
+
+function saveSelectedWord() {
+  const word = getSelectedWord();
+  state.entries = [
+    {
+      entryId: `${word.id}-${Date.now()}`,
+      wordId: word.id,
+      word: word.word,
+      reading: word.reading,
+      short: word.short,
+      image: word.image,
+      place: word.place,
+      createdAt: new Date().toISOString(),
+    },
+    ...state.entries,
+  ].slice(0, 40);
+  state.view = "poll";
+  saveState();
+  showToast("ことば帳に残しました。");
+  render();
+}
+
+function shareSelectedWord() {
+  const word = getSelectedWord();
+  const text = `ことばの森で「${word.word}」に出会いました。`;
+  if (navigator.share) {
+    navigator.share({ title: "ことばの森", text }).catch(() => {});
+    return;
   }
+  navigator.clipboard?.writeText(text);
+  showToast("共有用の文章をコピーしました。");
+}
+
+function getSelectedWord() {
+  return getWord(state.selectedWordId) || words[0];
+}
+
+function getWord(id) {
+  return words.find((word) => word.id === id);
+}
+
+function requestNotifications() {
+  ensureDailySchedule();
+
+  if (!("Notification" in window)) {
+    state.notifications.enabled = true;
+    state.notifications.permission = "unsupported";
+    saveState();
+    render();
+    showToast("今日のランダム通知を設定しました。");
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    state.notifications.enabled = true;
+    state.notifications.permission = "granted";
+    saveState();
+    render();
+    showToast("通知をONにしました。今日はランダムに2回届きます。");
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    state.notifications.enabled = false;
+    state.notifications.permission = "denied";
+    saveState();
+    render();
+    showToast("ブラウザの設定から通知を許可してください。");
+    return;
+  }
+
+  Notification.requestPermission().then((permission) => {
+    state.notifications.permission = permission;
+    state.notifications.enabled = permission === "granted";
+    saveState();
+    render();
+    showToast(permission === "granted" ? "通知をONにしました。" : "通知は許可されませんでした。");
+  });
+}
+
+function ensureDailySchedule(shouldSave = true) {
+  const now = new Date();
+  const key = getLocalDateKey(now);
+  if (state.notifications.date === key && state.notifications.times.length === 2) return;
+
+  const times = generateRandomTimes();
+  const nowMinutes = getMinutes(now);
+  state.notifications.date = key;
+  state.notifications.times = times;
+  state.notifications.sent = times.map((time) => timeToMinutes(time) < nowMinutes);
+  if (shouldSave) saveState();
+}
+
+function generateRandomTimes() {
+  const start = 8 * 60 + 30;
+  const end = 21 * 60 + 30;
+  let first = randomMinute(start, end);
+  let second = randomMinute(start, end);
+  let guard = 0;
+  while (Math.abs(first - second) < 90 && guard < 80) {
+    second = randomMinute(start, end);
+    guard += 1;
+  }
+  return [first, second].sort((a, b) => a - b).map(minutesToTime);
+}
+
+function randomMinute(start, end) {
+  return Math.floor(Math.random() * (end - start + 1)) + start;
+}
+
+function checkDueNotifications() {
+  ensureDailySchedule();
+  if (!state.notifications.enabled) return;
+
+  const now = new Date();
+  const nowMinutes = getMinutes(now);
+  let changed = false;
+
+  state.notifications.times.forEach((time, index) => {
+    if (state.notifications.sent[index]) return;
+    if (nowMinutes >= timeToMinutes(time)) {
+      state.notifications.sent[index] = true;
+      changed = true;
+      sendForestNotification(time);
+    }
+  });
+
+  if (changed) saveState();
+}
+
+function sendForestNotification(time) {
+  const body = notificationMessages[Math.floor(Math.random() * notificationMessages.length)];
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("ことばの森", {
+      body,
+      tag: `kotoba-forest-${state.notifications.date}-${time}`,
+    });
+  }
+  showToast(body);
+}
+
+function minutesToTime(minutes) {
+  const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const minute = String(minutes % 60).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function timeToMinutes(time) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function getMinutes(date) {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+function getLocalDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatEntryDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "今日";
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
-}
-
-function setView(view) {
-  const previousView = state.view;
-  if (!canTakeBreak() && (view === "break" || view === "rest")) {
-    view = "progress";
-  }
-  state.view = view;
-  if (view === "progress" && previousView !== "progress") startProgressClock();
-  if (view !== "progress") progressTickStartedAt = 0;
-  if (view !== "rest") {
-    restTickStartedAt = 0;
-    restShiftMinutesAdvanced = 0;
-  }
-  saveState();
-  render();
-  screen.scrollTop = 0;
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2400);
 }
 
 function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value).replace(/[&<>"]/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+  }[char]));
 }
-
-function minutesBetween(start, end) {
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const startMinutes = sh * 60 + sm;
-  let endMinutes = eh * 60 + em;
-  if (endMinutes <= startMinutes) endMinutes += 24 * 60;
-  return endMinutes - startMinutes;
-}
-
-function addMinutes(time, minutes) {
-  const [hour, minute] = time.split(":").map(Number);
-  const total = (hour * 60 + minute + minutes) % (24 * 60);
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-}
-
-function formatDuration(minutes) {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${hours}時間${String(mins).padStart(2, "0")}分`;
-}
-
-function formatTimer(seconds) {
-  const safe = Math.max(0, seconds);
-  const hh = Math.floor(safe / 3600);
-  const mm = Math.floor((safe % 3600) / 60);
-  const ss = safe % 60;
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-}
-
-function shiftLeftText() {
-  const hours = Math.floor(state.leftMinutes / 60);
-  const minutes = state.leftMinutes % 60;
-  return `${hours}時間${minutes}分`;
-}
-
-function todayKey() {
-  const today = new Date();
-  return [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, "0"),
-    String(today.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function canTakeBreak() {
-  return minutesBetween(state.shiftStart, state.shiftEnd) >= MINUTES_FOR_BREAK;
-}
-
-function hasClaimedCakeToday() {
-  return state.claimedDate === todayKey();
-}
-
-function normalizeState() {
-  if (!state.breakEnd) {
-    syncBreakEndFromDuration();
-  } else {
-    syncBreakDurationFromTimes();
-  }
-
-  if (!state.secondBreakStart || !state.secondBreakEnd) {
-    const slots = buildBreakSlots();
-    state.secondBreakStart = slots[1] || addMinutes(state.selectedSlot, state.selectedBreak + 90);
-    state.secondBreakEnd = addMinutes(state.secondBreakStart, 15);
-  }
-
-  if (!state.claimedDate && state.claimedToday) {
-    state.claimedDate = todayKey();
-  }
-
-  if (!canTakeBreak() && (state.view === "break" || state.view === "rest")) {
-    state.view = "progress";
-  }
-
-  if (state.view === "cards") {
-    state.view = "home";
-  }
-
-  if (hasClaimedCakeToday()) {
-    state.claimedToday = true;
-  }
-}
-
-function syncShiftProgress(resetProgress = false) {
-  const total = minutesBetween(state.shiftStart, state.shiftEnd);
-  if (resetProgress) {
-    state.progressPercent = 0;
-    state.leftMinutes = total;
-    return;
-  }
-  state.leftMinutes = Math.max(0, Math.round(total * (1 - state.progressPercent / 100)));
-}
-
-function buildBreakSlots() {
-  const total = minutesBetween(state.shiftStart, state.shiftEnd);
-  const latestOffset = Math.max(15, total - state.selectedBreak);
-  const firstOffset = Math.min(latestOffset, Math.max(30, Math.round(total * 0.38)));
-  const secondOffset = Math.min(latestOffset, Math.max(firstOffset + state.selectedBreak, Math.round(total * 0.72)));
-  const slots = [addMinutes(state.shiftStart, firstOffset), addMinutes(state.shiftStart, secondOffset)];
-  return [...new Set(slots)];
-}
-
-function resetBreakTimesForShift() {
-  const slots = buildBreakSlots();
-  state.selectedSlot = slots[0] || addMinutes(state.shiftStart, 60);
-  syncBreakEndFromDuration();
-  state.secondBreakStart = slots[1] || addMinutes(state.selectedSlot, state.selectedBreak + 90);
-  state.secondBreakEnd = addMinutes(state.secondBreakStart, 15);
-  state.break1Done = false;
-  state.break2Done = false;
-  state.activeBreakIndex = 0;
-  state.restElapsedSeconds = 0;
-}
-
-function breakEndTime() {
-  return state.breakEnd || addMinutes(state.selectedSlot, state.selectedBreak);
-}
-
-function secondBreakDuration() {
-  return Math.max(1, Math.min(240, minutesBetween(state.secondBreakStart, state.secondBreakEnd)));
-}
-
-function syncBreakEndFromDuration() {
-  state.breakEnd = addMinutes(state.selectedSlot, state.selectedBreak);
-}
-
-function syncBreakDurationFromTimes() {
-  const duration = minutesBetween(state.selectedSlot, breakEndTime());
-  state.selectedBreak = Math.max(1, Math.min(240, duration));
-  state.breakEnd = addMinutes(state.selectedSlot, state.selectedBreak);
-}
-
-function hasShiftTimeLeft() {
-  return state.leftMinutes > 0;
-}
-
-function nextBreakIndex() {
-  if (!canTakeBreak()) return -1;
-  if (!state.break1Done) return 0;
-  if (!state.break2Done) return 1;
-  return -1;
-}
-
-function activeBreakDuration() {
-  return state.activeBreakIndex === 1 ? secondBreakDuration() : state.selectedBreak;
-}
-
-function activeBreakLabel() {
-  return state.activeBreakIndex === 1 ? "休憩2" : "休憩1";
-}
-
-function markActiveBreakDone() {
-  if (state.activeBreakIndex === 1) {
-    state.break2Done = true;
-  } else {
-    state.break1Done = true;
-  }
-}
-
-function startProgressClock() {
-  progressTickStartedAt = Date.now();
-}
-
-function startRestClock() {
-  restTickStartedAt = Date.now();
-  restShiftMinutesAdvanced = 0;
-}
-
-function tickRestTimer() {
-  if (state.view !== "rest" || state.restSeconds <= 0) return;
-  if (!restTickStartedAt) startRestClock();
-
-  const total = Math.max(60, activeBreakDuration() * 60);
-  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - restTickStartedAt) / 1000));
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-  const minutesToAdvance = elapsedMinutes - restShiftMinutesAdvanced;
-  state.restElapsedSeconds = elapsedSeconds;
-  state.restSeconds = Math.max(0, total - elapsedSeconds);
-
-  if (minutesToAdvance > 0) {
-    advanceShift(minutesToAdvance);
-    restShiftMinutesAdvanced = elapsedMinutes;
-    if (!hasShiftTimeLeft()) {
-      state.progressPercent = 100;
-      finishRestAndContinue();
-      return;
-    }
-  }
-
-  const timer = document.querySelector("[data-timer]");
-  const fill = document.querySelector("[data-rest-fill]");
-  if (timer) timer.textContent = formatTimer(state.restSeconds);
-  if (fill) {
-    fill.style.width = `${Math.max(0, Math.min(100, (state.restSeconds / total) * 100))}%`;
-  }
-  if (state.restSeconds === 0) {
-    finishRestAndContinue();
-    return;
-  }
-  saveState();
-}
-
-function tickShiftMinute() {
-  if (state.view !== "progress" || !hasShiftTimeLeft()) return;
-  if (!progressTickStartedAt) startProgressClock();
-
-  const elapsedMs = Date.now() - progressTickStartedAt;
-  const minutesToAdvance = Math.floor(elapsedMs / 60000);
-  if (minutesToAdvance < 1) return;
-
-  advanceShift(minutesToAdvance);
-  progressTickStartedAt += minutesToAdvance * 60000;
-  if (hasShiftTimeLeft()) {
-    saveState();
-    render();
-    return;
-  }
-
-  state.progressPercent = 100;
-  saveState();
-  setView("arrival");
-  showToast("バイト終了！ごほうび会場に到着しました");
-}
-
-function render() {
-  const views = {
-    home: renderHome,
-    break: renderBreakChoice,
-    progress: renderProgress,
-    rest: renderRest,
-    arrival: renderArrival,
-    get: renderGet,
-    profile: renderProfile,
-  };
-
-  screen.innerHTML = views[state.view] ? views[state.view]() : renderHome();
-  updateTabs();
-}
-
-function updateTabs() {
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.nav === viewToNav[state.view]);
-  });
-}
-
-function mascot(extraClass = "") {
-  return `
-    <div class="mascot ${extraClass}" aria-hidden="true">
-      <div class="cape"></div>
-      <div class="heart-stick"></div>
-    </div>
-  `;
-}
-
-function artPanel(name, label, extraClass = "") {
-  const classes = ["art-panel", `art-${name}`, extraClass].filter(Boolean).join(" ");
-  return `<figure class="${classes}" role="img" aria-label="${escapeHtml(label)}"></figure>`;
-}
-
-function progressCharacterStyle() {
-  const total = Math.max(1, minutesBetween(state.shiftStart, state.shiftEnd));
-  const worked = Math.max(0, total - state.leftMinutes);
-  const ratio = Math.max(0, Math.min(1, worked / total));
-  const x = Math.round(ratio * 110);
-  const y = Math.round(ratio * -84);
-  const scale = (1 - ratio * 0.14).toFixed(2);
-  return `--walk-x: ${x}px; --walk-y: ${y}px; --walk-scale: ${scale};`;
-}
-
-function screenTitle(title, kicker = "") {
-  return `
-    <h1 class="screen-title">${title}</h1>
-    ${kicker ? `<p class="title-kicker">${kicker}</p>` : ""}
-  `;
-}
-
-function renderHome() {
-  const plannedMinutes = minutesBetween(state.shiftStart, state.shiftEnd);
-  const breakAvailable = canTakeBreak();
-  return `
-    <article class="page">
-      <h1 class="hero-title">今日の<br />バイト予定</h1>
-      ${artPanel("home", "今日のバイト予定のイラスト")}
-
-      <section class="schedule-card" aria-label="バイト予定">
-        <label class="time-box time-edit">
-          <span class="time-icon">◷</span>
-          <span>
-            <span class="time-label">バイト開始</span>
-            <input class="time-input" type="time" data-field="shiftStart" value="${state.shiftStart}" />
-          </span>
-        </label>
-        <label class="time-box time-edit">
-          <span class="time-icon">◴</span>
-          <span>
-            <span class="time-label">バイト終了</span>
-            <input class="time-input" type="time" data-field="shiftEnd" value="${state.shiftEnd}" />
-          </span>
-        </label>
-        <div class="total-time">
-          <span>予定時間</span>
-          <span>${formatDuration(plannedMinutes)}</span>
-        </div>
-      </section>
-
-      <div class="button-stack">
-        <button class="main-button" type="button" data-action="${breakAvailable ? "start" : "go-progress"}">★ レッドカーペット開始</button>
-        ${
-          breakAvailable
-            ? '<button class="sub-button" type="button" data-action="open-break">休憩時間をえらぶ</button>'
-            : '<p class="pill">6時間未満なので休憩なしで進みます</p>'
-        }
-      </div>
-    </article>
-  `;
-}
-
-function renderBreakChoice() {
-  const firstEnd = breakEndTime();
-  const secondDuration = secondBreakDuration();
-  const optionButtons = breakOptions
-    .map(
-      (minutes) => `
-        <button class="break-option ${minutes === state.selectedBreak ? "active" : ""}" type="button" data-action="select-break" data-minutes="${minutes}">
-          <span>${minutes}</span>分
-        </button>
-      `,
-    )
-    .join("");
-  const secondOptionButtons = breakOptions
-    .map(
-      (minutes) => `
-        <button class="break-option ${minutes === secondDuration ? "active" : ""}" type="button" data-action="select-second-break" data-minutes="${minutes}">
-          <span>${minutes}</span>分
-        </button>
-      `,
-    )
-    .join("");
-
-  return `
-    <article class="page">
-      ${screenTitle("休憩時間をえらぶ", "自分のペースで、快適に進みます")}
-      ${artPanel("break", "休憩時間をえらぶイラスト")}
-      <p class="pill">自分のペースでがんばろう！</p>
-
-      <section class="break-edit-card card">
-        <div class="break-card-head">
-          <strong>休憩1</strong>
-          <span>${state.selectedBreak}分</span>
-        </div>
-        <div class="break-options" aria-label="休憩1の長さ">${optionButtons}</div>
-        <div class="slot-grid break-time-grid">
-          <label class="time-box time-edit">
-            <span class="time-icon">◷</span>
-            <span>
-              <span class="time-label">休憩開始</span>
-              <input class="time-input" type="time" data-field="breakStart" value="${state.selectedSlot}" />
-            </span>
-          </label>
-          <label class="time-box time-edit">
-            <span class="time-icon">◴</span>
-            <span>
-              <span class="time-label">休憩終了</span>
-              <input class="time-input" type="time" data-field="breakEnd" value="${firstEnd}" />
-            </span>
-          </label>
-        </div>
-      </section>
-
-      <section class="break-edit-card card">
-        <div class="break-card-head">
-          <strong>休憩2</strong>
-          <span>${secondDuration}分</span>
-        </div>
-        <div class="break-options" aria-label="休憩2の長さ">${secondOptionButtons}</div>
-        <div class="slot-grid break-time-grid">
-          <label class="time-box time-edit">
-            <span class="time-icon">◷</span>
-            <span>
-              <span class="time-label">休憩開始</span>
-              <input class="time-input" type="time" data-field="secondBreakStart" value="${state.secondBreakStart}" />
-            </span>
-          </label>
-          <label class="time-box time-edit">
-            <span class="time-icon">◴</span>
-            <span>
-              <span class="time-label">休憩終了</span>
-              <input class="time-input" type="time" data-field="secondBreakEnd" value="${state.secondBreakEnd}" />
-            </span>
-          </label>
-        </div>
-      </section>
-
-      <section class="rest-summary card">
-        <div class="clock-face">⏰</div>
-        <div>
-          <strong>今日の休憩</strong>
-          <p>休憩1 ${state.selectedSlot}〜${firstEnd} / 休憩2 ${state.secondBreakStart}〜${state.secondBreakEnd}</p>
-        </div>
-      </section>
-
-      <div class="button-stack">
-        <button class="main-button" type="button" data-action="go-progress">この休憩で進む</button>
-        <button class="ghost-button" type="button" data-action="home">予定に戻る</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderProgress() {
-  const breakIndex = nextBreakIndex();
-  const breakButton = breakIndex >= 0
-    ? `<button class="main-button" type="button" data-action="enter-rest" data-break-index="${breakIndex}">休憩${breakIndex + 1}に入る</button>`
-    : "";
-  return `
-    <article class="page">
-      ${screenTitle("進行中", "レッドカーペットへ向かおう！")}
-      <section class="red-carpet progress-stage" role="img" aria-label="王冠マントのキャラクターがレッドカーペットを歩く">
-        <div class="arch"></div>
-        <div class="cake-goal"></div>
-        <div class="walking-worker" style="${progressCharacterStyle()}" aria-hidden="true"></div>
-        <div class="progress-stage-copy">レッドカーペットへ向かおう！</div>
-      </section>
-
-      <section class="route-card">
-        <div class="route-head">
-          <span>バイト時間　${state.shiftStart}〜${state.shiftEnd}</span>
-          <span>${state.progressPercent}%</span>
-        </div>
-        <div class="meter">
-          <div class="meter-fill" style="width: ${state.progressPercent}%"></div>
-        </div>
-        <div class="route-stats">
-          <div class="mini-stat">
-            経過
-            <span>${formatDuration(minutesBetween(state.shiftStart, state.shiftEnd) - state.leftMinutes)}</span>
-          </div>
-          <div class="mini-stat">
-            残り
-            <span>${shiftLeftText()}</span>
-          </div>
-        </div>
-      </section>
-
-      <div class="button-stack">
-        ${breakButton}
-      </div>
-    </article>
-  `;
-}
-
-function renderRest() {
-  const duration = activeBreakDuration();
-  const total = Math.max(60, duration * 60);
-  const card = cheerCards[state.cheerIndex];
-  return `
-    <article class="page">
-      ${screenTitle("休憩中", "リフレッシュしよう！")}
-      ${artPanel("rest", "休憩中のイラスト")}
-
-      <section class="timer-card card">
-        <strong>${activeBreakLabel()} 残り</strong>
-        <div class="timer" data-timer>${formatTimer(state.restSeconds)}</div>
-        <div class="meter">
-          <div class="meter-fill" data-rest-fill style="width: ${Math.min(100, (state.restSeconds / total) * 100)}%"></div>
-        </div>
-        <p>休憩中も60秒ごとにバイト時間が進みます</p>
-      </section>
-
-      <section class="cheer-card rest-cheer">
-        <strong>応援カード</strong>
-        <p>${escapeHtml(card.body)}</p>
-        <div class="star-row">${renderStars(card.stars)}</div>
-      </section>
-
-      <div class="button-stack">
-        <p class="pill">休憩が終わると自動で戻ります</p>
-      </div>
-    </article>
-  `;
-}
-
-function renderArrival() {
-  return `
-    <article class="page">
-      <section class="notice-card">
-        <span class="notice-icon">🍰</span>
-        <span>
-          <strong>レッドカーペット</strong>
-          <p>おつかれさま！会場に到着しました</p>
-        </span>
-        <span class="notice-now">now</span>
-      </section>
-
-      <h1 class="hero-title">バイト<br />おつかれさま！</h1>
-      <div class="red-arrival-wrap">
-        ${artPanel("arrival", "ごほうび到着のイラスト", "art-large")}
-      </div>
-
-      <section class="ticket-card">
-        <strong>ごほうび到着！</strong>
-        <div class="cake-ticket"></div>
-      </section>
-
-      <div class="button-stack">
-        <button class="main-button" type="button" data-action="claim">ごほうびを受け取る</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderGet() {
-  return `
-    <article class="page">
-      <h1 class="get-title">ごほうびGET!</h1>
-      <p class="pill">レッドカーペット会場に到着しました！</p>
-      <div class="red-arrival-wrap get-carpet-wrap">
-        ${artPanel("get", "ごほうびGETのイラスト", "art-large")}
-      </div>
-
-      <section class="ticket-card ticket-large">
-        <strong>ごほうびケーキ券</strong>
-        <div class="cake-ticket"></div>
-      </section>
-
-      <div class="button-stack">
-        <button class="main-button" type="button" data-action="home">ホームに戻る</button>
-      </div>
-    </article>
-  `;
-}
-
-function renderStars(count) {
-  return Array.from({ length: 3 }, (_, index) => {
-    const cls = index < count ? "star" : "star empty";
-    return `<span class="${cls}">★</span>`;
-  }).join("");
-}
-
-function renderProfile() {
-  const breakRows = canTakeBreak()
-    ? `
-        <div class="profile-row">
-          <strong>休憩1</strong>
-          <span>${state.selectedSlot}〜${breakEndTime()} / ${state.selectedBreak}分</span>
-        </div>
-        <div class="profile-row">
-          <strong>休憩2</strong>
-          <span>${state.secondBreakStart}〜${state.secondBreakEnd} / ${secondBreakDuration()}分</span>
-        </div>
-      `
-    : "";
-  return `
-    <article class="page">
-      ${screenTitle("今日の記録", "バイトとごほうびのログ")}
-      <section class="profile-card">
-        <div class="profile-row">
-          <strong>バイト予定</strong>
-          <span>${state.shiftStart}〜${state.shiftEnd}</span>
-        </div>
-        ${breakRows}
-        <div class="profile-row">
-          <strong>進行度</strong>
-          <span>${state.progressPercent}%</span>
-        </div>
-      </section>
-
-      <div class="button-stack">
-        <button class="main-button" type="button" data-action="home">ホームへ</button>
-        <button class="sub-button" type="button" data-action="reset">今日をリセット</button>
-      </div>
-    </article>
-  `;
-}
-
-function prepareRestTimer(index = 0) {
-  state.activeBreakIndex = index === 1 ? 1 : 0;
-  state.restElapsedSeconds = 0;
-  state.restSeconds = Math.max(60, activeBreakDuration() * 60);
-  startRestClock();
-}
-
-function advanceShift(minutes) {
-  state.leftMinutes = Math.max(0, state.leftMinutes - minutes);
-  const worked = minutesBetween(state.shiftStart, state.shiftEnd) - state.leftMinutes;
-  state.progressPercent = Math.max(0, Math.min(100, Math.round((worked / minutesBetween(state.shiftStart, state.shiftEnd)) * 100)));
-}
-
-function finishRestAndContinue() {
-  markActiveBreakDone();
-  state.restElapsedSeconds = 0;
-  state.restSeconds = 0;
-
-  if (hasShiftTimeLeft()) {
-    setView("progress");
-    showToast("休憩終了。バイトに戻ります");
-    return;
-  }
-
-  setView("arrival");
-  showToast("バイト終了！ごほうび会場に到着しました");
-}
-
-screen.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-action]");
-  if (!button) return;
-
-  const action = button.dataset.action;
-
-  if (action === "start" || action === "open-break") {
-    if (canTakeBreak()) {
-      setView("break");
-      showToast("休憩時間をえらびましょう");
-    } else {
-      syncShiftProgress(true);
-      setView("progress");
-      showToast("6時間未満なので休憩なしで進みます");
-    }
-  }
-
-  if (action === "select-break") {
-    state.selectedBreak = Number(button.dataset.minutes);
-    syncBreakEndFromDuration();
-    saveState();
-    render();
-  }
-
-  if (action === "select-second-break") {
-    state.secondBreakEnd = addMinutes(state.secondBreakStart, Number(button.dataset.minutes));
-    saveState();
-    render();
-  }
-
-  if (action === "select-slot") {
-    state.selectedSlot = button.dataset.slot;
-    syncBreakEndFromDuration();
-    saveState();
-    render();
-  }
-
-  if (action === "go-progress") {
-    syncShiftProgress(true);
-    setView("progress");
-    showToast("レッドカーペットへ向かっています！");
-  }
-
-  if (action === "enter-rest") {
-    const breakIndex = Number(button.dataset.breakIndex ?? nextBreakIndex());
-    if (canTakeBreak() && breakIndex >= 0) {
-      prepareRestTimer(breakIndex);
-      setView("rest");
-      showToast(`${activeBreakLabel()}に入りました`);
-    } else {
-      setView("progress");
-      showToast("今日の休憩は終わっています");
-    }
-  }
-
-  if (action === "finish-no-break") {
-    setView("arrival");
-    showToast("ごほうび会場に到着しました！");
-  }
-
-  if (action === "claim") {
-    let message = "今日のごほうびは受け取り済みです";
-    if (!hasClaimedCakeToday()) {
-      state.ticketCount += 1;
-      state.claimedToday = true;
-      state.claimedDate = todayKey();
-      message = "ケーキ券を受け取りました！";
-    }
-    state.cheerIndex = Math.floor(Math.random() * cheerCards.length);
-    setView("get");
-    showToast(message);
-  }
-
-  if (action === "home") setView("home");
-
-  if (action === "reset") {
-    state.view = "home";
-    state.selectedBreak = 30;
-    state.selectedSlot = "12:00";
-    state.breakEnd = "12:30";
-    state.secondBreakStart = "15:00";
-    state.secondBreakEnd = "15:15";
-    state.break1Done = false;
-    state.break2Done = false;
-    state.activeBreakIndex = 0;
-    state.restElapsedSeconds = 0;
-    progressTickStartedAt = 0;
-    restTickStartedAt = 0;
-    restShiftMinutesAdvanced = 0;
-    syncShiftProgress(true);
-    state.restSeconds = 0;
-    state.cheerIndex = 0;
-    saveState();
-    render();
-    showToast("今日の記録をリセットしました");
-  }
-});
-
-screen.addEventListener("change", (event) => {
-  const input = event.target.closest("[data-field]");
-  if (!input) return;
-
-  const field = input.dataset.field;
-  if (!["shiftStart", "shiftEnd", "breakStart", "breakEnd", "secondBreakStart", "secondBreakEnd"].includes(field)) return;
-  if (!input.value) return;
-
-  if (field === "shiftStart" || field === "shiftEnd") {
-    state[field] = input.value;
-    syncShiftProgress(true);
-    resetBreakTimesForShift();
-  }
-
-  if (field === "breakStart") {
-    state.selectedSlot = input.value;
-    syncBreakDurationFromTimes();
-  }
-
-  if (field === "breakEnd") {
-    state.breakEnd = input.value;
-    syncBreakDurationFromTimes();
-  }
-
-  if (field === "secondBreakStart") {
-    state.secondBreakStart = input.value;
-  }
-
-  if (field === "secondBreakEnd") {
-    state.secondBreakEnd = input.value;
-  }
-
-  state.restSeconds = state.view === "rest" ? Math.max(60, activeBreakDuration() * 60) : state.restSeconds;
-  saveState();
-  render();
-  showToast(field.includes("Break") || field === "breakStart" || field === "breakEnd" ? "休憩時間を更新しました" : "バイト時間を更新しました");
-});
-
-tabbar.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-nav]");
-  if (!button) return;
-  if (button.dataset.nav === "nominate" && !canTakeBreak()) {
-    showToast("6時間未満なので休憩はありません");
-    setView("progress");
-    return;
-  }
-  setView(navToView[button.dataset.nav] || "home");
-});
