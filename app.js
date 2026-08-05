@@ -225,6 +225,16 @@ screen.addEventListener("click", (event) => {
   }
 });
 
+screen.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  if (target.dataset.action !== "pick-photo") return;
+  const file = target.files?.[0];
+  if (!file) return;
+  handlePhotoFile(file);
+  target.value = "";
+});
+
 tabbar.addEventListener("click", (event) => {
   const target = event.target.closest("[data-nav]");
   if (!target) return;
@@ -395,7 +405,9 @@ function renderCamera() {
           <h1>カメラを許可する</h1>
           <p>許可すると、この画面でそのまま写真を撮れます。</p>
           ${state.cameraError ? `<p class="camera-error">${escapeHtml(state.cameraError)}</p>` : ""}
-          <button class="primary-button" type="button" data-action="request-camera">許可する</button>
+          <input class="photo-input" id="photoInput" type="file" accept="image/*" capture="environment" data-action="pick-photo" />
+          <label class="primary-button file-capture-button" for="photoInput">許可して写真を撮る</label>
+          <button class="secondary-button file-capture-button" type="button" data-action="request-camera">ライブカメラを開く</button>
         </section>
       </div>
     </div>`;
@@ -415,7 +427,8 @@ function renderCamera() {
         <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
       </div>
       <div class="camera-bottom">
-        <span class="camera-thumb empty-thumb" aria-hidden="true"></span>
+        <label class="camera-thumb file-thumb" for="livePhotoInput" aria-label="写真を撮る">▧</label>
+        <input class="photo-input" id="livePhotoInput" type="file" accept="image/*" capture="environment" data-action="pick-photo" />
         <button class="shutter" type="button" data-action="capture" aria-label="撮影する"></button>
         <span class="camera-icon" aria-hidden="true">▢</span>
       </div>
@@ -706,6 +719,48 @@ function captureScene() {
   navigate("choose");
 }
 
+function handlePhotoFile(file) {
+  if (!file.type.startsWith("image/")) {
+    showToast("写真ファイルを選んでください。");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => captureImageElement(image);
+    image.onerror = () => showToast("写真を読み込めませんでした。");
+    image.src = String(reader.result || "");
+  };
+  reader.onerror = () => showToast("写真を読み込めませんでした。");
+  reader.readAsDataURL(file);
+}
+
+function captureImageElement(image) {
+  const maxWidth = 560;
+  const scale = Math.min(maxWidth / image.naturalWidth, 1);
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.drawImage(image, 0, 0, width, height);
+
+  const analysis = analyzeScene(context, width, height);
+  state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.66);
+  state.sceneAnalysis = analysis;
+  state.candidateWordIds = chooseCandidateWordIds(analysis);
+  state.selectedWordId = "";
+  state.activeEntryId = "";
+  state.cameraReady = false;
+  state.cameraError = "";
+  state.savingEntry = false;
+  stopCamera();
+  saveState();
+  if (navigator.vibrate) navigator.vibrate(35);
+  navigate("choose");
+}
 function selectWord(wordId) {
   if (!getWord(wordId)) return;
   state.selectedWordId = wordId;
@@ -1119,6 +1174,11 @@ function escapeHtml(value) {
     '"': "&quot;",
   }[char]));
 }
+
+
+
+
+
 
 
 

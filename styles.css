@@ -1031,3 +1031,25 @@ button {
   bottom: 14px;
   font-size: 12px;
 }
+
+.photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-capture-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.file-thumb {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.18);
+}
