@@ -1006,3 +1006,28 @@ button {
   min-width: 0;
   padding-inline: 12px;
 }
+
+.analysis-note {
+  margin: 10px 2px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.map-pin.current {
+  color: #fff;
+  background: linear-gradient(135deg, #7665e8 0%, #4db69c 100%);
+  border-color: rgba(255, 255, 255, 0.95);
+  transform: translate(-50%, -50%) scale(1.07);
+  z-index: 2;
+}
+
+.map-pin.current small {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.map-note {
+  bottom: 14px;
+  font-size: 12px;
+}

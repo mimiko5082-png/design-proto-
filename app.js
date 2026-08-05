@@ -79,13 +79,106 @@ const words = [
   },
 ];
 
-const pollRows = [
-  { id: "seihitsu", word: "静謐", reading: "せいひつ", text: "静かで、心が落ち着く。", percent: 38, image: "./assets/kotoba-mist.png" },
-  { id: "yoin", word: "余韻", reading: "よいん", text: "あとに残る、やさしい響き。", percent: 26, image: "./assets/kotoba-forest.png" },
-  { id: "kyoshu", word: "郷愁", reading: "きょうしゅう", text: "なつかしく、胸があたたかくなる。", percent: 20, image: "./assets/kotoba-lake.png" },
-  { id: "yakudo", word: "躍動", reading: "やくどう", text: "いのちが動き出すような感じ。", percent: 16, image: "./assets/kotoba-sunset.png" },
+const extraWords = [
+  {
+    id: "yuubae",
+    word: "夕映え",
+    reading: "ゆうばえ",
+    image: "./assets/kotoba-sunset.png",
+    place: "夕方の空",
+    short: "夕日の光で、景色が美しく照り輝くこと。",
+    origin: "夕方の光が建物や雲に映えて、いつもの景色を少し特別に見せる時に使われる言葉です。明るさの終わり際に残る美しさを含んでいます。",
+    works: [["島崎藤村『千曲川のスケッチ』", "夕映えのなかで、川面は淡く光っていた。"], ["国木田独歩『武蔵野』", "野の色が夕日の中で静かに映えた。"]],
+  },
+  {
+    id: "komorebi",
+    word: "木漏れ日",
+    reading: "こもれび",
+    image: "./assets/kotoba-forest.png",
+    place: "木の下の道",
+    short: "木々の間からこぼれる、やわらかな光。",
+    origin: "木の葉のすきまを通って地面に届く日の光を表す言葉です。光そのものだけでなく、葉の揺れや風の気配まで一緒に思い出させます。",
+    works: [["国木田独歩『武蔵野』", "林の中に、細かな光が落ちていた。"], ["宮沢賢治『注文の多い料理店』", "木々の影が、明るい斑点をつくった。"]],
+  },
+  {
+    id: "ryokuin",
+    word: "緑陰",
+    reading: "りょくいん",
+    image: "./assets/kotoba-forest.png",
+    place: "緑の木陰",
+    short: "青々とした木々がつくる、涼しい影。",
+    origin: "夏の強い光のなかで、草木の緑がつくる陰を表します。涼しさや休む場所の感覚も一緒に持った言葉です。",
+    works: [["正岡子規『墨汁一滴』", "緑陰に腰をおろし、風を待った。"], ["寺田寅彦『柿の種』", "葉の影が、庭に濃く落ちていた。"]],
+  },
+  {
+    id: "sokyu",
+    word: "蒼穹",
+    reading: "そうきゅう",
+    image: "./assets/kotoba-lake.png",
+    place: "広い空",
+    short: "青く高く広がる空。",
+    origin: "蒼は深い青、穹は弓なりに広がる空のこと。見上げた時に空の高さまで感じるような写真に向いています。",
+    works: [["萩原朔太郎『月に吠える』", "蒼い空が、遠くまで張りつめていた。"], ["宮沢賢治『春と修羅』", "高い空の奥へ、光が吸い込まれた。"]],
+  },
+  {
+    id: "seicho",
+    word: "清澄",
+    reading: "せいちょう",
+    image: "./assets/kotoba-lake.png",
+    place: "澄んだ水辺",
+    short: "空気や水が、澄んで清らかなこと。",
+    origin: "濁りがなく、すっきりと澄んでいる様子を表します。青空、水面、朝の光など、透明感のある景色に合う言葉です。",
+    works: [["志賀直哉『暗夜行路』", "清澄な空気が、胸の奥まで届いた。"], ["芥川龍之介『蜜柑』", "明るく澄んだ景色が窓の外に広がった。"]],
+  },
+  {
+    id: "shigure",
+    word: "時雨",
+    reading: "しぐれ",
+    image: "./assets/kotoba-mist.png",
+    place: "雨の通り道",
+    short: "降ったり止んだりする、静かな通り雨。",
+    origin: "短く降っては止む雨を表す言葉です。暗い空や濡れた道、少し冷たい空気の写真に寄り添います。",
+    works: [["松尾芭蕉 俳句", "初しぐれ、空の気配が変わっていく。"], ["泉鏡花『高野聖』", "雨の音だけが、山道に残った。"]],
+  },
+  {
+    id: "kirameki",
+    word: "煌めき",
+    reading: "きらめき",
+    image: "./assets/kotoba-lake.png",
+    place: "光る水面",
+    short: "小さな光が、きらきらと瞬くこと。",
+    origin: "光が細かく反射して、一瞬ごとに表情を変える様子を表します。水面、窓、夜景、強い日差しの写真に似合います。",
+    works: [["谷崎潤一郎『陰翳礼讃』", "光は、暗がりの中で細くきらめいた。"], ["小川未明『赤いろうそくと人魚』", "海の面が小さく光った。"]],
+  },
+  {
+    id: "kageboshi",
+    word: "影法師",
+    reading: "かげぼうし",
+    image: "./assets/kotoba-mist.png",
+    place: "影の伸びる道",
+    short: "光に照らされてできる、人や物の影。",
+    origin: "影を人の形になぞらえた言葉です。低い日差しや、濃い影が伸びる写真に少し物語を加えます。",
+    works: [["小泉八雲『怪談』", "影法師だけが、道の上を長く歩いた。"], ["宮沢賢治『銀河鉄道の夜』", "黒い影が、灯りのそばに立っていた。"]],
+  },
 ];
 
+words.push(...extraWords);
+
+const wordProfiles = {
+  akane: { warm: 1.15, red: 1.1, bright: 0.45, vivid: 0.3 },
+  kouka: { warm: 0.9, red: 1.2, vivid: 0.7, quiet: 0.2 },
+  tasogare: { warm: 0.6, dark: 0.75, quiet: 0.6, contrast: 0.25 },
+  hakumei: { quiet: 0.95, cool: 0.5, dark: 0.45, bright: 0.25 },
+  yoin: { quiet: 0.9, warm: 0.35, dark: 0.3, contrast: 0.2 },
+  yuubae: { warm: 1.05, bright: 0.85, red: 0.65, vivid: 0.35 },
+  komorebi: { green: 1.15, bright: 0.7, warm: 0.25, contrast: 0.35 },
+  ryokuin: { green: 1.25, dark: 0.35, quiet: 0.45 },
+  sokyu: { blue: 1.25, bright: 0.65, vivid: 0.45 },
+  seicho: { blue: 0.8, bright: 0.75, quiet: 0.55, vivid: 0.25 },
+  shigure: { dark: 0.8, cool: 0.85, quiet: 0.65, blue: 0.35 },
+  kirameki: { bright: 1, contrast: 0.75, vivid: 0.65 },
+  kageboshi: { dark: 1, contrast: 0.95, warm: 0.25 }
+};
 const notificationMessages = [
   "いま見ている景色に、まだ知らない言葉があるかもしれません。",
   "森からの合図です。少しだけ空を見上げてみませんか。",
@@ -96,10 +189,13 @@ const notificationMessages = [
 const state = {
   view: "home",
   selectedWordId: "",
+  candidateWordIds: [],
   capturedPhoto: "",
+  sceneAnalysis: null,
   activeEntryId: "",
   cameraReady: false,
   cameraError: "",
+  savingEntry: false,
   entries: [],
   notifications: {
     enabled: false,
@@ -139,6 +235,8 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     if (Array.isArray(saved.entries)) state.entries = saved.entries;
+    if (Array.isArray(saved.candidateWordIds)) state.candidateWordIds = saved.candidateWordIds;
+    if (saved.sceneAnalysis && typeof saved.sceneAnalysis === "object") state.sceneAnalysis = saved.sceneAnalysis;
     if (saved.notifications && typeof saved.notifications === "object") {
       state.notifications = {
         ...state.notifications,
@@ -157,6 +255,7 @@ function loadState() {
 
   if (!isKnownView(state.view)) state.view = "home";
   if (state.selectedWordId && !getWord(state.selectedWordId)) state.selectedWordId = "";
+  state.candidateWordIds = state.candidateWordIds.filter((id) => getWord(id)).slice(0, 5);
 }
 
 function saveState() {
@@ -165,7 +264,9 @@ function saveState() {
     JSON.stringify({
       view: state.view,
       selectedWordId: state.selectedWordId,
+      candidateWordIds: state.candidateWordIds,
       capturedPhoto: state.capturedPhoto,
+      sceneAnalysis: state.sceneAnalysis,
       activeEntryId: state.activeEntryId,
       entries: state.entries,
       notifications: state.notifications,
@@ -180,7 +281,6 @@ function isKnownView(view) {
 function navigate(view) {
   if (!isKnownView(view)) return;
   if (state.view === "camera" && view !== "camera") stopCamera();
-  if (view !== "detail") state.activeEntryId = "";
   state.view = view;
   saveState();
   render();
@@ -326,24 +426,25 @@ function renderCamera() {
 function renderChoose() {
   const selectedId = state.selectedWordId;
   const photo = getCurrentPhoto();
+  const candidateWords = getCandidateWords();
   return `<div class="view choose-view">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="camera" aria-label="戻る">‹</button>
       <h1 class="page-title">この景色を表す言葉</h1>
-      <span class="icon-button" aria-hidden="true">5</span>
+      <span class="icon-button" aria-hidden="true">${candidateWords.length}</span>
     </header>
     <div class="photo-card">
       <img src="${escapeHtml(photo)}" alt="撮影した景色" />
     </div>
+    <p class="analysis-note">撮った写真の色と明るさから、近い言葉を選びました。</p>
     <div class="word-list">
-      ${words.map((word) => renderWordOption(word, selectedId)).join("")}
+      ${candidateWords.map((word) => renderWordOption(word, selectedId)).join("")}
     </div>
     <div class="action-area">
-      <button class="primary-button" type="button" data-action="save-word" ${selectedId ? "" : "disabled"}>この言葉で保存する</button>
+      <button class="primary-button" type="button" data-action="open-detail" ${selectedId ? "" : "disabled"}>いちばん近い言葉を選ぶ</button>
     </div>
   </div>`;
 }
-
 function renderWordOption(word, selectedId) {
   const selected = word.id === selectedId;
   return `<button class="word-option ${selected ? "selected" : ""}" type="button" data-action="select-word" data-word-id="${word.id}">
@@ -357,12 +458,13 @@ function renderWordOption(word, selectedId) {
 }
 
 function renderDetail() {
-  const word = getSelectedWord() || words[0];
+  const word = getSelectedWord() || getCandidateWords()[0] || words[0];
   const detailPhoto = getDetailPhoto(word);
+  const isSavedEntry = Boolean(state.activeEntryId && getEntry(state.activeEntryId));
   return `<div class="view detail-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">‹</button>
-      <h1 class="page-title">ことばの世界</h1>
+      <button class="back-button" type="button" data-nav="${isSavedEntry ? "notebook" : "choose"}" aria-label="戻る">‹</button>
+      <h1 class="page-title">言葉の世界</h1>
       <button class="icon-button" type="button" data-action="share-word" aria-label="共有">↗</button>
     </header>
 
@@ -385,9 +487,10 @@ function renderDetail() {
         ${word.works.map((item) => renderWorkItem(item, word.image)).join("")}
       </div>
     </section>
+
+    ${isSavedEntry ? "" : `<div class="action-area"><button class="primary-button" type="button" data-action="save-word" ${state.savingEntry ? "disabled" : ""}>${state.savingEntry ? "保存しています" : "この言葉を手帳に残す"}</button></div>`}
   </div>`;
 }
-
 function renderWorkItem(item, image) {
   return `<div class="work-item">
     <img src="${image}" alt="作品に添える景色" />
@@ -396,27 +499,27 @@ function renderWorkItem(item, image) {
 }
 
 function renderPoll() {
+  const rows = getPollRows();
   return `<div class="view poll-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
+      <button class="back-button" type="button" data-nav="detail" aria-label="戻る">‹</button>
       <h1 class="page-title">みんなは、どう感じた？</h1>
       <span class="icon-button" aria-hidden="true">%</span>
     </header>
     <p class="poll-intro">この景色に対して、みんなはどんな言葉を選んでいるでしょう。</p>
     <div class="poll-list">
-      ${pollRows.map(renderPollRow).join("")}
+      ${rows.map(renderPollRow).join("")}
     </div>
     <section class="origin-card">
       <div class="card-label">同じ景色でも、感じ方は人それぞれ。</div>
       <p>言葉が増えるほど、世界の見え方が少しずつ豊かになります。</p>
     </section>
     <div class="action-area split-actions">
-      <button class="secondary-button" type="button" data-nav="map">地図を見る</button>
-      <button class="primary-button" type="button" data-nav="notebook">ことば帳を見る</button>
+      <button class="secondary-button" type="button" data-nav="notebook">ことば帳</button>
+      <button class="primary-button" type="button" data-nav="map">言葉の地図を見る</button>
     </div>
   </div>`;
 }
-
 function renderPollRow(row) {
   return `<div class="poll-row" style="--pct:${row.percent}%">
     <img src="${row.image}" alt="${row.word}の景色" />
@@ -460,40 +563,37 @@ function renderBookRow(entry) {
 }
 
 function renderMap() {
-  const pins = state.entries.slice(0, 4).map((entry, index) => {
-    const positions = [
-      ["50%", "33%"],
-      ["67%", "51%"],
-      ["34%", "58%"],
-      ["56%", "70%"],
-    ];
-    const [x, y] = positions[index];
-    return `<button class="map-pin" type="button" style="--x:${x};--y:${y}" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
-      ${escapeHtml(entry.word)}<small>${escapeHtml(entry.place)}</small>
+  const entries = state.entries.slice(0, 12);
+  const locatedCount = entries.filter((entry) => entry.location).length;
+  const pins = entries.map((entry, index) => {
+    const [x, y] = getPinPosition(entry, entries, index);
+    const isCurrent = entry.entryId === state.activeEntryId;
+    return `<button class="map-pin ${isCurrent ? "current" : ""}" type="button" style="--x:${x}%;--y:${y}%" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
+      ${escapeHtml(entry.word)}<small>${escapeHtml(entry.location ? "今日撮った場所" : entry.place)}</small>
     </button>`;
   });
 
   return `<div class="view map-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
-      <h1 class="page-title">ことばの地図</h1>
+      <button class="back-button" type="button" data-nav="poll" aria-label="戻る">‹</button>
+      <h1 class="page-title">言葉の地図</h1>
       <span class="icon-button" aria-hidden="true">⌖</span>
     </header>
-    <p class="poll-intro">あなたが出会ったことばが、地図の上に咲いていきます。</p>
+    <p class="poll-intro">今日撮った場所に、保存した言葉が残っていきます。</p>
     <section class="map-card">
       <img src="./assets/kotoba-map.png" alt="ことばが咲いていく地図" />
       ${pins.join("")}
-      ${pins.length ? "" : `<div class="map-empty">まだ地図には何もありません。景色を撮ると、ここに言葉が増えていきます。</div>`}
+      ${pins.length ? `<div class="map-empty map-note">${locatedCount ? "位置情報つきで保存しました。" : "位置情報が使えない時は、地図上の仮の場所に保存します。"}</div>` : `<div class="map-empty">まだ地図には何もありません。景色を撮ると、ここに言葉が増えていきます。</div>`}
     </section>
   </div>`;
 }
-
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === "open-camera") openCameraView();
   if (action === "request-camera") requestCamera();
   if (action === "capture") captureScene();
   if (action === "select-word") selectWord(target.dataset.wordId);
+  if (action === "open-detail") openSelectedWordDetail();
   if (action === "save-word") saveSelectedWord();
   if (action === "open-entry") openEntry(target.dataset.entryId, target.dataset.wordId);
   if (action === "request-notifications") requestNotifications();
@@ -504,10 +604,13 @@ function openCameraView() {
   stopCamera();
   state.view = "camera";
   state.selectedWordId = "";
+  state.candidateWordIds = [];
+  state.sceneAnalysis = null;
   state.activeEntryId = "";
   state.capturedPhoto = "";
   state.cameraReady = false;
   state.cameraError = "";
+  state.savingEntry = false;
   saveState();
   render();
 }
@@ -578,21 +681,25 @@ function captureScene() {
     return;
   }
 
-  const maxWidth = 760;
+  const maxWidth = 560;
   const scale = Math.min(maxWidth / video.videoWidth, 1);
   const width = Math.round(video.videoWidth * scale);
   const height = Math.round(video.videoHeight * scale);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const context = canvas.getContext("2d");
+  const context = canvas.getContext("2d", { willReadFrequently: true });
   context.drawImage(video, 0, 0, width, height);
 
-  state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.74);
+  const analysis = analyzeScene(context, width, height);
+  state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.66);
+  state.sceneAnalysis = analysis;
+  state.candidateWordIds = chooseCandidateWordIds(analysis);
   state.selectedWordId = "";
   state.activeEntryId = "";
   state.cameraReady = false;
   state.cameraError = "";
+  state.savingEntry = false;
   stopCamera();
   saveState();
   if (navigator.vibrate) navigator.vibrate(35);
@@ -607,21 +714,36 @@ function selectWord(wordId) {
   render();
 }
 
+function openSelectedWordDetail() {
+  if (!getSelectedWord()) {
+    showToast("いちばん近い言葉をひとつ選んでください。");
+    return;
+  }
+  navigate("detail");
+}
+
 function openEntry(entryId, fallbackWordId) {
   const entry = getEntry(entryId) || state.entries.find((item) => item.wordId === fallbackWordId);
   if (!entry || !getWord(entry.wordId)) return;
   state.selectedWordId = entry.wordId;
   state.activeEntryId = entry.entryId;
   state.capturedPhoto = entry.image;
+  state.sceneAnalysis = entry.analysis || null;
+  state.candidateWordIds = entry.candidateWordIds || [entry.wordId];
   navigate("detail");
 }
 
-function saveSelectedWord() {
+async function saveSelectedWord() {
   const word = getSelectedWord();
   if (!word) {
     showToast("近い言葉をひとつ選んでください。");
     return;
   }
+  if (state.savingEntry) return;
+
+  state.savingEntry = true;
+  render();
+  const location = await getCurrentLocation();
 
   const entry = {
     entryId: `${word.id}-${Date.now()}`,
@@ -630,15 +752,19 @@ function saveSelectedWord() {
     reading: word.reading,
     short: word.short,
     image: getCurrentPhoto(),
-    place: state.capturedPhoto ? "撮影した景色" : word.place,
+    place: location ? "今日撮った場所" : "撮影した景色",
+    location,
+    analysis: state.sceneAnalysis,
+    candidateWordIds: state.candidateWordIds,
     createdAt: new Date().toISOString(),
   };
 
-  state.entries = [entry, ...state.entries].slice(0, 24);
+  state.entries = [entry, ...state.entries].slice(0, 12);
   state.activeEntryId = entry.entryId;
+  state.savingEntry = false;
   state.view = "poll";
   saveState();
-  showToast("ことば帳に保存しました。");
+  showToast(location ? "ことばと場所を保存しました。" : "ことばを保存しました。");
   render();
 }
 
@@ -652,6 +778,119 @@ function shareSelectedWord() {
   }
   navigator.clipboard?.writeText(text);
   showToast("共有用の文章をコピーしました。");
+}
+
+function analyzeScene(context, width, height) {
+  const data = context.getImageData(0, 0, width, height).data;
+  const step = Math.max(12, Math.floor(Math.sqrt(width * height) / 32));
+  let count = 0;
+  let totalR = 0;
+  let totalG = 0;
+  let totalB = 0;
+  let totalBrightness = 0;
+  let totalSaturation = 0;
+  const brightnessSamples = [];
+
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const brightness = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      const saturation = rgbSaturation(r, g, b);
+      count += 1;
+      totalR += r;
+      totalG += g;
+      totalB += b;
+      totalBrightness += brightness;
+      totalSaturation += saturation;
+      brightnessSamples.push(brightness);
+    }
+  }
+
+  const avgR = totalR / count;
+  const avgG = totalG / count;
+  const avgB = totalB / count;
+  const brightness = totalBrightness / count;
+  const saturation = totalSaturation / count;
+  const variance = brightnessSamples.reduce((sum, value) => sum + (value - brightness) ** 2, 0) / count;
+  const contrast = clamp(Math.sqrt(variance) * 2.8);
+
+  return {
+    brightness,
+    saturation,
+    bright: clamp((brightness - 0.34) / 0.58),
+    dark: clamp((0.72 - brightness) / 0.62),
+    vivid: clamp(saturation * 1.35),
+    quiet: clamp(1 - saturation * 1.15),
+    warm: clamp((avgR * 1.08 + avgG * 0.28 - avgB * 1.08) / 190 + 0.34),
+    cool: clamp((avgB + avgG * 0.25 - avgR * 0.9) / 180 + 0.34),
+    green: clamp((avgG - Math.max(avgR, avgB) * 0.72) / 115 + 0.32),
+    blue: clamp((avgB - avgR * 0.62 + (avgB - avgG) * 0.26) / 145 + 0.32),
+    red: clamp((avgR - avgG * 0.78 - avgB * 0.52) / 125 + 0.32),
+    contrast,
+  };
+}
+
+function rgbSaturation(r, g, b) {
+  const max = Math.max(r, g, b) / 255;
+  const min = Math.min(r, g, b) / 255;
+  if (max === 0) return 0;
+  return (max - min) / max;
+}
+
+function chooseCandidateWordIds(analysis) {
+  return words
+    .map((word, index) => ({ word, index, score: scoreWord(word, analysis) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, 5)
+    .map((item) => item.word.id);
+}
+
+function scoreWord(word, analysis) {
+  const profile = wordProfiles[word.id] || {};
+  return Object.entries(profile).reduce((score, [key, weight]) => score + (analysis[key] || 0) * weight, 0);
+}
+
+function getCandidateWords() {
+  if (!state.candidateWordIds.length) {
+    state.candidateWordIds = chooseCandidateWordIds(state.sceneAnalysis || defaultAnalysis());
+  }
+  return state.candidateWordIds.map(getWord).filter(Boolean).slice(0, 5);
+}
+
+function getPollRows() {
+  const candidateIds = getCandidateWords().map((word) => word.id);
+  const orderedIds = [state.selectedWordId, ...candidateIds.filter((id) => id !== state.selectedWordId)].filter(Boolean).slice(0, 4);
+  const percents = [38, 26, 20, 16];
+  return orderedIds.map((id, index) => {
+    const word = getWord(id);
+    return {
+      word: word.word,
+      reading: word.reading,
+      text: word.short,
+      image: index === 0 ? getCurrentPhoto() : word.image,
+      percent: percents[index],
+    };
+  });
+}
+
+function defaultAnalysis() {
+  return {
+    brightness: 0.62,
+    saturation: 0.45,
+    bright: 0.55,
+    dark: 0.28,
+    vivid: 0.48,
+    quiet: 0.48,
+    warm: 0.62,
+    cool: 0.34,
+    green: 0.32,
+    blue: 0.34,
+    red: 0.46,
+    contrast: 0.42,
+  };
 }
 
 function getSelectedWord() {
@@ -677,6 +916,56 @@ function getDetailPhoto(word) {
   return word.image;
 }
 
+function getCurrentLocation() {
+  if (!navigator.geolocation) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: roundCoord(position.coords.latitude),
+          longitude: roundCoord(position.coords.longitude),
+          accuracy: Math.round(position.coords.accuracy || 0),
+        });
+      },
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 180000 }
+    );
+  });
+}
+
+function getPinPosition(entry, entries, index) {
+  if (!entry.location) return fallbackPinPosition(index);
+
+  const locatedEntries = entries.filter((item) => item.location);
+  const center = getMapCenter(locatedEntries);
+  const offset = index * 4;
+  const x = clamp(50 + (entry.location.longitude - center.longitude) * 85000 + offset, 16, 84);
+  const y = clamp(45 - (entry.location.latitude - center.latitude) * 110000 + offset * 0.4, 16, 82);
+  return [roundPercent(x), roundPercent(y)];
+}
+
+function getMapCenter(entries) {
+  const latitude = entries.reduce((sum, entry) => sum + entry.location.latitude, 0) / entries.length;
+  const longitude = entries.reduce((sum, entry) => sum + entry.location.longitude, 0) / entries.length;
+  return { latitude, longitude };
+}
+
+function fallbackPinPosition(index) {
+  const positions = [[52, 42], [67, 54], [34, 59], [56, 70], [42, 31], [73, 36]];
+  return positions[index % positions.length];
+}
+
+function roundCoord(value) {
+  return Math.round(value * 1000000) / 1000000;
+}
+
+function roundPercent(value) {
+  return Math.round(value * 10) / 10;
+}
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value));
+}
 function cameraErrorMessage(error) {
   if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
     return "カメラの許可が必要です。ブラウザの表示で許可を押してください。";
@@ -830,5 +1119,18 @@ function escapeHtml(value) {
     '"': "&quot;",
   }[char]));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
