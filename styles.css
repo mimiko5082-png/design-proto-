@@ -924,3 +924,85 @@ button {
 
 
 
+
+.camera-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #111722;
+}
+
+.permission-overlay {
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(12, 18, 30, 0.28), rgba(12, 18, 30, 0.18) 38%, rgba(12, 18, 30, 0.64));
+}
+
+.camera-permission {
+  margin: auto 0 38px;
+  padding: 24px 20px;
+  border-radius: 26px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 45px rgba(9, 12, 20, 0.24);
+  text-align: center;
+  backdrop-filter: blur(18px);
+}
+
+.camera-permission span {
+  display: block;
+  color: var(--green-deep);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.camera-permission h1 {
+  margin: 8px 0 7px;
+  color: var(--deep);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 30px;
+  letter-spacing: 0;
+}
+
+.camera-permission p {
+  margin: 0 auto 16px;
+  max-width: 250px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.camera-permission .primary-button {
+  width: 100%;
+}
+
+.camera-error {
+  color: #b34047 !important;
+  background: rgba(255, 238, 239, 0.92);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.empty-thumb {
+  display: block;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.split-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.split-actions .primary-button,
+.split-actions .secondary-button {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding-inline: 12px;
+}

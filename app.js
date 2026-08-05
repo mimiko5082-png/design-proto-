@@ -3,6 +3,9 @@ const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
 
+let cameraStream = null;
+let cameraToken = 0;
+
 const words = [
   {
     id: "akane",
@@ -92,7 +95,11 @@ const notificationMessages = [
 
 const state = {
   view: "home",
-  selectedWordId: "akane",
+  selectedWordId: "",
+  capturedPhoto: "",
+  activeEntryId: "",
+  cameraReady: false,
+  cameraError: "",
   entries: [],
   notifications: {
     enabled: false,
@@ -141,13 +148,15 @@ function loadState() {
       };
     }
     if (typeof saved.selectedWordId === "string") state.selectedWordId = saved.selectedWordId;
+    if (typeof saved.capturedPhoto === "string") state.capturedPhoto = saved.capturedPhoto;
+    if (typeof saved.activeEntryId === "string") state.activeEntryId = saved.activeEntryId;
     if (typeof saved.view === "string") state.view = saved.view;
   } catch {
     state.view = "home";
   }
 
   if (!isKnownView(state.view)) state.view = "home";
-  if (!getWord(state.selectedWordId)) state.selectedWordId = words[0].id;
+  if (state.selectedWordId && !getWord(state.selectedWordId)) state.selectedWordId = "";
 }
 
 function saveState() {
@@ -156,6 +165,8 @@ function saveState() {
     JSON.stringify({
       view: state.view,
       selectedWordId: state.selectedWordId,
+      capturedPhoto: state.capturedPhoto,
+      activeEntryId: state.activeEntryId,
       entries: state.entries,
       notifications: state.notifications,
     })
@@ -168,6 +179,8 @@ function isKnownView(view) {
 
 function navigate(view) {
   if (!isKnownView(view)) return;
+  if (state.view === "camera" && view !== "camera") stopCamera();
+  if (view !== "detail") state.activeEntryId = "";
   state.view = view;
   saveState();
   render();
@@ -175,6 +188,8 @@ function navigate(view) {
 
 function render() {
   ensureDailySchedule(false);
+  if (state.view !== "camera") stopCamera();
+
   const views = {
     home: renderHome,
     camera: renderCamera,
@@ -187,12 +202,17 @@ function render() {
 
   screen.innerHTML = views[state.view]();
   updateTabbar();
+
+  if (state.view === "camera" && state.cameraReady) startCamera();
 }
 
 function updateTabbar() {
   tabbar.hidden = state.view === "camera";
   tabbar.querySelectorAll(".tab").forEach((tab) => {
-    tab.classList.toggle("active", tab.dataset.nav === state.view || (state.view === "choose" && tab.dataset.nav === "home") || (state.view === "detail" && tab.dataset.nav === "home") || (state.view === "poll" && tab.dataset.nav === "home"));
+    const active =
+      tab.dataset.nav === state.view ||
+      (["choose", "detail", "poll"].includes(state.view) && tab.dataset.nav === "home");
+    tab.classList.toggle("active", active);
   });
 }
 
@@ -255,20 +275,39 @@ function renderNotificationCard() {
 }
 
 function renderRecentCard(entry) {
-  return `<button class="recent-card" type="button" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+  return `<button class="recent-card" type="button" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
     <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
     <span>${escapeHtml(entry.word)}</span>
   </button>`;
 }
 
 function renderCamera() {
-  return `<div class="view full-camera">
-    <img class="camera-photo" src="./assets/kotoba-sunset.png" alt="撮影している夕暮れの景色" />
+  if (!state.cameraReady) {
+    return `<div class="view full-camera">
+      <img class="camera-photo" src="./assets/kotoba-sunset.png" alt="カメラ許可前の景色" />
+      <div class="camera-overlay permission-overlay">
+        <div class="camera-top">
+          <button class="close-button" type="button" data-nav="home" aria-label="閉じる">×</button>
+          <span class="camera-flash" aria-hidden="true">⌁</span>
+        </div>
+        <section class="camera-permission">
+          <span>02　景色を撮る</span>
+          <h1>カメラを許可する</h1>
+          <p>許可すると、この画面でそのまま写真を撮れます。</p>
+          ${state.cameraError ? `<p class="camera-error">${escapeHtml(state.cameraError)}</p>` : ""}
+          <button class="primary-button" type="button" data-action="request-camera">許可する</button>
+        </section>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="view full-camera camera-live">
+    <video class="camera-video" id="cameraVideo" autoplay playsinline muted></video>
     <div class="camera-overlay">
       <div>
         <div class="camera-top">
           <button class="close-button" type="button" data-nav="home" aria-label="閉じる">×</button>
-          <button class="camera-flash" type="button" aria-label="フラッシュ">⌁</button>
+          <span class="camera-flash" aria-hidden="true">⌁</span>
         </div>
         <div class="camera-prompt">この景色に、どんな言葉があるだろう？</div>
       </div>
@@ -276,7 +315,7 @@ function renderCamera() {
         <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
       </div>
       <div class="camera-bottom">
-        <img class="camera-thumb" src="./assets/kotoba-sunset.png" alt="直前の景色" />
+        <span class="camera-thumb empty-thumb" aria-hidden="true"></span>
         <button class="shutter" type="button" data-action="capture" aria-label="撮影する"></button>
         <span class="camera-icon" aria-hidden="true">▢</span>
       </div>
@@ -285,7 +324,8 @@ function renderCamera() {
 }
 
 function renderChoose() {
-  const selectedId = state.selectedWordId || words[0].id;
+  const selectedId = state.selectedWordId;
+  const photo = getCurrentPhoto();
   return `<div class="view choose-view">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="camera" aria-label="戻る">‹</button>
@@ -293,13 +333,13 @@ function renderChoose() {
       <span class="icon-button" aria-hidden="true">5</span>
     </header>
     <div class="photo-card">
-      <img src="./assets/kotoba-sunset.png" alt="夕暮れの川辺の景色" />
+      <img src="${escapeHtml(photo)}" alt="撮影した景色" />
     </div>
     <div class="word-list">
       ${words.map((word) => renderWordOption(word, selectedId)).join("")}
     </div>
     <div class="action-area">
-      <button class="primary-button" type="button" data-action="open-detail">いちばん近い言葉を選ぶ</button>
+      <button class="primary-button" type="button" data-action="save-word" ${selectedId ? "" : "disabled"}>この言葉で保存する</button>
     </div>
   </div>`;
 }
@@ -317,16 +357,17 @@ function renderWordOption(word, selectedId) {
 }
 
 function renderDetail() {
-  const word = getSelectedWord();
+  const word = getSelectedWord() || words[0];
+  const detailPhoto = getDetailPhoto(word);
   return `<div class="view detail-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="choose" aria-label="戻る">‹</button>
+      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">‹</button>
       <h1 class="page-title">ことばの世界</h1>
       <button class="icon-button" type="button" data-action="share-word" aria-label="共有">↗</button>
     </header>
 
     <section class="word-detail-top">
-      <img class="detail-photo" src="${word.image}" alt="${word.word}に近い景色" />
+      <img class="detail-photo" src="${escapeHtml(detailPhoto)}" alt="${word.word}に近い景色" />
       <div class="word-heading">
         <h1>${word.word}</h1>
         <p>${word.reading}　${word.short}</p>
@@ -344,10 +385,6 @@ function renderDetail() {
         ${word.works.map((item) => renderWorkItem(item, word.image)).join("")}
       </div>
     </section>
-
-    <div class="action-area">
-      <button class="primary-button" type="button" data-action="save-word">このことばを手帳に残す</button>
-    </div>
   </div>`;
 }
 
@@ -361,7 +398,7 @@ function renderWorkItem(item, image) {
 function renderPoll() {
   return `<div class="view poll-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="detail" aria-label="戻る">‹</button>
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
       <h1 class="page-title">みんなは、どう感じた？</h1>
       <span class="icon-button" aria-hidden="true">%</span>
     </header>
@@ -373,7 +410,8 @@ function renderPoll() {
       <div class="card-label">同じ景色でも、感じ方は人それぞれ。</div>
       <p>言葉が増えるほど、世界の見え方が少しずつ豊かになります。</p>
     </section>
-    <div class="action-area">
+    <div class="action-area split-actions">
+      <button class="secondary-button" type="button" data-nav="map">地図を見る</button>
       <button class="primary-button" type="button" data-nav="notebook">ことば帳を見る</button>
     </div>
   </div>`;
@@ -411,7 +449,7 @@ function renderNotebook() {
 }
 
 function renderBookRow(entry) {
-  return `<button class="book-row" type="button" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+  return `<button class="book-row" type="button" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
     <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
     <span>
       <strong>${escapeHtml(entry.word)}<small>（${escapeHtml(entry.reading)}）</small></strong>
@@ -430,7 +468,7 @@ function renderMap() {
       ["56%", "70%"],
     ];
     const [x, y] = positions[index];
-    return `<button class="map-pin" type="button" style="--x:${x};--y:${y}" data-action="open-entry" data-word-id="${escapeHtml(entry.wordId)}">
+    return `<button class="map-pin" type="button" style="--x:${x};--y:${y}" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
       ${escapeHtml(entry.word)}<small>${escapeHtml(entry.place)}</small>
     </button>`;
   });
@@ -452,18 +490,110 @@ function renderMap() {
 
 function handleAction(target) {
   const action = target.dataset.action;
-  if (action === "open-camera") navigate("camera");
+  if (action === "open-camera") openCameraView();
+  if (action === "request-camera") requestCamera();
   if (action === "capture") captureScene();
   if (action === "select-word") selectWord(target.dataset.wordId);
-  if (action === "open-detail") navigate("detail");
   if (action === "save-word") saveSelectedWord();
-  if (action === "open-entry") openEntry(target.dataset.wordId);
+  if (action === "open-entry") openEntry(target.dataset.entryId, target.dataset.wordId);
   if (action === "request-notifications") requestNotifications();
   if (action === "share-word") shareSelectedWord();
 }
 
+function openCameraView() {
+  stopCamera();
+  state.view = "camera";
+  state.selectedWordId = "";
+  state.activeEntryId = "";
+  state.capturedPhoto = "";
+  state.cameraReady = false;
+  state.cameraError = "";
+  saveState();
+  render();
+}
+
+function requestCamera() {
+  state.cameraReady = true;
+  state.cameraError = "";
+  render();
+}
+
+async function startCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    state.cameraReady = false;
+    state.cameraError = "このブラウザではカメラを起動できません。";
+    render();
+    return;
+  }
+
+  if (cameraStream) {
+    attachCameraStream();
+    return;
+  }
+
+  const token = ++cameraToken;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 960 },
+      },
+      audio: false,
+    });
+
+    if (token !== cameraToken || state.view !== "camera" || !state.cameraReady) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    cameraStream = stream;
+    attachCameraStream();
+  } catch (error) {
+    state.cameraReady = false;
+    state.cameraError = cameraErrorMessage(error);
+    saveState();
+    render();
+  }
+}
+
+function attachCameraStream() {
+  const video = document.getElementById("cameraVideo");
+  if (!video || !cameraStream) return;
+  video.srcObject = cameraStream;
+  video.play().catch(() => {});
+}
+
+function stopCamera() {
+  cameraToken += 1;
+  if (!cameraStream) return;
+  cameraStream.getTracks().forEach((track) => track.stop());
+  cameraStream = null;
+}
+
 function captureScene() {
-  state.selectedWordId = "akane";
+  const video = document.getElementById("cameraVideo");
+  if (!video || !cameraStream || video.readyState < 2 || !video.videoWidth) {
+    showToast("カメラの準備ができたら、もう一度押してください。");
+    return;
+  }
+
+  const maxWidth = 760;
+  const scale = Math.min(maxWidth / video.videoWidth, 1);
+  const width = Math.round(video.videoWidth * scale);
+  const height = Math.round(video.videoHeight * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.drawImage(video, 0, 0, width, height);
+
+  state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.74);
+  state.selectedWordId = "";
+  state.activeEntryId = "";
+  state.cameraReady = false;
+  state.cameraError = "";
+  stopCamera();
   saveState();
   if (navigator.vibrate) navigator.vibrate(35);
   navigate("choose");
@@ -472,39 +602,49 @@ function captureScene() {
 function selectWord(wordId) {
   if (!getWord(wordId)) return;
   state.selectedWordId = wordId;
+  state.activeEntryId = "";
   saveState();
   render();
 }
 
-function openEntry(wordId) {
-  if (!getWord(wordId)) return;
-  state.selectedWordId = wordId;
+function openEntry(entryId, fallbackWordId) {
+  const entry = getEntry(entryId) || state.entries.find((item) => item.wordId === fallbackWordId);
+  if (!entry || !getWord(entry.wordId)) return;
+  state.selectedWordId = entry.wordId;
+  state.activeEntryId = entry.entryId;
+  state.capturedPhoto = entry.image;
   navigate("detail");
 }
 
 function saveSelectedWord() {
   const word = getSelectedWord();
-  state.entries = [
-    {
-      entryId: `${word.id}-${Date.now()}`,
-      wordId: word.id,
-      word: word.word,
-      reading: word.reading,
-      short: word.short,
-      image: word.image,
-      place: word.place,
-      createdAt: new Date().toISOString(),
-    },
-    ...state.entries,
-  ].slice(0, 40);
+  if (!word) {
+    showToast("近い言葉をひとつ選んでください。");
+    return;
+  }
+
+  const entry = {
+    entryId: `${word.id}-${Date.now()}`,
+    wordId: word.id,
+    word: word.word,
+    reading: word.reading,
+    short: word.short,
+    image: getCurrentPhoto(),
+    place: state.capturedPhoto ? "撮影した景色" : word.place,
+    createdAt: new Date().toISOString(),
+  };
+
+  state.entries = [entry, ...state.entries].slice(0, 24);
+  state.activeEntryId = entry.entryId;
   state.view = "poll";
   saveState();
-  showToast("ことば帳に残しました。");
+  showToast("ことば帳に保存しました。");
   render();
 }
 
 function shareSelectedWord() {
   const word = getSelectedWord();
+  if (!word) return;
   const text = `ことばの森で「${word.word}」に出会いました。`;
   if (navigator.share) {
     navigator.share({ title: "ことばの森", text }).catch(() => {});
@@ -515,11 +655,36 @@ function shareSelectedWord() {
 }
 
 function getSelectedWord() {
-  return getWord(state.selectedWordId) || words[0];
+  return getWord(state.selectedWordId);
 }
 
 function getWord(id) {
   return words.find((word) => word.id === id);
+}
+
+function getEntry(entryId) {
+  return state.entries.find((entry) => entry.entryId === entryId);
+}
+
+function getCurrentPhoto() {
+  return state.capturedPhoto || "./assets/kotoba-sunset.png";
+}
+
+function getDetailPhoto(word) {
+  const entry = getEntry(state.activeEntryId);
+  if (entry?.image) return entry.image;
+  if (state.capturedPhoto) return state.capturedPhoto;
+  return word.image;
+}
+
+function cameraErrorMessage(error) {
+  if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+    return "カメラの許可が必要です。ブラウザの表示で許可を押してください。";
+  }
+  if (error?.name === "NotFoundError" || error?.name === "OverconstrainedError") {
+    return "使えるカメラが見つかりませんでした。";
+  }
+  return "カメラを起動できませんでした。もう一度試してください。";
 }
 
 function requestNotifications() {
@@ -665,3 +830,5 @@ function escapeHtml(value) {
     '"': "&quot;",
   }[char]));
 }
+
+
