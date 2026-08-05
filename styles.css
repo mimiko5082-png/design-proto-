@@ -1034,15 +1034,18 @@ button {
 
 .photo-input {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .file-capture-button {
+  position: relative;
   width: 100%;
   margin-top: 10px;
+  overflow: hidden;
 }
 
 .file-thumb {
@@ -1053,3 +1056,4 @@ button {
   font-weight: 900;
   background: rgba(255, 255, 255, 0.18);
 }
+
