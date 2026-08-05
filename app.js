@@ -312,6 +312,10 @@ function render() {
 
   screen.innerHTML = views[state.view]();
   updateTabbar();
+
+  if (state.view === "camera") {
+    startCamera();
+  }
 }
 
 function updateTabbar() {
@@ -390,24 +394,56 @@ function renderRecentCard(entry) {
 }
 
 function renderCamera() {
-  return `<div class="view full-camera">
-    <img class="camera-photo" src="./assets/kotoba-sunset.png" alt="写真撮影前の景色" />
-    <div class="camera-overlay permission-overlay">
-      <div class="camera-top">
-        <button class="close-button" type="button" data-nav="home" aria-label="閉じる">×</button>
-        <span class="camera-flash" aria-hidden="true">⌁</span>
+  return `
+    <div class="view full-camera">
+      <video
+        id="cameraPreview"
+        class="camera-photo"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+      <div class="camera-overlay">
+        <div class="camera-top">
+          <button
+            class="close-button"
+            type="button"
+            data-nav="home"
+            aria-label="閉じる"
+          >×</button>
+
+          <span class="camera-question">
+            この景色に、どんな言葉があるだろう？
+          </span>
+        </div>
+
+        <div class="camera-frame" aria-hidden="true"></div>
+
+        <div class="camera-controls">
+          <label class="gallery-button" aria-label="写真から選ぶ">
+            ▧
+            <input
+              class="photo-input"
+              type="file"
+              accept="image/*"
+              data-action="pick-photo"
+              hidden
+            />
+          </label>
+
+          <button
+            class="shutter-button"
+            type="button"
+            data-action="take-photo"
+            aria-label="撮影する"
+          ></button>
+
+          <span class="camera-spacer"></span>
+        </div>
       </div>
-      <section class="camera-permission">
-        <span>02　景色を撮る</span>
-        <h1>景色を撮る</h1>
-        <p>スマホのカメラで、今見ている景色を1枚撮ってください。</p>
-        <label class="primary-button file-capture-button camera-file-button">
-          撮影する
-          <input class="photo-input" type="file" accept="image/*" capture="environment" data-action="pick-photo" />
-        </label>
-      </section>
     </div>
-  </div>`;
+  `;
 }
 function renderChoose() {
   const selectedId = state.selectedWordId;
@@ -576,6 +612,7 @@ function renderMap() {
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === "open-camera") openCameraView();
+  if (action === "take-photo") takeCameraPhoto();
   if (action === "select-word") selectWord(target.dataset.wordId);
   if (action === "open-detail") openSelectedWordDetail();
   if (action === "save-word") saveSelectedWord();
@@ -605,6 +642,101 @@ function stopCamera() {
   cameraStream.getTracks().forEach((track) => track.stop());
   cameraStream = null;
 }
+
+async function startCamera() {
+  stopCamera();
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showToast("このブラウザではカメラを使用できません。");
+    return;
+  }
+
+  const token = ++cameraToken;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 1920 },
+      },
+    });
+
+    if (token !== cameraToken || state.view !== "camera") {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    const video = document.getElementById("cameraPreview");
+
+    if (!video) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    cameraStream = stream;
+    video.srcObject = stream;
+    await video.play();
+
+    state.cameraReady = true;
+    state.cameraError = "";
+  } catch (error) {
+    console.error(error);
+
+    state.cameraReady = false;
+    state.cameraError = error?.name || "CameraError";
+
+    if (error?.name === "NotAllowedError") {
+      showToast("Safariの設定からカメラを許可してください。");
+    } else {
+      showToast("カメラを起動できませんでした。");
+    }
+  }
+}
+
+function takeCameraPhoto() {
+  const video = document.getElementById("cameraPreview");
+
+  if (!video || !video.videoWidth || !video.videoHeight) {
+    showToast("カメラの準備中です。");
+    return;
+  }
+
+  const maxWidth = 560;
+  const scale = Math.min(maxWidth / video.videoWidth, 1);
+  const width = Math.max(1, Math.round(video.videoWidth * scale));
+  const height = Math.max(1, Math.round(video.videoHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d", {
+    willReadFrequently: true,
+  });
+
+  context.drawImage(video, 0, 0, width, height);
+
+  const analysis = analyzeScene(context, width, height);
+
+  state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.76);
+  state.sceneAnalysis = analysis;
+  state.candidateWordIds = chooseCandidateWordIds(analysis);
+  state.selectedWordId = "";
+  state.activeEntryId = "";
+  state.cameraReady = false;
+  state.cameraError = "";
+
+  stopCamera();
+  saveState();
+
+  if (navigator.vibrate) {
+    navigator.vibrate(35);
+  }
+
+  navigate("choose");
+}
+
 function handlePhotoFile(file) {
   if (!file.type.startsWith("image/")) {
     showToast("写真ファイルを選んでください。");
