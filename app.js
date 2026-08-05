@@ -399,15 +399,11 @@ function renderCamera() {
       </div>
       <section class="camera-permission">
         <span>02　景色を撮る</span>
-        <h1>写真を撮る</h1>
-        <p>スマホのカメラで撮影するか、写真を1枚選んでください。</p>
+        <h1>景色を撮る</h1>
+        <p>スマホのカメラで、今見ている景色を1枚撮ってください。</p>
         <label class="primary-button file-capture-button camera-file-button">
-          写真を撮る
+          撮影する
           <input class="photo-input" type="file" accept="image/*" capture="environment" data-action="pick-photo" />
-        </label>
-        <label class="secondary-button file-capture-button camera-file-button">
-          写真を選ぶ
-          <input class="photo-input" type="file" accept="image/*" data-action="pick-photo" />
         </label>
       </section>
     </div>
@@ -1054,6 +1050,7 @@ function escapeHtml(value) {
     '"': "&quot;",
   }[char]));
 }
+
 
 
 
