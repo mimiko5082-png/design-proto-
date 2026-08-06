@@ -368,7 +368,6 @@ function renderHome() {
         </div>
         <div class="home-actions">
           <button class="primary-button coral-button" type="button" data-action="open-camera">ことばの旅をはじめる</button>
-          <button class="secondary-button pale-button" type="button" data-nav="notebook">ゲストではじめる</button>
         </div>
       </div>
     </section>
@@ -684,26 +683,28 @@ function renderMap() {
 
 function renderForest() {
   const stats = getForestStats();
-  const todaysWord = state.entries[0]?.word || "希望";
+  const growth = getForestGrowth(stats.photos);
+  const todaysWord = state.entries[0]?.word || "まだなし";
   return `<div class="view forest-page">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
       <h1 class="page-title">わたしの森</h1>
       <span class="step-number orange-step">08</span>
     </header>
-    <section class="my-forest-card">
-      <h2>わたしの森</h2>
-      <p>集めたことばが、あなただけの森を育てます。</p>
+    <section class="my-forest-card ${growth.className}">
+      <h2>${growth.title}</h2>
+      <p>${growth.message}</p>
       <img src="./assets/kotoba-hero.png" alt="育っていくことばの森" />
-      <div class="forest-stat-cloud left"><span>${stats.words}</span><small>ことばの木</small></div>
+      <div class="growth-symbol" aria-hidden="true">${growth.symbol}</div>
+      <div class="forest-stat-cloud left"><span>${stats.photos}</span><small>保存した写真</small></div>
       <div class="forest-stat-cloud right"><span>${todaysWord}</span><small>今日のことば</small></div>
       <div class="forest-stats">
-        <span><strong>${stats.scenes}</strong>見つけた景色</span>
+        <span><strong>${stats.photos}</strong>撮った写真</span>
+        <span><strong>${stats.words}</strong>集めたことば</span>
         <span><strong>${stats.places}</strong>訪れた場所</span>
-        <span><strong>${stats.hearts}</strong>もらった共感</span>
       </div>
     </section>
-    <button class="primary-button orange-button forest-cta" type="button" data-action="open-camera">森を見にいく</button>
+    <button class="primary-button orange-button forest-cta" type="button" data-action="open-camera">${stats.photos ? "森をもっと育てる" : "最初の写真を撮る"}</button>
   </div>`;
 }
 
@@ -1121,12 +1122,48 @@ function getConnectionWords(word) {
 }
 
 function getForestStats() {
+  const photoCount = state.entries.length;
   const places = new Set(state.entries.map((entry) => entry.place || entry.word)).size;
   return {
-    words: state.entries.length || 124,
-    scenes: Math.max(state.entries.length, 1) * 7 + 80,
-    places: Math.max(places, state.entries.length ? places : 52),
-    hearts: Math.max(1248, state.entries.length * 94 + 1248),
+    photos: photoCount,
+    words: photoCount,
+    places: photoCount ? places : 0,
+  };
+}
+
+function getForestGrowth(count) {
+  if (count <= 0) {
+    return {
+      className: "growth-empty",
+      symbol: "種",
+      title: "まだ何もない森",
+      message: "最初の景色を保存すると、小さな芽が出ます。",
+    };
+  }
+
+  if (count === 1) {
+    return {
+      className: "growth-sprout",
+      symbol: "芽",
+      title: "小さな芽が出ました",
+      message: "1枚目の写真が、あなたの森を育てはじめました。",
+    };
+  }
+
+  if (count < 5) {
+    return {
+      className: "growth-young",
+      symbol: "若葉",
+      title: "若葉の森",
+      message: "保存した景色の数だけ、ことばの葉が増えています。",
+    };
+  }
+
+  return {
+    className: "growth-rich",
+    symbol: "森",
+    title: "育ってきた森",
+    message: "集めた景色が、あなただけの森になっています。",
   };
 }
 

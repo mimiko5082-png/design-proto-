@@ -2054,6 +2054,63 @@ button {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.06) 46%, rgba(255, 255, 255, 0.48));
 }
 
+.my-forest-card.growth-empty img {
+  filter: grayscale(0.28) saturate(0.64) brightness(1.08);
+  opacity: 0.44;
+}
+
+.my-forest-card.growth-sprout img {
+  filter: saturate(0.82) brightness(1.05);
+  opacity: 0.62;
+}
+
+.my-forest-card.growth-young img {
+  filter: saturate(1.05) brightness(1.02);
+  opacity: 0.82;
+}
+
+.my-forest-card.growth-rich img {
+  filter: saturate(1.18) brightness(1.03);
+  opacity: 1;
+}
+
+.growth-symbol {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  min-width: 104px;
+  min-height: 104px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border-radius: 999px;
+  color: #2f7a45;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 38px rgba(48, 102, 56, 0.18);
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.growth-empty .growth-symbol {
+  color: #8c8464;
+  background: rgba(255, 251, 231, 0.9);
+}
+
+.growth-sprout .growth-symbol {
+  color: #3a9a52;
+  background: rgba(235, 255, 225, 0.9);
+}
+
+.growth-young .growth-symbol {
+  color: #2e8e52;
+}
+
+.growth-rich .growth-symbol {
+  color: #1d7044;
+}
+
 .forest-stat-cloud {
   position: absolute;
   z-index: 2;
