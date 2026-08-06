@@ -215,7 +215,8 @@ button {
 
 .primary-button,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   min-height: 50px;
   display: inline-flex;
   align-items: center;
@@ -237,6 +238,12 @@ button {
   color: var(--deep);
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--line);
+}
+
+.danger-button {
+  color: #b7444d;
+  background: rgba(255, 242, 243, 0.94);
+  border: 1px solid rgba(183, 68, 77, 0.18);
 }
 
 .ghost-button {
@@ -601,6 +608,10 @@ button {
   width: 100%;
 }
 
+.action-area .danger-button {
+  width: 100%;
+}
+
 .word-detail-top {
   margin-bottom: 14px;
 }
@@ -760,12 +771,23 @@ button {
 
 .book-row {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
-  gap: 11px;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
   align-items: center;
   padding: 9px;
   text-align: left;
   color: var(--ink);
+}
+
+.book-open-button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 11px;
+  align-items: center;
+  color: inherit;
+  background: transparent;
+  text-align: left;
 }
 
 .book-row img {
@@ -789,9 +811,16 @@ button {
   line-height: 1.45;
 }
 
-.leaf-mark {
-  color: var(--green);
-  font-size: 18px;
+.delete-entry-button {
+  align-self: stretch;
+  min-width: 54px;
+  padding: 0 10px;
+  border-radius: 14px;
+  color: #b7444d;
+  background: rgba(255, 242, 243, 0.95);
+  border: 1px solid rgba(183, 68, 77, 0.14);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .filter-pills {

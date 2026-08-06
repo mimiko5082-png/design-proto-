@@ -526,7 +526,11 @@ function renderDetail() {
       </section>
     </div>
 
-    ${isSavedEntry ? "" : `<div class="action-area stage-action detail-action"><button class="primary-button" type="button" data-action="save-word" ${state.savingEntry ? "disabled" : ""}>${state.savingEntry ? "保存しています" : "このことばを手帳に残す"}</button></div>`}
+    ${
+      isSavedEntry
+        ? `<div class="action-area stage-action detail-action"><button class="danger-button" type="button" data-action="delete-entry" data-entry-id="${escapeHtml(state.activeEntryId)}">この保存を削除</button></div>`
+        : `<div class="action-area stage-action detail-action"><button class="primary-button" type="button" data-action="save-word" ${state.savingEntry ? "disabled" : ""}>${state.savingEntry ? "保存しています" : "このことばを手帳に残す"}</button></div>`
+    }
   </div>`;
 }
 function renderWorkItem(item, image) {
@@ -590,14 +594,16 @@ function renderNotebook() {
 }
 
 function renderBookRow(entry) {
-  return `<button class="book-row" type="button" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
-    <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
-    <span>
-      <strong>${escapeHtml(entry.word)}<small>（${escapeHtml(entry.reading)}）</small></strong>
-      <small>${escapeHtml(entry.short)}<br />${escapeHtml(formatEntryDate(entry.createdAt))}</small>
-    </span>
-    <span class="leaf-mark" aria-hidden="true">◇</span>
-  </button>`;
+  return `<article class="book-row">
+    <button class="book-open-button" type="button" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
+      <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
+      <span>
+        <strong>${escapeHtml(entry.word)}<small>（${escapeHtml(entry.reading)}）</small></strong>
+        <small>${escapeHtml(entry.short)}<br />${escapeHtml(formatEntryDate(entry.createdAt))}</small>
+      </span>
+    </button>
+    <button class="delete-entry-button" type="button" data-action="delete-entry" data-entry-id="${escapeHtml(entry.entryId)}" aria-label="${escapeHtml(entry.word)}を削除">削除</button>
+  </article>`;
 }
 
 function renderMap() {
@@ -633,6 +639,7 @@ function handleAction(target) {
   if (action === "select-word") selectWord(target.dataset.wordId);
   if (action === "open-detail") openSelectedWordDetail();
   if (action === "save-word") saveSelectedWord();
+  if (action === "delete-entry") deleteEntry(target.dataset.entryId);
   if (action === "open-entry") openEntry(target.dataset.entryId, target.dataset.wordId);
   if (action === "request-notifications") requestNotifications();
   if (action === "share-word") shareSelectedWord();
@@ -875,6 +882,32 @@ async function saveSelectedWord() {
   state.view = "poll";
   saveState();
   showToast(location ? "ことばと場所を保存しました。" : "ことばを保存しました。");
+  render();
+}
+
+function deleteEntry(entryId) {
+  const id = entryId || state.activeEntryId;
+  const entry = getEntry(id);
+  if (!entry) {
+    showToast("削除する保存が見つかりませんでした。");
+    return;
+  }
+
+  state.entries = state.entries.filter((item) => item.entryId !== id);
+
+  if (state.activeEntryId === id) {
+    state.activeEntryId = "";
+    state.capturedPhoto = "";
+    state.sceneAnalysis = null;
+    state.candidateWordIds = [];
+  }
+
+  if (state.view === "detail") {
+    state.view = "notebook";
+  }
+
+  saveState();
+  showToast("ことば帳から削除しました。");
   render();
 }
 
