@@ -575,12 +575,15 @@ function renderNotebook() {
   const list = entries.length
     ? `<div class="book-list">${entries.map(renderBookRow).join("")}</div>`
     : `<section class="empty-card"><p>まだ手帳に残した言葉はありません。</p></section>`;
+  const deleteAllButton = entries.length
+    ? `<button class="clear-book-button" type="button" data-action="clear-notebook">全削除</button>`
+    : `<span class="icon-button" aria-hidden="true">⌕</span>`;
 
   return `<div class="view notebook-view">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
       <h1 class="page-title">ことば帳</h1>
-      <span class="icon-button" aria-hidden="true">⌕</span>
+      ${deleteAllButton}
     </header>
     <div class="filter-pills" aria-label="分類">
       <span class="filter-pill active">すべて</span>
@@ -640,6 +643,7 @@ function handleAction(target) {
   if (action === "open-detail") openSelectedWordDetail();
   if (action === "save-word") saveSelectedWord();
   if (action === "delete-entry") deleteEntry(target.dataset.entryId);
+  if (action === "clear-notebook") clearNotebook();
   if (action === "open-entry") openEntry(target.dataset.entryId, target.dataset.wordId);
   if (action === "request-notifications") requestNotifications();
   if (action === "share-word") shareSelectedWord();
@@ -908,6 +912,20 @@ function deleteEntry(entryId) {
 
   saveState();
   showToast("ことば帳から削除しました。");
+  render();
+}
+
+function clearNotebook() {
+  if (!state.entries.length) return;
+  state.entries = [];
+  state.activeEntryId = "";
+  state.capturedPhoto = "";
+  state.sceneAnalysis = null;
+  state.candidateWordIds = [];
+  state.selectedWordId = "";
+  state.view = "notebook";
+  saveState();
+  showToast("ことば帳を空にしました。");
   render();
 }
 
