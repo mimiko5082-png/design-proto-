@@ -290,7 +290,7 @@ function saveState() {
 }
 
 function isKnownView(view) {
-  return ["home", "camera", "choose", "detail", "poll", "notebook", "map"].includes(view);
+  return ["home", "camera", "choose", "detail", "poll", "notebook", "map", "forest"].includes(view);
 }
 
 function navigate(view) {
@@ -313,6 +313,7 @@ function render() {
     poll: renderPoll,
     notebook: renderNotebook,
     map: renderMap,
+    forest: renderForest,
   };
 
   screen.innerHTML = views[state.view]();
@@ -347,7 +348,7 @@ function renderHome() {
       </section>`
     : "";
 
-  return `<div class="view home-view">
+  return `<div class="view home-view forest-home">
     <header class="app-header">
       <button class="icon-button" type="button" aria-label="メニュー">☰</button>
       <div class="brand">
@@ -357,14 +358,18 @@ function renderHome() {
       <button class="icon-button" type="button" data-action="request-notifications" aria-label="通知">⌁</button>
     </header>
 
-    <section class="hero">
+    <section class="hero forest-hero">
       <img src="./assets/kotoba-hero.png" alt="大きな木と空が広がる森の景色" />
-      <div class="hero-content">
-        <div class="hero-copy">
-          <h1>言葉に出会う</h1>
-          <p>写真を撮って、言葉を見つけよう</p>
+      <div class="hero-content forest-hero-content">
+        <div class="hero-copy forest-hero-copy">
+          <span class="hero-badge">ことばの森</span>
+          <h1>世界を、美しく読む。</h1>
+          <p>見過ごしていた景色に、ことばが眠っている。</p>
         </div>
-        <button class="primary-button" type="button" data-action="open-camera">景色を撮る</button>
+        <div class="home-actions">
+          <button class="primary-button coral-button" type="button" data-action="open-camera">ことばの旅をはじめる</button>
+          <button class="secondary-button pale-button" type="button" data-nav="notebook">ゲストではじめる</button>
+        </div>
       </div>
     </section>
 
@@ -414,7 +419,7 @@ function renderCamera() {
           >×</button>
 
           <span class="camera-question">
-            この景色に、どんな言葉があるだろう？
+            気になる景色を見つけたらシャッターをタップ！
           </span>
         </div>
 
@@ -422,13 +427,12 @@ function renderCamera() {
 
         <div class="camera-controls">
           <label class="gallery-button" aria-label="写真から選ぶ">
-            ▧
+            <span aria-hidden="true">▧</span><small>アルバム</small>
             <input
               class="photo-input"
               type="file"
               accept="image/*"
               data-action="pick-photo"
-              hidden
             />
           </label>
 
@@ -444,7 +448,7 @@ function renderCamera() {
             type="button"
             data-action="switch-camera"
             aria-label="内カメと外カメを切り替える"
-          ><span aria-hidden="true">⇄</span><small>${state.cameraFacing === "environment" ? "内" : "外"}</small></button>
+          ><span aria-hidden="true">⇄</span><small>${state.cameraFacing === "environment" ? "内カメ" : "外カメ"}</small></button>
         </div>
       </div>
     </div>
@@ -456,7 +460,9 @@ function renderChoose() {
     ? state.selectedWordId
     : candidateWords[0]?.id || "";
   const photo = getCurrentPhoto();
-  return `<div class="view choose-view stage-view">
+  const selectedWord = getWord(selectedId) || candidateWords[0] || words[0];
+  const sideWords = candidateWords.filter((word) => word.id !== selectedWord.id).slice(0, 2);
+  return `<div class="view choose-view stage-view word-decision-view">
     <header class="story-step-header">
       <button class="back-button" type="button" data-nav="camera" aria-label="戻る">‹</button>
       <span class="step-number">03</span>
@@ -464,19 +470,40 @@ function renderChoose() {
     </header>
 
     <div class="stage-scroll choose-scroll">
-      <figure class="choice-photo">
-        <img src="${escapeHtml(photo)}" alt="撮影した景色" />
-      </figure>
-      <p class="choice-count">この景色を表す言葉 <strong>${candidateWords.length}つ</strong></p>
-      <div class="word-list choice-word-list">
-        ${candidateWords.map((word) => renderWordOption(word, selectedId)).join("")}
+      <p class="decision-lead">この景色にぴったりの言葉を見つけました！</p>
+      <div class="word-card-stage">
+        ${sideWords[0] ? renderSideWordCard(sideWords[0], "left") : ""}
+        <button class="big-word-card" type="button" data-action="select-word" data-word-id="${selectedWord.id}">
+          <img src="${escapeHtml(photo)}" alt="撮影した景色" />
+          <span class="sparkle">✦</span>
+          <strong>${selectedWord.word}</strong>
+          <small>${selectedWord.reading}</small>
+          <p>${selectedWord.short}</p>
+        </button>
+        ${sideWords[1] ? renderSideWordCard(sideWords[1], "right") : ""}
+      </div>
+      <div class="mini-word-strip" aria-label="候補の言葉">
+        ${candidateWords.map((word) => renderWordChip(word, selectedId)).join("")}
       </div>
     </div>
 
-    <div class="action-area stage-action">
-      <button class="primary-button" type="button" data-action="open-detail" ${selectedId ? "" : "disabled"}>いちばん近い言葉を選ぶ <span aria-hidden="true">→</span></button>
+    <div class="action-area stage-action decision-actions">
+      <button class="round-action refresh-action" type="button" data-nav="camera"><span aria-hidden="true">↻</span><small>もう一度探す</small></button>
+      <button class="heart-action" type="button" data-action="open-detail" ${selectedId ? "" : "disabled"}><span aria-hidden="true">♥</span><small>これに決定！</small></button>
     </div>
   </div>`;
+}
+
+function renderSideWordCard(word, side) {
+  return `<button class="side-word-card ${side}" type="button" data-action="select-word" data-word-id="${word.id}">
+    <img src="${word.image}" alt="${word.word}の景色" />
+    <strong>${word.word}</strong>
+    <small>${word.reading}</small>
+  </button>`;
+}
+
+function renderWordChip(word, selectedId) {
+  return `<button class="word-chip ${word.id === selectedId ? "active" : ""}" type="button" data-action="select-word" data-word-id="${word.id}">${word.word}</button>`;
 }
 function renderWordOption(word, selectedId) {
   const selected = word.id === selectedId;
@@ -518,6 +545,13 @@ function renderDetail() {
         <p>${word.origin}</p>
       </section>
 
+      <section class="connection-card detail-card">
+        <div class="card-label"><span class="card-mark link-mark">結</span>ことばのつながり</div>
+        <div class="connection-tags">
+          ${getConnectionWords(word).map((item) => `<button type="button" data-action="select-word" data-word-id="${item.id}">${item.word}<small>${item.reading}</small></button>`).join("")}
+        </div>
+      </section>
+
       <section class="work-card detail-card">
         <div class="card-label"><span class="card-mark book-mark">本</span>この言葉が使われた作品</div>
         <div class="work-list">
@@ -542,70 +576,83 @@ function renderWorkItem(item, image) {
 
 function renderPoll() {
   const rows = getPollRows();
-  return `<div class="view poll-view">
+  return `<div class="view poll-view feelings-view">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="detail" aria-label="戻る">‹</button>
       <h1 class="page-title">みんなは、どう感じた？</h1>
-      <span class="icon-button" aria-hidden="true">%</span>
+      <span class="step-number pink-step">05</span>
     </header>
-    <p class="poll-intro">この景色に対して、みんなはどんな言葉を選んでいるでしょう。</p>
-    <div class="poll-list">
-      ${rows.map(renderPollRow).join("")}
-    </div>
-    <section class="origin-card">
+    <section class="feelings-card">
+      <h2>みんなの感じたこと</h2>
+      <p>この景色と同じ言葉に寄せられた声</p>
+      <div class="poll-list">
+        ${rows.map(renderPollRow).join("")}
+      </div>
+    </section>
+    <section class="origin-card flower-note">
       <div class="card-label">同じ景色でも、感じ方は人それぞれ。</div>
       <p>言葉が増えるほど、世界の見え方が少しずつ豊かになります。</p>
     </section>
     <div class="action-area split-actions">
-      <button class="secondary-button" type="button" data-nav="notebook">ことば帳</button>
-      <button class="primary-button" type="button" data-nav="map">言葉の地図を見る</button>
+      <button class="secondary-button pink-share-button" type="button" data-action="share-word">あなたの気持ちをシェアする</button>
+      <button class="primary-button" type="button" data-nav="notebook">ことば帳へ</button>
     </div>
   </div>`;
 }
 function renderPollRow(row) {
   return `<div class="poll-row" style="--pct:${row.percent}%">
     <img src="${row.image}" alt="${row.word}の景色" />
-    <span><strong>${row.word}<small>（${row.reading}）</small></strong><small>${row.text}</small></span>
-    <span class="percent">${row.percent}%</span>
+    <span><strong>${row.feeling}</strong><small>${row.word}　${row.text}</small></span>
+    <span class="percent">♥ ${row.hearts}</span>
   </div>`;
 }
 
 function renderNotebook() {
   const entries = state.entries;
   const list = entries.length
-    ? `<div class="book-list">${entries.map(renderBookRow).join("")}</div>`
+    ? `<div class="book-grid">${entries.map(renderBookRow).join("")}</div>`
     : `<section class="empty-card"><p>まだ手帳に残した言葉はありません。</p></section>`;
   const deleteAllButton = entries.length
     ? `<button class="clear-book-button" type="button" data-action="clear-notebook">全削除</button>`
     : `<span class="icon-button" aria-hidden="true">⌕</span>`;
 
-  return `<div class="view notebook-view">
+  return `<div class="view notebook-view book-view">
     <header class="simple-header">
       <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
       <h1 class="page-title">ことば帳</h1>
       ${deleteAllButton}
     </header>
+    <section class="book-summary">
+      <strong>集めたことば <span>${entries.length}</span></strong>
+      <small>お気に入り ${Math.min(entries.length, 36)}</small>
+    </section>
     <div class="filter-pills" aria-label="分類">
       <span class="filter-pill active">すべて</span>
-      <span class="filter-pill">自然</span>
-      <span class="filter-pill">心</span>
-      <span class="filter-pill">時間</span>
+      <span class="filter-pill">季節</span>
       <span class="filter-pill">色</span>
+      <span class="filter-pill">時間</span>
+      <span class="filter-pill">自然</span>
+      <span class="filter-pill">気持ち</span>
     </div>
     ${list}
+    <div class="book-toolbar">
+      <button type="button" data-action="open-camera">選択</button>
+      <button type="button" data-nav="map">移動</button>
+      <button type="button" data-nav="forest">お気に入り</button>
+      <button type="button" data-action="clear-notebook">削除</button>
+    </div>
   </div>`;
 }
 
 function renderBookRow(entry) {
-  return `<article class="book-row">
+  return `<article class="book-card">
     <button class="book-open-button" type="button" data-action="open-entry" data-entry-id="${escapeHtml(entry.entryId)}" data-word-id="${escapeHtml(entry.wordId)}">
       <img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.word)}を見つけた景色" />
-      <span>
-        <strong>${escapeHtml(entry.word)}<small>（${escapeHtml(entry.reading)}）</small></strong>
-        <small>${escapeHtml(entry.short)}<br />${escapeHtml(formatEntryDate(entry.createdAt))}</small>
-      </span>
+      <span class="new-badge">NEW</span>
+      <strong>${escapeHtml(entry.word)}</strong>
+      <small>${escapeHtml(entry.reading)}<br />${escapeHtml(formatEntryDate(entry.createdAt))}</small>
     </button>
-    <button class="delete-entry-button" type="button" data-action="delete-entry" data-entry-id="${escapeHtml(entry.entryId)}" aria-label="${escapeHtml(entry.word)}を削除">削除</button>
+    <button class="delete-entry-button card-delete" type="button" data-action="delete-entry" data-entry-id="${escapeHtml(entry.entryId)}" aria-label="${escapeHtml(entry.word)}を削除">×</button>
   </article>`;
 }
 
@@ -620,20 +667,46 @@ function renderMap() {
     </button>`;
   });
 
-  return `<div class="view map-view">
+  return `<div class="view map-view forest-map-view">
     <header class="simple-header">
-      <button class="back-button" type="button" data-nav="poll" aria-label="戻る">‹</button>
-      <h1 class="page-title">言葉の地図</h1>
-      <span class="icon-button" aria-hidden="true">⌖</span>
+      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">‹</button>
+      <h1 class="page-title">ことばの地図</h1>
+      <span class="step-number green-step">07</span>
     </header>
-    <p class="poll-intro">今日撮った場所に、保存した言葉が残っていきます。</p>
+    <p class="poll-intro">日本のどこかで、ことばが見つかっています。</p>
     <section class="map-card">
       <img src="./assets/kotoba-map.png" alt="ことばが咲いていく地図" />
       ${pins.join("")}
-      ${pins.length ? `<div class="map-empty map-note">${locatedCount ? "位置情報つきで保存しました。" : "位置情報が使えない時は、地図上の仮の場所に保存します。"}</div>` : `<div class="map-empty">まだ地図には何もありません。景色を撮ると、ここに言葉が増えていきます。</div>`}
+      ${pins.length ? `<div class="map-empty map-note">${locatedCount ? "今日撮った場所に保存しました。" : "地図上の仮の場所に保存しました。"}</div>` : `<div class="map-empty">まだ地図には何もありません。景色を撮ると、ここに言葉が増えていきます。</div>`}
     </section>
   </div>`;
 }
+
+function renderForest() {
+  const stats = getForestStats();
+  const todaysWord = state.entries[0]?.word || "希望";
+  return `<div class="view forest-page">
+    <header class="simple-header">
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">‹</button>
+      <h1 class="page-title">わたしの森</h1>
+      <span class="step-number orange-step">08</span>
+    </header>
+    <section class="my-forest-card">
+      <h2>わたしの森</h2>
+      <p>集めたことばが、あなただけの森を育てます。</p>
+      <img src="./assets/kotoba-hero.png" alt="育っていくことばの森" />
+      <div class="forest-stat-cloud left"><span>${stats.words}</span><small>ことばの木</small></div>
+      <div class="forest-stat-cloud right"><span>${todaysWord}</span><small>今日のことば</small></div>
+      <div class="forest-stats">
+        <span><strong>${stats.scenes}</strong>見つけた景色</span>
+        <span><strong>${stats.places}</strong>訪れた場所</span>
+        <span><strong>${stats.hearts}</strong>もらった共感</span>
+      </div>
+    </section>
+    <button class="primary-button orange-button forest-cta" type="button" data-action="open-camera">森を見にいく</button>
+  </div>`;
+}
+
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === "open-camera") openCameraView();
@@ -1025,6 +1098,8 @@ function getPollRows() {
   const candidateIds = getCandidateWords().map((word) => word.id);
   const orderedIds = [state.selectedWordId, ...candidateIds.filter((id) => id !== state.selectedWordId)].filter(Boolean).slice(0, 4);
   const percents = [38, 26, 20, 16];
+  const feelings = ["やさしい気持ちになった", "懐かしい気持ち", "明日も頑張れそう！", "物語の始まりみたい"];
+  const hearts = [128, 96, 74, 58];
   return orderedIds.map((id, index) => {
     const word = getWord(id);
     return {
@@ -1033,8 +1108,26 @@ function getPollRows() {
       text: word.short,
       image: index === 0 ? getCurrentPhoto() : word.image,
       percent: percents[index],
+      feeling: feelings[index],
+      hearts: hearts[index],
     };
   });
+}
+
+function getConnectionWords(word) {
+  const candidates = getCandidateWords().filter((item) => item.id !== word.id);
+  const fallback = words.filter((item) => item.id !== word.id);
+  return [...candidates, ...fallback].filter((item, index, list) => list.findIndex((other) => other.id === item.id) === index).slice(0, 3);
+}
+
+function getForestStats() {
+  const places = new Set(state.entries.map((entry) => entry.place || entry.word)).size;
+  return {
+    words: state.entries.length || 124,
+    scenes: Math.max(state.entries.length, 1) * 7 + 80,
+    places: Math.max(places, state.entries.length ? places : 52),
+    hearts: Math.max(1248, state.entries.length * 94 + 1248),
+  };
 }
 
 function defaultAnalysis() {
