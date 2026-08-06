@@ -193,6 +193,7 @@ const state = {
   capturedPhoto: "",
   sceneAnalysis: null,
   activeEntryId: "",
+  cameraFacing: "environment",
   cameraReady: false,
   cameraError: "",
   savingEntry: false,
@@ -258,6 +259,9 @@ function loadState() {
     if (typeof saved.selectedWordId === "string") state.selectedWordId = saved.selectedWordId;
     if (typeof saved.capturedPhoto === "string") state.capturedPhoto = saved.capturedPhoto;
     if (typeof saved.activeEntryId === "string") state.activeEntryId = saved.activeEntryId;
+    if (saved.cameraFacing === "user" || saved.cameraFacing === "environment") {
+      state.cameraFacing = saved.cameraFacing;
+    }
     if (typeof saved.view === "string") state.view = saved.view;
   } catch {
     state.view = "home";
@@ -278,6 +282,7 @@ function saveState() {
       capturedPhoto: state.capturedPhoto,
       sceneAnalysis: state.sceneAnalysis,
       activeEntryId: state.activeEntryId,
+      cameraFacing: state.cameraFacing,
       entries: state.entries,
       notifications: state.notifications,
     })
@@ -369,17 +374,12 @@ function renderHome() {
 }
 
 function renderNotificationCard() {
-  const times = state.notifications.times.length === 2 ? state.notifications.times : ["--:--", "--:--"];
   const enabled = state.notifications.enabled;
   return `<section class="notification-card">
     <div class="notification-row">
       <div>
         <strong>${enabled ? "今日の森からの合図" : "通知は1日2回ランダム"}</strong>
         <p>${enabled ? "今日のどこかで2回、景色を見る合図が届きます。" : "許可すると、毎日ランダムな2回だけ合図が届きます。"}</p>
-        <div class="time-chips" aria-label="今日の通知予定">
-          <span class="time-chip">${times[0]}</span>
-          <span class="time-chip">${times[1]}</span>
-        </div>
       </div>
       <button class="ghost-button" type="button" data-action="request-notifications">${enabled ? "ON" : "受け取る"}</button>
     </div>
@@ -398,7 +398,7 @@ function renderCamera() {
     <div class="view full-camera">
       <video
         id="cameraPreview"
-        class="camera-photo"
+        class="camera-photo ${state.cameraFacing === "user" ? "front-camera" : ""}"
         autoplay
         playsinline
         muted
@@ -439,7 +439,12 @@ function renderCamera() {
             aria-label="撮影する"
           ></button>
 
-          <span class="camera-spacer"></span>
+          <button
+            class="camera-switch-button"
+            type="button"
+            data-action="switch-camera"
+            aria-label="内カメと外カメを切り替える"
+          ><span aria-hidden="true">⇄</span><small>${state.cameraFacing === "environment" ? "内" : "外"}</small></button>
         </div>
       </div>
     </div>
@@ -624,6 +629,7 @@ function handleAction(target) {
   const action = target.dataset.action;
   if (action === "open-camera") openCameraView();
   if (action === "take-photo") takeCameraPhoto();
+  if (action === "switch-camera") switchCameraFacing();
   if (action === "select-word") selectWord(target.dataset.wordId);
   if (action === "open-detail") openSelectedWordDetail();
   if (action === "save-word") saveSelectedWord();
@@ -668,7 +674,7 @@ async function startCamera() {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
-        facingMode: { ideal: "environment" },
+        facingMode: { ideal: state.cameraFacing },
         width: { ideal: 1280 },
         height: { ideal: 1920 },
       },
@@ -706,6 +712,15 @@ async function startCamera() {
   }
 }
 
+function switchCameraFacing() {
+  if (state.view !== "camera") return;
+  state.cameraFacing = state.cameraFacing === "environment" ? "user" : "environment";
+  state.cameraReady = false;
+  state.cameraError = "";
+  saveState();
+  render();
+}
+
 function takeCameraPhoto() {
   const video = document.getElementById("cameraPreview");
 
@@ -726,6 +741,10 @@ function takeCameraPhoto() {
     willReadFrequently: true,
   });
 
+  if (state.cameraFacing === "user") {
+    context.translate(width, 0);
+    context.scale(-1, 1);
+  }
   context.drawImage(video, 0, 0, width, height);
 
   const analysis = analyzeScene(context, width, height);

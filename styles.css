@@ -279,23 +279,6 @@ button {
   gap: 12px;
 }
 
-.time-chips {
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-
-.time-chip {
-  min-width: 58px;
-  padding: 7px 9px;
-  border-radius: 999px;
-  color: var(--green-deep);
-  background: #edf8ef;
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-}
-
 .section-head {
   display: flex;
   align-items: center;
@@ -360,6 +343,10 @@ button {
   height: 100%;
   object-fit: cover;
   filter: saturate(1.02) brightness(0.86);
+}
+
+.camera-photo.front-camera {
+  transform: scaleX(-1);
 }
 
 .camera-overlay {
@@ -472,13 +459,14 @@ button {
 }
 
 .gallery-button,
-.camera-spacer {
+.camera-switch-button {
   width: 52px;
   height: 52px;
   border-radius: 16px;
 }
 
-.gallery-button {
+.gallery-button,
+.camera-switch-button {
   position: relative;
   display: grid;
   place-items: center;
@@ -490,8 +478,18 @@ button {
   font-weight: 900;
 }
 
-.camera-spacer {
+.camera-switch-button {
+  gap: 1px;
+  grid-template-rows: 22px 14px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.camera-switch-button small {
   display: block;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  line-height: 1;
 }
 
 .shutter-button {
