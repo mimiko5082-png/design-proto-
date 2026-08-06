@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "kotoba-forest-v7";
+﻿const CACHE_NAME = "kotoba-forest-v9";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -446,24 +446,30 @@ function renderCamera() {
   `;
 }
 function renderChoose() {
-  const selectedId = state.selectedWordId;
-  const photo = getCurrentPhoto();
   const candidateWords = getCandidateWords();
-  return `<div class="view choose-view">
-    <header class="simple-header">
+  const selectedId = candidateWords.some((word) => word.id === state.selectedWordId)
+    ? state.selectedWordId
+    : candidateWords[0]?.id || "";
+  const photo = getCurrentPhoto();
+  return `<div class="view choose-view stage-view">
+    <header class="story-step-header">
       <button class="back-button" type="button" data-nav="camera" aria-label="戻る">‹</button>
-      <h1 class="page-title">この景色を表す言葉</h1>
-      <span class="icon-button" aria-hidden="true">${candidateWords.length}</span>
+      <span class="step-number">03</span>
+      <h1>この景色を表す言葉</h1>
     </header>
-    <div class="photo-card">
-      <img src="${escapeHtml(photo)}" alt="撮影した景色" />
+
+    <div class="stage-scroll choose-scroll">
+      <figure class="choice-photo">
+        <img src="${escapeHtml(photo)}" alt="撮影した景色" />
+      </figure>
+      <p class="choice-count">この景色を表す言葉 <strong>${candidateWords.length}つ</strong></p>
+      <div class="word-list choice-word-list">
+        ${candidateWords.map((word) => renderWordOption(word, selectedId)).join("")}
+      </div>
     </div>
-    <p class="analysis-note">撮った写真の色と明るさから、近い言葉を選びました。</p>
-    <div class="word-list">
-      ${candidateWords.map((word) => renderWordOption(word, selectedId)).join("")}
-    </div>
-    <div class="action-area">
-      <button class="primary-button" type="button" data-action="open-detail" ${selectedId ? "" : "disabled"}>いちばん近い言葉を選ぶ</button>
+
+    <div class="action-area stage-action">
+      <button class="primary-button" type="button" data-action="open-detail" ${selectedId ? "" : "disabled"}>いちばん近い言葉を選ぶ <span aria-hidden="true">→</span></button>
     </div>
   </div>`;
 }
@@ -471,7 +477,7 @@ function renderWordOption(word, selectedId) {
   const selected = word.id === selectedId;
   return `<button class="word-option ${selected ? "selected" : ""}" type="button" data-action="select-word" data-word-id="${word.id}">
     <img src="${word.image}" alt="${word.word}の景色" />
-    <span>
+    <span class="word-option-copy">
       <strong>${word.word}<small>（${word.reading}）</small></strong>
       <small>${word.short}</small>
     </span>
@@ -483,34 +489,39 @@ function renderDetail() {
   const word = getSelectedWord() || getCandidateWords()[0] || words[0];
   const detailPhoto = getDetailPhoto(word);
   const isSavedEntry = Boolean(state.activeEntryId && getEntry(state.activeEntryId));
-  return `<div class="view detail-view">
-    <header class="simple-header">
+  return `<div class="view detail-view stage-view">
+    <header class="detail-topbar">
       <button class="back-button" type="button" data-nav="${isSavedEntry ? "notebook" : "choose"}" aria-label="戻る">‹</button>
-      <h1 class="page-title">言葉の世界</h1>
+      <span class="step-number">04</span>
+      <h1>ことばの世界</h1>
       <button class="icon-button" type="button" data-action="share-word" aria-label="共有">↗</button>
     </header>
 
-    <section class="word-detail-top">
-      <img class="detail-photo" src="${escapeHtml(detailPhoto)}" alt="${word.word}に近い景色" />
-      <div class="word-heading">
+    <div class="stage-scroll detail-scroll">
+      <figure class="detail-photo-frame">
+        <img class="detail-photo" src="${escapeHtml(detailPhoto)}" alt="${word.word}に近い景色" />
+      </figure>
+
+      <section class="dictionary-heading">
         <h1>${word.word}</h1>
-        <p>${word.reading}　${word.short}</p>
-      </div>
-    </section>
+        <span>${word.reading}</span>
+        <p>${word.short}</p>
+      </section>
 
-    <section class="origin-card">
-      <div class="card-label">ことばの由来</div>
-      <p>${word.origin}</p>
-    </section>
+      <section class="origin-card detail-card">
+        <div class="card-label"><span class="card-mark">葉</span>ことばの由来</div>
+        <p>${word.origin}</p>
+      </section>
 
-    <section class="work-card">
-      <div class="card-label">この言葉が使われた作品</div>
-      <div class="work-list">
-        ${word.works.map((item) => renderWorkItem(item, word.image)).join("")}
-      </div>
-    </section>
+      <section class="work-card detail-card">
+        <div class="card-label"><span class="card-mark book-mark">本</span>この言葉が使われた作品</div>
+        <div class="work-list">
+          ${word.works.map((item) => renderWorkItem(item, word.image)).join("")}
+        </div>
+      </section>
+    </div>
 
-    ${isSavedEntry ? "" : `<div class="action-area"><button class="primary-button" type="button" data-action="save-word" ${state.savingEntry ? "disabled" : ""}>${state.savingEntry ? "保存しています" : "この言葉を手帳に残す"}</button></div>`}
+    ${isSavedEntry ? "" : `<div class="action-area stage-action detail-action"><button class="primary-button" type="button" data-action="save-word" ${state.savingEntry ? "disabled" : ""}>${state.savingEntry ? "保存しています" : "このことばを手帳に残す"}</button></div>`}
   </div>`;
 }
 function renderWorkItem(item, image) {
@@ -722,7 +733,7 @@ function takeCameraPhoto() {
   state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.76);
   state.sceneAnalysis = analysis;
   state.candidateWordIds = chooseCandidateWordIds(analysis);
-  state.selectedWordId = "";
+  state.selectedWordId = state.candidateWordIds[0] || "";
   state.activeEntryId = "";
   state.cameraReady = false;
   state.cameraError = "";
@@ -769,7 +780,7 @@ function captureImageElement(image) {
   state.capturedPhoto = canvas.toDataURL("image/jpeg", 0.66);
   state.sceneAnalysis = analysis;
   state.candidateWordIds = chooseCandidateWordIds(analysis);
-  state.selectedWordId = "";
+  state.selectedWordId = state.candidateWordIds[0] || "";
   state.activeEntryId = "";
   state.cameraReady = false;
   state.cameraError = "";
@@ -788,9 +799,16 @@ function selectWord(wordId) {
 }
 
 function openSelectedWordDetail() {
-  if (!getSelectedWord()) {
-    showToast("いちばん近い言葉をひとつ選んでください。");
-    return;
+  const candidateWords = getCandidateWords();
+  const selectedWord = getSelectedWord();
+  if (!selectedWord || !candidateWords.some((word) => word.id === selectedWord.id)) {
+    const firstWord = candidateWords[0];
+    if (!firstWord) {
+      showToast("いちばん近い言葉をひとつ選んでください。");
+      return;
+    }
+    state.selectedWordId = firstWord.id;
+    saveState();
   }
   navigate("detail");
 }

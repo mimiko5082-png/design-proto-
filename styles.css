@@ -1127,3 +1127,328 @@ button {
   background: rgba(255, 255, 255, 0.18);
 }
 
+.stage-view {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: calc(45px + var(--safe-top)) 16px calc(86px + var(--safe-bottom));
+  background:
+    linear-gradient(180deg, rgba(255, 254, 249, 0.96), rgba(255, 252, 245, 0.98)),
+    radial-gradient(circle at 18% 6%, rgba(128, 207, 160, 0.2), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(145, 124, 232, 0.14), transparent 28%);
+}
+
+.stage-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+}
+
+.stage-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.story-step-header,
+.detail-topbar {
+  flex: 0 0 auto;
+  min-height: 39px;
+  display: grid;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 12px;
+}
+
+.story-step-header {
+  grid-template-columns: 38px 36px 1fr;
+}
+
+.detail-topbar {
+  grid-template-columns: 38px 36px 1fr 38px;
+}
+
+.story-step-header h1,
+.detail-topbar h1 {
+  min-width: 0;
+  margin: 0;
+  color: #22243d;
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.step-number {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #22243d;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 22px rgba(68, 78, 95, 0.13);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.choice-photo,
+.detail-photo-frame {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(44, 64, 92, 0.1);
+  border-radius: 22px;
+  background: #dfe6ec;
+  box-shadow: 0 14px 30px rgba(53, 64, 84, 0.12);
+}
+
+.choice-photo img {
+  width: 100%;
+  max-height: 188px;
+  display: block;
+  aspect-ratio: 16 / 7.2;
+  object-fit: cover;
+}
+
+.choice-count {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 3px 8px;
+  color: #313b59;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.choice-count strong {
+  color: var(--violet);
+  font-weight: 900;
+}
+
+.choice-word-list {
+  gap: 8px;
+  margin-top: 0;
+}
+
+.choice-word-list .word-option {
+  min-height: 69px;
+  grid-template-columns: 58px 1fr 31px;
+  gap: 10px;
+  padding: 8px 9px 8px 8px;
+  border-radius: 18px;
+  background: rgba(255, 251, 244, 0.92);
+  box-shadow: 0 9px 22px rgba(47, 58, 77, 0.07);
+}
+
+.choice-word-list .word-option img {
+  width: 58px;
+  height: 52px;
+  border-radius: 14px;
+}
+
+.word-option-copy {
+  min-width: 0;
+}
+
+.choice-word-list .word-option strong {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+  color: #202b4b;
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.choice-word-list .word-option strong small {
+  display: inline;
+  margin: 0;
+  color: #202b4b;
+  font-size: 10px;
+}
+
+.choice-word-list .word-option small {
+  margin-top: 4px;
+  color: #65718b;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.choice-word-list .word-option.selected {
+  border-color: rgba(148, 106, 235, 0.7);
+  background: #f6efff;
+  box-shadow:
+    0 0 0 1px rgba(148, 106, 235, 0.16),
+    0 12px 26px rgba(104, 82, 184, 0.12);
+}
+
+.choice-word-list .checkmark {
+  width: 27px;
+  height: 27px;
+  align-self: center;
+  font-size: 14px;
+  background: #725bea;
+}
+
+.stage-action {
+  position: relative;
+  z-index: 8;
+  bottom: auto;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 11px 0 0;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0), rgba(255, 253, 247, 0.96) 28%, var(--paper));
+}
+
+.stage-action .primary-button {
+  width: 100%;
+  min-height: 55px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8c72f0 0%, #6c62e8 70%, #4f79e8 100%);
+  box-shadow:
+    0 14px 30px rgba(94, 78, 213, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  font-size: 14px;
+}
+
+.detail-photo-frame .detail-photo {
+  width: 100%;
+  max-height: 166px;
+  display: block;
+  aspect-ratio: 16 / 6.8;
+  border-radius: 0;
+  object-fit: cover;
+  box-shadow: none;
+}
+
+.dictionary-heading {
+  margin: 12px 0 12px;
+}
+
+.dictionary-heading h1 {
+  margin: 0;
+  color: #20235b;
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 45px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.dictionary-heading span {
+  display: block;
+  margin-top: 3px;
+  color: #20235b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dictionary-heading p {
+  margin: 4px 0 0;
+  color: #495670;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.detail-card {
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 250, 244, 0.92);
+}
+
+.detail-card .card-label {
+  margin-bottom: 9px;
+  color: #28315f;
+  font-size: 12px;
+}
+
+.card-mark {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--green);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.book-mark {
+  background: #7665e8;
+}
+
+.detail-card p {
+  color: #48536c;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.detail-card .work-list {
+  gap: 9px;
+}
+
+.detail-card .work-item {
+  grid-template-columns: 58px 1fr;
+  gap: 10px;
+  padding: 0;
+}
+
+.detail-card .work-item img {
+  width: 58px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.detail-card .work-item strong {
+  font-size: 12.5px;
+}
+
+.detail-card .work-item small {
+  font-size: 10.5px;
+}
+
+.detail-action {
+  padding-top: 12px;
+}
+
+@media (max-height: 740px) {
+  .stage-view {
+    padding-top: calc(40px + var(--safe-top));
+    padding-bottom: calc(80px + var(--safe-bottom));
+  }
+
+  .story-step-header,
+  .detail-topbar {
+    margin-bottom: 8px;
+  }
+
+  .choice-photo img {
+    max-height: 145px;
+    aspect-ratio: 16 / 6;
+  }
+
+  .choice-word-list .word-option {
+    min-height: 62px;
+  }
+
+  .choice-word-list .word-option img {
+    width: 52px;
+    height: 46px;
+  }
+
+  .dictionary-heading h1 {
+    font-size: 39px;
+  }
+
+  .detail-photo-frame .detail-photo {
+    max-height: 128px;
+  }
+}
+
