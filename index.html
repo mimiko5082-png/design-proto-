@@ -3,23 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4ead8" />
+    <meta name="theme-color" content="#f4ecdc" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="BASHO WALK" />
+    <meta name="apple-mobile-web-app-title" content="芭蕉のまなざし" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta
       name="description"
-      content="BASHO WALKは、目的地ではなく見方のお題を受け取り、街で詠んだ句を次の人の道しるべにするスマホWebプロトタイプです。"
+      content="芭蕉のまなざしは、目的地ではなく街を見る手がかりを受け取り、俳句とともにことばを置いていくスマホWebプロトタイプです。"
     />
-    <title>BASHO WALK</title>
+    <title>芭蕉のまなざし</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
     <link rel="icon" sizes="192x192" href="./assets/kotoba-icon-192.png" />
     <link rel="stylesheet" href="./basho-styles.css" />
   </head>
   <body>
-    <main class="app-shell" aria-label="BASHO WALK Webプロトタイプ">
+    <main class="app-shell" aria-label="芭蕉のまなざし Webプロトタイプ">
       <section class="phone" aria-live="polite">
         <div class="status-bar" aria-hidden="true">
           <span>9:41</span>
@@ -30,19 +30,19 @@
 
         <nav class="tabbar" aria-label="メインメニュー">
           <button class="tab active" type="button" data-nav="home">
-            <span class="tab-icon">日</span>
-            今日
+            <span class="tab-icon">始</span>
+            はじまり
           </button>
           <button class="tab" type="button" data-nav="walk">
-            <span class="tab-icon">足</span>
-            歩く
+            <span class="tab-icon">句</span>
+            俳句
           </button>
           <button class="tab" type="button" data-nav="map">
             <span class="tab-icon">道</span>
             地図
           </button>
           <button class="tab" type="button" data-nav="notebook">
-            <span class="tab-icon">句</span>
+            <span class="tab-icon">帳</span>
             句帳
           </button>
         </nav>
@@ -51,7 +51,7 @@
       <div class="toast" id="toast" role="status"></div>
     </main>
 
-    <script src="./basho-app.js?v=20260807-basho-walk-v2"></script>
+    <script src="./basho-app.js?v=20260807-basho-manazashi-v3"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

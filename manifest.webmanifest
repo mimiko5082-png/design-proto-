@@ -1,14 +1,14 @@
 ﻿{
-  "name": "BASHO WALK",
-  "short_name": "BASHO WALK",
-  "description": "芭蕉みたいに街を見るためのお題を受け取り、そこで詠んだ句を道しるべにするスマホWebアプリ。",
+  "name": "芭蕉のまなざし",
+  "short_name": "芭蕉のまなざし",
+  "description": "目的地ではなく街を見る手がかりを受け取り、俳句とともにことばを置いていくスマホWebアプリ。",
   "lang": "ja",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4ead8",
-  "theme_color": "#f4ead8",
+  "background_color": "#f4ecdc",
+  "theme_color": "#f4ecdc",
   "icons": [
     {
       "src": "./assets/kotoba-icon-192.png",
