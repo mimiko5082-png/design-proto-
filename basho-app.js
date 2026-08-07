@@ -758,7 +758,7 @@ function verticalLines(text) {
 function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return `${date.getMonth() + 1}.${date.getDate()}`;
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
 function todayKey() {

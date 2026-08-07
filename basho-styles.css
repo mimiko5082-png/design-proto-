@@ -921,7 +921,11 @@ input {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 0;
+}
+
+.history-strip > span {
+  display: none;
 }
 
 .history-strip button {
