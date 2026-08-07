@@ -222,6 +222,7 @@ const feelingLabels = ["自然の壮大さ", "旅の静けさ", "時の重なり
 const state = {
   view: "home",
   date: "",
+  scheduleVersion: "",
   clueId: "",
   selectedHaikuId: "",
   selectedFeeling: "",
@@ -306,13 +307,6 @@ function renderHome() {
         <small>${haiku.author}</small>
       </div>
       <button class="primary-button start-button" type="button" data-nav="walk">はじめる</button>
-    </section>
-
-    <section class="concept-card">
-      <span>CONCEPT</span>
-      <p>AIが俳句を作るのではなく、芭蕉みたいに街を見るための仕組み。</p>
-      <strong>「どこへ行くかを教える地図」ではなく、「どう街を見るかを変える地図」。</strong>
-      <a href="${sourceUrl}" target="_blank" rel="noreferrer">芭蕉発句全集を開く</a>
     </section>
   </div>`;
 }
@@ -583,17 +577,14 @@ function navigate(view) {
 }
 
 function chooseDaily() {
-  state.clueId = pickRandomClueId(state.clueId);
-  state.selectedHaikuId = haikuForClue()[0].id;
-  state.selectedFeeling = "";
-  saveState();
-  showToast("今日のまなざしを選び直しました。");
+  setDailySelection(todayKey());
+  showToast("今日の手がかりに戻しました。");
   render();
 }
 
 function selectClue(clueId) {
   state.clueId = clueId;
-  state.selectedHaikuId = haikuForClue()[0].id;
+  state.selectedHaikuId = getDailyHaikuId(todayKey(), clueId);
   state.selectedFeeling = "";
   saveState();
   render();
@@ -694,21 +685,28 @@ function clearSelection() {
 }
 
 function ensureToday() {
-  state.date = todayKey();
-  state.clueId = pickRandomClueId(state.clueId);
-  state.selectedHaikuId = haikuForClue()[0].id;
+  const today = todayKey();
+  if (state.date === today && state.scheduleVersion === "daily-v1" && state.clueId && state.selectedHaikuId) return;
+  setDailySelection(today);
+}
+
+function setDailySelection(dateKey) {
+  state.date = dateKey;
+  state.scheduleVersion = "daily-v1";
+  state.clueId = getDailyClueId(dateKey);
+  state.selectedHaikuId = getDailyHaikuId(dateKey, state.clueId);
   state.selectedFeeling = "";
   saveState();
 }
 
-function pickRandomClueId(previousId = "") {
-  if (clues.length <= 1) return clues[0]?.id || "";
+function getDailyClueId(dateKey) {
+  return clues[seededNumber(`${dateKey}-clue`, clues.length)]?.id || clues[0]?.id || "";
+}
 
-  let nextId = previousId;
-  while (nextId === previousId) {
-    nextId = clues[Math.floor(Math.random() * clues.length)].id;
-  }
-  return nextId;
+function getDailyHaikuId(dateKey, clueId) {
+  const list = bashoHaiku.filter((haiku) => haiku.clueId === clueId);
+  const candidates = list.length ? list : bashoHaiku;
+  return candidates[seededNumber(`${dateKey}-${clueId}-haiku`, candidates.length)]?.id || candidates[0]?.id || "";
 }
 
 function selectedHaiku() {
