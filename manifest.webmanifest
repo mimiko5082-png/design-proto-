@@ -1,14 +1,14 @@
 ﻿{
-  "name": "ことばの森",
-  "short_name": "ことばの森",
-  "description": "見た景色を撮って、その景色に近い言葉と出会うスマホWebアプリ。",
+  "name": "BASHO WALK",
+  "short_name": "BASHO WALK",
+  "description": "芭蕉みたいに街を見るためのお題を受け取り、そこで詠んだ句を道しるべにするスマホWebアプリ。",
   "lang": "ja",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f8f5ed",
-  "theme_color": "#f8f5ed",
+  "background_color": "#f4ead8",
+  "theme_color": "#f4ead8",
   "icons": [
     {
       "src": "./assets/kotoba-icon-192.png",

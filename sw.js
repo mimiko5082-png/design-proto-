@@ -1,15 +1,11 @@
-const CACHE_NAME = "kotoba-forest-v14";
+const CACHE_NAME = "basho-walk-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./basho-styles.css",
+  "./basho-app.js",
   "./manifest.webmanifest",
-  "./assets/kotoba-hero.png",
   "./assets/kotoba-sunset.png",
-  "./assets/kotoba-forest.png",
-  "./assets/kotoba-lake.png",
-  "./assets/kotoba-mist.png",
   "./assets/kotoba-map.png",
   "./assets/kotoba-icon-192.png",
   "./assets/kotoba-icon-512.png",
