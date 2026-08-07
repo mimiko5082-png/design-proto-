@@ -142,6 +142,7 @@ input {
 }
 
 .brand {
+  flex: 1 1 auto;
   min-width: 0;
   text-align: center;
 }
@@ -156,23 +157,29 @@ input {
 .brand-title,
 .simple-header h1 {
   display: block;
+  min-width: 0;
   margin: 2px 0 0;
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 25px;
+  font-size: clamp(22px, 6vw, 25px);
   font-weight: 800;
   letter-spacing: 0;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
 }
 
 .simple-header h1 {
+  flex: 1 1 auto;
   margin: 0;
-  font-size: 20px;
+  font-size: clamp(15px, 4.4vw, 20px);
+  text-align: center;
 }
 
 .icon-button,
 .back-button,
 .filter-button,
 .screen-number {
+  flex: 0 0 auto;
   width: 38px;
   height: 38px;
   display: grid;
@@ -264,37 +271,41 @@ input {
 }
 
 .vertical-poem {
-  display: inline-flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
+  display: block;
   gap: 0;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   font-weight: 800;
-  line-height: 1.75;
+  line-height: 1.48;
   letter-spacing: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-break: anywhere;
 }
 
 .vertical-poem span {
-  display: inline-block;
+  display: inline;
 }
 
 .hero-poem {
-  min-height: 190px;
-  max-height: 290px;
-  font-size: 27px;
+  width: min(100%, 250px);
+  height: 250px;
+  font-size: clamp(20px, 5.8vw, 24px);
+  text-align: start;
 }
 
 .primary-button,
 .secondary-button,
 .danger-button {
   min-height: 50px;
+  padding: 0 16px;
   border-radius: 999px;
   font-weight: 900;
+  line-height: 1.22;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .primary-button {
@@ -363,9 +374,10 @@ input {
 .concept-card p {
   margin: 8px 0;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
-  line-height: 1.7;
+  line-height: 1.62;
+  overflow-wrap: anywhere;
 }
 
 .concept-card strong {
@@ -374,8 +386,9 @@ input {
   border: 1px solid rgba(25, 27, 26, 0.22);
   border-radius: 10px;
   color: var(--ink);
-  font-size: 12px;
-  line-height: 1.8;
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .concept-card a {
@@ -413,6 +426,10 @@ input {
   text-align: left;
 }
 
+.clue-row div {
+  min-width: 0;
+}
+
 .clue-row > span {
   width: 46px;
   height: 46px;
@@ -432,7 +449,9 @@ input {
 
 .clue-row strong {
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 18px;
+  font-size: clamp(15px, 4.4vw, 18px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .clue-row small {
@@ -458,7 +477,7 @@ input {
 
 .deck {
   position: relative;
-  height: 438px;
+  height: 420px;
   margin-top: 16px;
 }
 
@@ -467,12 +486,12 @@ input {
   top: 14px;
   bottom: 14px;
   left: 50%;
-  width: 188px;
+  width: min(188px, 54vw);
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 18px;
-  padding: 20px 16px;
+  gap: 14px;
+  padding: 18px 14px;
   border: 1px solid rgba(29, 33, 32, 0.2);
   border-radius: 13px;
   color: var(--ink);
@@ -483,8 +502,10 @@ input {
 }
 
 .haiku-card .vertical-poem {
-  height: 300px;
-  font-size: 25px;
+  width: 132px;
+  max-width: 100%;
+  height: 286px;
+  font-size: clamp(19px, 5.5vw, 23px);
 }
 
 .haiku-card small {
@@ -520,13 +541,14 @@ input {
 .saved-paper {
   display: grid;
   justify-items: center;
-  gap: 13px;
-  padding: 22px 18px;
+  gap: 11px;
+  padding: 18px 16px;
 }
 
 .world-poem {
-  height: 270px;
-  font-size: 29px;
+  width: min(100%, 205px);
+  height: 230px;
+  font-size: clamp(21px, 6.6vw, 26px);
 }
 
 .world-meta {
@@ -551,9 +573,10 @@ input {
 .placed-paper p {
   margin: 0;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
-  line-height: 1.9;
+  line-height: 1.72;
+  overflow-wrap: anywhere;
 }
 
 .lens-box,
@@ -582,9 +605,10 @@ input {
 .next-clue p {
   margin: 5px 0 0;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
-  line-height: 1.7;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .feeling-head {
@@ -601,7 +625,8 @@ input {
   padding: 10px;
   border-radius: 12px;
   background: rgba(255, 252, 243, 0.56);
-  font-size: 18px;
+  font-size: 15px;
+  line-height: 1.36;
 }
 
 .feeling-head p {
@@ -621,7 +646,7 @@ input {
 .feeling-row {
   min-height: 58px;
   display: grid;
-  grid-template-columns: 86px 1fr 44px;
+  grid-template-columns: minmax(66px, 84px) 1fr 38px;
   gap: 10px;
   align-items: center;
   padding: 11px;
@@ -634,6 +659,8 @@ input {
 .feeling-row span {
   font-size: 12px;
   font-weight: 900;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .feeling-row div {
@@ -672,9 +699,10 @@ input {
 .comment-paper p {
   margin: 8px 0 0;
   color: var(--faint);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.7;
+  line-height: 1.58;
+  overflow-wrap: anywhere;
 }
 
 .notebook-grid {
@@ -719,11 +747,16 @@ input {
 }
 
 .notebook-main strong {
-  min-height: 96px;
+  width: 100%;
+  height: 112px;
   writing-mode: vertical-rl;
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: clamp(14px, 4.1vw, 16px);
+  line-height: 1.4;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-break: anywhere;
 }
 
 .notebook-main span,
@@ -775,7 +808,8 @@ input {
 
 .map-board {
   position: relative;
-  height: 520px;
+  height: min(520px, calc(100svh - 214px));
+  min-height: 410px;
   overflow: hidden;
   border: 1px solid rgba(28, 31, 30, 0.2);
   border-radius: 24px;
@@ -806,8 +840,8 @@ input {
 .map-pin {
   position: absolute;
   z-index: 2;
-  width: 92px;
-  min-height: 58px;
+  width: 74px;
+  min-height: 50px;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -818,7 +852,10 @@ input {
   background: rgba(244, 236, 220, 0.82);
   box-shadow: 0 12px 24px rgba(31, 29, 24, 0.18);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 13px;
   font-weight: 900;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .map-pin.mine {
@@ -836,10 +873,11 @@ input {
 }
 
 .compose-source {
-  height: 170px;
+  width: min(100%, 180px);
+  height: 150px;
   margin: 8px auto 12px;
   color: rgba(24, 27, 27, 0.52);
-  font-size: 20px;
+  font-size: 17px;
 }
 
 .compose-paper label {
@@ -864,9 +902,10 @@ input {
   color: var(--ink);
   background: rgba(255, 252, 243, 0.34);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   outline: none;
+  overflow-wrap: anywhere;
 }
 
 .next-clue {
@@ -890,8 +929,9 @@ input {
   border-radius: 10px;
   color: var(--ink);
   background: rgba(255, 252, 243, 0.52);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+  line-height: 1.2;
 }
 
 .tabbar {
@@ -992,5 +1032,51 @@ input {
 
   .opening-copy {
     min-height: calc(100svh - 256px);
+  }
+
+  .hero-poem {
+    height: 224px;
+    font-size: 20px;
+  }
+
+  .deck {
+    height: 392px;
+  }
+
+  .haiku-card {
+    width: 168px;
+    padding: 16px 12px;
+  }
+
+  .haiku-card .vertical-poem {
+    width: 118px;
+    height: 260px;
+    font-size: 19px;
+  }
+
+  .world-poem {
+    height: 208px;
+    font-size: 22px;
+  }
+
+  .clue-row {
+    grid-template-columns: 48px 1fr;
+    gap: 9px;
+  }
+
+  .clue-row > span {
+    width: 40px;
+    height: 40px;
+  }
+
+  .notebook-main strong {
+    height: 104px;
+    font-size: 14px;
+  }
+
+  .map-pin {
+    width: 64px;
+    min-height: 46px;
+    font-size: 12px;
   }
 }

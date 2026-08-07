@@ -583,7 +583,7 @@ function navigate(view) {
 }
 
 function chooseDaily() {
-  state.clueId = clues[seededNumber(todayKey() + "clue", clues.length)].id;
+  state.clueId = pickRandomClueId(state.clueId);
   state.selectedHaikuId = haikuForClue()[0].id;
   state.selectedFeeling = "";
   saveState();
@@ -694,13 +694,21 @@ function clearSelection() {
 }
 
 function ensureToday() {
-  if (state.date !== todayKey() || !state.clueId) {
-    state.date = todayKey();
-    state.clueId = clues[seededNumber(state.date, clues.length)].id;
-    state.selectedHaikuId = haikuForClue()[0].id;
-    state.selectedFeeling = "";
-    saveState();
+  state.date = todayKey();
+  state.clueId = pickRandomClueId(state.clueId);
+  state.selectedHaikuId = haikuForClue()[0].id;
+  state.selectedFeeling = "";
+  saveState();
+}
+
+function pickRandomClueId(previousId = "") {
+  if (clues.length <= 1) return clues[0]?.id || "";
+
+  let nextId = previousId;
+  while (nextId === previousId) {
+    nextId = clues[Math.floor(Math.random() * clues.length)].id;
   }
+  return nextId;
 }
 
 function selectedHaiku() {
