@@ -339,6 +339,7 @@ button {
   inset: 0;
   background: rgba(7, 10, 10, 0.52);
   backdrop-filter: grayscale(1);
+  pointer-events: none;
 }
 
 .dark-cover {
@@ -534,6 +535,12 @@ button {
   font-size: 12px;
   font-weight: 800;
   line-height: 1.8;
+}
+
+.haiku-stage .main-button,
+.borrow-stage .main-button {
+  position: relative;
+  z-index: 3;
 }
 
 .note-paper {

@@ -273,7 +273,7 @@ function renderHaiku() {
         <b>印</b>
       </article>
       <p>${escapeHtml(item.note)}</p>
-      <button class="main-button dark-button" type="button" data-nav="note">次へ</button>
+      <button class="main-button dark-button" type="button" data-action="go-note">次へ</button>
     </section>
   </div>`;
 }
@@ -382,6 +382,7 @@ function handleAction(target) {
     saveState();
   }
   if (action === "save-note") saveNote();
+  if (action === "go-note") navigate("note");
   if (action === "open-entry") {
     state.activeEntryId = target.dataset.entryId;
     saveState();
