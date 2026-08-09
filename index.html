@@ -19,8 +19,191 @@
     <link rel="stylesheet" href="./basho-styles.css" />
   </head>
   <body>
-    <main class="app-shell" aria-label="芭蕉のまなざし Webプロトタイプ">
-      <section class="phone" aria-live="polite">
+    <main class="app-shell poster-shell" aria-label="芭蕉のまなざし Webプロトタイプ">
+      <section class="award-board" aria-label="芭蕉のまなざし 受賞用赤入れボード">
+        <header class="award-header">
+          <div>
+            <h1>芭蕉のまなざし</h1>
+            <p>青空文庫『おくのほそ道』から、街の見方をひらく</p>
+          </div>
+          <div class="concept-copy">
+            <strong>「どこへ行くか」ではなく、<br />「どう街を見るか」を変える地図。</strong>
+            <span>AIが俳句を作るのではなく、芭蕉の観察を、いまの街歩きに翻訳する。</span>
+          </div>
+          <aside class="award-callout">
+            <b>受賞用に強くする赤入れ</b>
+            <span>この1枚に“実証”を差し込む</span>
+          </aside>
+        </header>
+
+        <section class="award-flow">
+          <article class="poster-phone-card">
+            <span class="poster-number">01</span>
+            <small>まなざしを受け取る</small>
+            <div class="poster-screen light-screen">
+              <button class="poster-menu">☰</button>
+              <button class="poster-chip">今日の<br />まなざし</button>
+              <h2>赤いものを<br />3つ見つける</h2>
+              <i></i>
+              <p>名前ではなく、<br />小さな変化に目を向けてみましょう。</p>
+              <em>出典：青空文庫<br />「おくのほそ道」</em>
+              <strong class="poster-dark-button">この視点で歩き始める</strong>
+              <strong class="poster-light-button">ひとりで歩き始める</strong>
+            </div>
+            <p>他者の気づきやAIが<br />今日の「まなざし」を提案</p>
+          </article>
+
+          <span class="flow-arrow">→</span>
+
+          <article class="poster-phone-card">
+            <span class="poster-number">02</span>
+            <small>スマホをしまう</small>
+            <div class="poster-screen dark-screen">
+              <h2>では、スマホを<br />しまってください。</h2>
+              <div class="phone-sketch"></div>
+              <p>10分後に、そっと<br />お知らせします。</p>
+              <button>やめる</button>
+            </div>
+            <p>スマホを見る時間を減らし、<br />街の中に身を置く</p>
+          </article>
+
+          <span class="flow-arrow">→</span>
+
+          <article class="poster-phone-card">
+            <span class="poster-number">03</span>
+            <small>立ち止まり、感じる</small>
+            <div class="poster-screen light-screen pause-screen">
+              <p>今いる場所で<br />30秒、立ち止まってください。</p>
+              <div class="poster-timer">30<span>秒</span></div>
+              <p>風の音、遠くの音、足音、光、匂い。<br />いちばんに残ったものをひとつ覚えておいてください。</p>
+              <button>終了しました</button>
+            </div>
+            <p>立ち止まり、五感をひらく<br />（音・光・風・匂い・気配など）</p>
+          </article>
+
+          <span class="flow-arrow">→</span>
+
+          <article class="poster-phone-card annotated">
+            <span class="poster-number">04</span>
+            <small>芭蕉と出会う</small>
+            <div class="poster-screen light-screen classic-mini">
+              <button class="poster-menu">☰</button>
+              <article class="mini-slip">
+                <b>閑さや<br />岩にしみ入る<br />蝉の声</b>
+                <span>（おくのほそ道より）</span>
+              </article>
+              <p>静けさの中の、<br />音に耳を澄ます。</p>
+              <em>出典：青空文庫<br />「おくのほそ道」</em>
+            </div>
+            <p>芭蕉の句と出会い、<br />その観察の眼にふれる</p>
+            <div class="red-note note-top">④ 句そのものではなく<br />“観察方法”が伝わるようにする</div>
+            <div class="red-note note-bottom">変換の例<br />「閑さや岩にしみ入る蝉の声」<br />↓<br />“静けさの中の音を聴く”<br />↓<br />今日のお題</div>
+          </article>
+
+          <span class="flow-arrow">→</span>
+
+          <article class="poster-phone-card annotated">
+            <span class="poster-number">05</span>
+            <small>自分の気づきを残す</small>
+            <div class="poster-screen light-screen note-mini">
+              <button class="back-mini">←</button>
+              <h3>この場所で、<br />あなたが気づいたことを<br />ひとつ残してください。</h3>
+              <div class="note-box">電車が通ったあと、<br />一瞬だけ町が<br />静かになる。</div>
+              <div class="tag-row"><span>音</span><span>光</span><span>風</span><span>匂い</span><span>気配</span></div>
+              <small>場所のメモ（任意）<br />例：駅のホーム、風鈴の角 など</small>
+            </div>
+            <p>気づきを言葉・写真・音で残し、<br />自分のまなざしとして記録する</p>
+            <div class="red-note note-right">② 実際のユーザーの<br />記録例を1つ入れる</div>
+          </article>
+        </section>
+
+        <section class="award-lower">
+          <aside class="priority-note">
+            <b>優先順位</b>
+            <span>1 実証結果</span>
+            <span>2 実際の声</span>
+            <span>3 継承の実例</span>
+            <p>この順に強化すると伝わります</p>
+          </aside>
+
+          <article class="quote-panel">
+            <h2>旅に病んで<br />夢は枯野を<br />かけ廻る</h2>
+            <small>（おくのほそ道より）</small>
+          </article>
+
+          <article class="poster-phone-card lower-phone">
+            <span class="poster-number">06</span>
+            <small>まなざしの種を見る</small>
+            <div class="poster-screen list-screen">
+              <nav><span>すべて</span><span>音</span><span>光</span><span>季節</span><span>暮らし</span></nav>
+              <div><b>五月雨を あつめて早し 最上川</b><p>流れが集まる場所を探す</p></div>
+              <div><b>涼しさを 我宿にしてねまる也</b><p>涼しさのある場所を見つける</p></div>
+              <div><b>有難や 雪をかほらす 南谷</b><p>季節が残っている場所を探す</p></div>
+            </div>
+            <p>原典から抽出した「まなざしの種」。<br />今日の気分や季節で選べる。</p>
+          </article>
+
+          <article class="poster-phone-card lower-phone">
+            <span class="poster-number">07</span>
+            <small>まなざしの地図</small>
+            <div class="poster-screen map-screen">
+              <div class="map-grid"></div>
+              <div class="map-card-small"><b>夕方だけ、<br />この壁が金色になる。</b><small>2024.5.12　16:48</small><span>光　時間　季節</span></div>
+              <strong>このまなざしを借りる</strong>
+            </div>
+            <p>ルートではなく、気づきの点が残る地図。<br />他者の“見つけ方”が重なっていく。</p>
+          </article>
+
+          <article class="poster-phone-card lower-phone">
+            <span class="poster-number">08</span>
+            <small>わたしの句帳</small>
+            <div class="poster-screen notebook-screen">
+              <nav><span>すべて</span><span>気づき</span><span>俳句風</span></nav>
+              <div><img src="./assets/kotoba-forest.png" alt="" /><p>赤いポストが、<br />雨の日はもっと赤い。</p></div>
+              <div><img src="./assets/kotoba-lake.png" alt="" /><p>風が抜けるたび、<br />端がそっと透明になる。</p></div>
+              <div><img src="./assets/kotoba-sunset.png" alt="" /><p>夜の路地が、<br />石の匂いをゆっくり返す。</p></div>
+            </div>
+            <p>自分の気づきが種へ重なり、<br />次の歩きにつながっていく。</p>
+          </article>
+
+          <aside class="proof-panel">
+            <div class="red-note fixed-note">① ここを“実証結果”に差し替える</div>
+            <h3>実証結果（街歩きテスト）</h3>
+            <p><b>5人</b>で街歩きテスト</p>
+            <p><strong>4人</strong>が<br />「普段気づかない音や光に気づいた」</p>
+            <p><strong>3人</strong>が<br />「また使いたい」</p>
+            <hr />
+            <small>Before / After の例</small>
+            <div class="before-after"><img src="./assets/kotoba-sunset.png" alt="" /><span>→</span><img src="./assets/kotoba-forest.png" alt="" /></div>
+            <p class="voice">被験者の声：<br />「いつもの道が、まるで別の場所に感じられた。」</p>
+          </aside>
+        </section>
+
+        <section class="award-evidence">
+          <div class="red-note wide-note">③ Aさん→Bさんへ視点が受け継がれた実例を入れる</div>
+          <article>
+            <h3>なぜ、このアプリが魅力なのか</h3>
+            <div class="comparison">
+              <div><b>いつもの街歩き</b><img src="./assets/kotoba-sunset.png" alt="" /><p>目的地・移動が中心</p></div>
+              <span>→</span>
+              <div><b>芭蕉のまなざしで歩いた後</b><img src="./assets/kotoba-forest.png" alt="" /><p>小さな変化・気配に気づく</p></div>
+            </div>
+            <div class="inheritance">
+              <span>Aさん</span><p>夕方だけ、<br />この壁が金色になる。</p><b>→</b><p>窓の反射にも気づいた。<br />光の角度が違って見えた。</p><span>Bさん</span>
+            </div>
+          </article>
+        </section>
+
+        <footer class="award-footer">
+          <div><b>読む</b><span>青空文庫の原典にふれ、芭蕉の言葉と出会う。</span></div>
+          <div><b>見つめる</b><span>立ち止まり、感覚をひらき、街の小さな変化を受けとめる。</span></div>
+          <div><b>受け継ぐ</b><span>気づきを残し、地図や句帳で共有し、次の旅人のまなざしを豊かにする。</span></div>
+          <p class="validation">検証概要：京都市内で実施 ／ 2026年8月 ／ n=5 ／ 通常歩行との比較</p>
+          <small>引用・出典：青空文庫　松尾芭蕉「おくのほそ道」　杉浦正一郎校註　作品ID 61619</small>
+        </footer>
+      </section>
+
+      <section class="phone live-phone" aria-live="polite">
         <div class="status-bar" aria-hidden="true">
           <span>9:41</span>
           <span>5G</span>
@@ -51,7 +234,7 @@
       <div class="toast" id="toast" role="status"></div>
     </main>
 
-    <script src="./basho-app.js?v=20260810-basho-manazashi-v12"></script>
+    <script src="./basho-app.js?v=20260810-basho-manazashi-v13"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
