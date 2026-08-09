@@ -195,6 +195,7 @@ const state = {
   promptId: "",
   haikuId: "",
   note: "",
+  photoData: "",
   mode: "ことば",
   timerStartedAt: 0,
   entries: [],
@@ -224,6 +225,12 @@ screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-note-input]")) {
     state.note = event.target.value.slice(0, 54);
     saveState();
+  }
+});
+
+screen.addEventListener("change", (event) => {
+  if (event.target.matches("[data-photo-input]")) {
+    handlePhotoInput(event.target);
   }
 });
 
@@ -327,27 +334,52 @@ function renderHaiku() {
 }
 
 function renderNote() {
-  const suggestion = currentNoteSuggestion();
-  const date = formatDate(new Date());
+  const activeMode = state.mode || "ことば";
   return `<div class="view note-view">
     <header class="simple-head">
       <button class="back-button" type="button" data-nav="haiku" aria-label="戻る">←</button>
-      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">…</button>
     </header>
-    <section class="note-paper note-card-view">
+    <section class="note-paper">
       <span class="screen-label">05　自分の気づきを残す</span>
-      <p class="note-kicker">あなたの気づきが<br>次の人の手がかりになります。</p>
-      <article class="note-preview-card">
-        <img src="${escapeAttr(suggestion.image)}" alt="" />
-        <div>
-          <h2>${lineBreak(suggestion.title)}</h2>
-          <p>${escapeHtml(suggestion.category)}｜${escapeHtml(date)}<br>あなた</p>
-        </div>
-        <span class="note-person" aria-hidden="true">●</span>
-      </article>
-      <button class="main-button" type="button" data-action="save-note">この気づきを残す</button>
+      <h2>この場所で、<br>あなたが気づいたことを<br>残してください。</h2>
+      ${renderNoteBody(activeMode)}
+      <div class="note-actions">
+        <button class="${activeMode === "ことば" ? "active" : ""}" type="button" data-action="mode" data-mode="ことば">ことばで残す</button>
+        <button class="${activeMode === "俳句" ? "active" : ""}" type="button" data-action="mode" data-mode="俳句">俳句にする</button>
+        <button class="${activeMode === "写真" ? "active" : ""}" type="button" data-action="mode" data-mode="写真">写真を残す</button>
+      </div>
+      <button class="main-button" type="button" data-action="save-note">残す</button>
     </section>
   </div>`;
+}
+
+function renderNoteBody(mode) {
+  const example = currentPrompt().borrowed;
+  if (mode === "俳句") {
+    return `<label class="note-input haiku-input">
+      <span>五・七・五にしなくても大丈夫。見えたままを短く置いてください。</span>
+      <textarea data-note-input maxlength="54" placeholder="夕風や&#10;この壁だけが&#10;金になる">${escapeHtml(state.note)}</textarea>
+    </label>`;
+  }
+  if (mode === "写真") {
+    const preview = state.photoData
+      ? `<img class="photo-preview" src="${escapeAttr(state.photoData)}" alt="選択した写真" />`
+      : `<div class="photo-empty">この場所の写真を<br>一枚選んでください。</div>`;
+    return `<div class="note-input photo-note-input">
+      <span>写真を一枚だけ残せます。あとから句帳に並びます。</span>
+      ${preview}
+      <label class="photo-picker">
+        写真を選択
+        <input type="file" accept="image/*" data-photo-input hidden />
+      </label>
+      <textarea data-note-input maxlength="32" placeholder="写真にひとこと添える">${escapeHtml(state.note)}</textarea>
+    </div>`;
+  }
+  return `<label class="note-input">
+    <span>例）${escapeHtml(example)}</span>
+    <textarea data-note-input maxlength="54" placeholder="ここに残すことばを書く">${escapeHtml(state.note)}</textarea>
+  </label>`;
 }
 
 function renderMap() {
@@ -483,6 +515,7 @@ function handleAction(target) {
     state.mode = target.dataset.mode || "ことば";
     showToast(`${state.mode}で残します。`);
     saveState();
+    render();
   }
   if (action === "save-note") saveNote();
   if (action === "go-note") navigate("note");
@@ -554,14 +587,28 @@ function navigate(view) {
 function saveNote() {
   const prompt = currentPrompt();
   const suggestion = currentNoteSuggestion();
-  const text = state.note.trim() || suggestion.title;
+  const mode = state.mode || "ことば";
+  const text = state.note.trim();
+  if (mode === "写真" && !state.photoData) {
+    showToast("写真を選んでください。");
+    return;
+  }
+  const title =
+    text ||
+    (mode === "俳句" ? "夕風や\nこの壁だけが\n金になる" : suggestion.title);
+  const body =
+    mode === "写真"
+      ? "写真として、この場所のまなざしを残しました。"
+      : mode === "俳句"
+        ? "この場所で生まれた一句です。"
+        : suggestion.body;
   const entry = {
     id: `entry-${Date.now()}`,
-    title: text,
-    body: suggestion.body,
+    title,
+    body,
     date: formatDate(new Date()),
-    category: suggestion.category || prompt.category,
-    image: suggestion.image,
+    category: mode === "俳句" ? "俳句" : mode === "写真" ? "写真" : suggestion.category || prompt.category,
+    image: mode === "写真" && state.photoData ? state.photoData : suggestion.image,
     promptId: prompt.id,
     x: 30 + ((Date.now() / 17) % 44),
     y: 28 + ((Date.now() / 29) % 48),
@@ -569,9 +616,39 @@ function saveNote() {
   state.entries.unshift(entry);
   state.activeEntryId = entry.id;
   state.note = "";
+  state.photoData = "";
+  state.mode = "ことば";
   saveState();
   showToast("まなざしを残しました。");
   navigate("map");
+}
+
+function handlePhotoInput(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const maxSide = 900;
+      const scale = Math.min(maxSide / image.width, maxSide / image.height, 1);
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, width, height);
+      state.photoData = canvas.toDataURL("image/jpeg", 0.78);
+      saveState();
+      render();
+    };
+    image.onerror = () => showToast("写真を読み込めませんでした。");
+    image.src = String(reader.result || "");
+  };
+  reader.onerror = () => showToast("写真を読み込めませんでした。");
+  reader.readAsDataURL(file);
 }
 
 function updateTimer() {
@@ -646,6 +723,7 @@ function loadState() {
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
+    if (typeof state.photoData !== "string") state.photoData = "";
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
