@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v6";
+const CACHE_NAME = "basho-manazashi-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,9 @@ const APP_SHELL = [
   "./basho-app.js",
   "./manifest.webmanifest",
   "./assets/kotoba-mist.png",
+  "./assets/kotoba-forest.png",
+  "./assets/kotoba-lake.png",
+  "./assets/kotoba-sunset.png",
   "./assets/kotoba-map.png",
   "./assets/kotoba-icon-192.png",
   "./assets/kotoba-icon-512.png",

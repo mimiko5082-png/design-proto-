@@ -1,12 +1,12 @@
 :root {
-  --ink: #161a1c;
-  --sumi: #2f312d;
-  --faint: #77746c;
-  --paper: #f4ecdc;
-  --paper-deep: #e6dac4;
-  --line: rgba(35, 37, 34, 0.18);
-  --seal: #8e3d2e;
-  --shadow: 0 24px 70px rgba(28, 31, 30, 0.22), 0 10px 24px rgba(26, 24, 20, 0.16);
+  --ink: #1d211f;
+  --soft-ink: #4c4b44;
+  --paper: #efe5d2;
+  --paper-light: #f7efdf;
+  --paper-deep: #d8ccb8;
+  --line: rgba(29, 33, 31, 0.18);
+  --seal: #8d4234;
+  --dark: #141817;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -16,25 +16,24 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
+html,
+body {
   min-height: 100%;
-  background: #d9cfbc;
 }
 
 body {
-  min-height: 100%;
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 18%, rgba(32, 38, 36, 0.1), transparent 24%),
-    radial-gradient(circle at 90% 8%, rgba(118, 96, 68, 0.14), transparent 26%),
-    linear-gradient(135deg, #e7ddca 0%, #f5eddd 50%, #d7cbb7 100%);
+    radial-gradient(circle at 9% 12%, rgba(36, 42, 39, 0.1), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(96, 83, 61, 0.16), transparent 25%),
+    linear-gradient(135deg, #e2d6bf, #f5ecd9 45%, #d9cbb5);
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic",
     "YuGothic", "Noto Sans JP", sans-serif;
 }
 
 button,
-input {
+textarea {
   font: inherit;
 }
 
@@ -42,10 +41,6 @@ button {
   border: 0;
   cursor: pointer;
   touch-action: manipulation;
-}
-
-input {
-  min-width: 0;
 }
 
 .app-shell {
@@ -61,23 +56,22 @@ input {
   height: min(900px, calc(100svh - 36px));
   min-height: 700px;
   overflow: hidden;
-  border: 6px solid #15191b;
+  border: 6px solid #172021;
   border-radius: 34px;
   background: var(--paper);
-  box-shadow: var(--shadow);
+  box-shadow: 0 26px 76px rgba(26, 27, 23, 0.22), 0 9px 22px rgba(20, 22, 20, 0.18);
 }
 
 .status-bar {
   position: absolute;
   inset: 0 0 auto;
-  z-index: 20;
+  z-index: 30;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: max(13px, var(--safe-top)) 23px 0;
-  color: rgba(22, 26, 28, 0.82);
+  padding: max(13px, var(--safe-top)) 22px 0;
+  color: rgba(24, 28, 27, 0.8);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
   pointer-events: none;
 }
 
@@ -86,44 +80,40 @@ input {
   inset: 0;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(246, 239, 223, 0.94), rgba(238, 229, 211, 0.98)),
-    radial-gradient(circle at 20% 8%, rgba(71, 77, 72, 0.08), transparent 26%);
+    linear-gradient(180deg, rgba(248, 240, 224, 0.92), rgba(236, 226, 207, 0.98)),
+    radial-gradient(circle at 86% 12%, rgba(29, 33, 31, 0.08), transparent 26%);
 }
 
 .screen::before {
   content: "";
   position: absolute;
   inset: 0;
-  opacity: 0.2;
   pointer-events: none;
+  opacity: 0.24;
   background-image:
-    linear-gradient(90deg, rgba(42, 39, 33, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(42, 39, 33, 0.06) 1px, transparent 1px);
-  background-size: 16px 16px;
+    linear-gradient(90deg, rgba(42, 38, 30, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(42, 38, 30, 0.06) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 .screen::after {
-  content: "芭蕉";
+  content: "";
   position: absolute;
-  right: 18px;
-  bottom: 102px;
-  z-index: 0;
-  width: 30px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 2px solid rgba(142, 61, 46, 0.55);
-  color: rgba(142, 61, 46, 0.58);
-  font-size: 10px;
-  font-weight: 900;
-  writing-mode: vertical-rl;
+  right: -10px;
+  bottom: 74px;
+  width: 150px;
+  height: 120px;
+  pointer-events: none;
+  opacity: 0.23;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(30, 35, 33, 0.42) 42%, transparent 45%);
+  filter: blur(0.4px);
 }
 
 .view {
   position: relative;
   z-index: 1;
   min-height: 100%;
-  padding: calc(44px + var(--safe-top)) 18px calc(94px + var(--safe-bottom));
+  padding: calc(42px + var(--safe-top)) 18px calc(94px + var(--safe-bottom));
   overflow: auto;
   scrollbar-width: none;
 }
@@ -132,8 +122,16 @@ input {
   display: none;
 }
 
-.app-header,
-.simple-header {
+.dark-view {
+  color: #f4ead7;
+  background: #141817;
+}
+
+.topbar,
+.simple-head,
+.minimal-head,
+.map-head,
+.journal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -141,801 +139,711 @@ input {
   margin-bottom: 14px;
 }
 
-.brand {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: center;
+.minimal-head {
+  justify-content: flex-start;
 }
 
-.brand-kana {
-  display: block;
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.brand-title,
-.simple-header h1 {
-  display: block;
-  min-width: 0;
-  margin: 2px 0 0;
-  color: var(--ink);
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: clamp(22px, 6vw, 25px);
-  font-weight: 800;
-  letter-spacing: 0;
-  line-height: 1.18;
-  overflow-wrap: anywhere;
-}
-
-.simple-header h1 {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: clamp(15px, 4.4vw, 20px);
-  text-align: center;
-}
-
-.icon-button,
+.round-button,
 .back-button,
-.filter-button,
-.screen-number {
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
+.x-button,
+.menu-dots,
+.today-chip,
+.back-float,
+.share-float {
   display: grid;
   place-items: center;
-  border-radius: 999px;
   color: var(--ink);
-  background: rgba(255, 252, 243, 0.62);
-  box-shadow: inset 0 0 0 1px rgba(25, 27, 26, 0.08);
+  background: rgba(250, 244, 230, 0.64);
+  box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.12);
   font-weight: 900;
 }
 
-.seal {
-  border-radius: 8px;
-  color: var(--seal);
-  background: transparent;
-  box-shadow: inset 0 0 0 2px rgba(142, 61, 46, 0.42);
-}
-
-.screen-number {
-  border-radius: 10px;
-  color: var(--seal);
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  background: transparent;
-}
-
-.filter-button {
-  width: auto;
-  min-width: 52px;
-  padding: 0 12px;
+.round-button,
+.back-button,
+.x-button,
+.menu-dots,
+.back-float,
+.share-float {
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
-  font-size: 12px;
 }
 
-.opening-card {
+.today-chip {
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(29, 33, 31, 0.2);
+  border-radius: 999px;
+  background: rgba(244, 236, 220, 0.56);
+  color: var(--soft-ink);
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.screen-label {
+  display: block;
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.screen-label.light {
+  color: rgba(250, 242, 226, 0.88);
+}
+
+.manazashi-card,
+.feel-paper,
+.note-paper {
   position: relative;
-  min-height: 548px;
+  min-height: 520px;
   overflow: hidden;
-  border: 1px solid rgba(24, 28, 28, 0.35);
-  border-radius: 28px;
-  background: #d9d0bf;
-  box-shadow: 0 18px 42px rgba(34, 32, 28, 0.18);
-}
-
-.opening-card img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1) sepia(0.28) contrast(0.86) brightness(1.08);
-  opacity: 0.64;
-}
-
-.mist-layer {
-  position: absolute;
-  inset: 0;
+  border: 1px solid rgba(29, 33, 31, 0.3);
+  border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(244, 236, 220, 0.3), rgba(244, 236, 220, 0.08) 42%, rgba(24, 27, 27, 0.44)),
-    radial-gradient(circle at 50% 20%, rgba(250, 245, 232, 0.44), transparent 34%);
+    linear-gradient(135deg, rgba(250, 244, 231, 0.88), rgba(221, 211, 192, 0.68)),
+    var(--paper);
+  box-shadow: 0 18px 42px rgba(36, 34, 28, 0.15);
 }
 
-.opening-copy {
-  position: relative;
-  z-index: 1;
-  min-height: 470px;
+.manazashi-card {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 14px;
-  padding: 38px 22px 88px;
+  gap: 16px;
+  padding: 24px 22px 28px;
   text-align: center;
 }
 
-.opening-copy > span {
-  max-width: 250px;
-  color: rgba(30, 32, 31, 0.72);
+.ink-branch {
+  position: absolute;
+  left: -28px;
+  top: 26px;
+  width: 180px;
+  height: 180px;
+  opacity: 0.15;
+  background: radial-gradient(ellipse at 40% 45%, transparent 34%, #1d211f 36%, transparent 38%);
+  transform: rotate(-22deg);
+}
+
+.manazashi-card::after,
+.feel-paper::after,
+.note-paper::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  bottom: -8px;
+  width: 190px;
+  height: 145px;
+  opacity: 0.18;
+  background: url("./assets/kotoba-mist.png") center / cover no-repeat;
+  filter: grayscale(1) sepia(0.25);
+}
+
+.manazashi-card h1 {
+  position: relative;
+  z-index: 1;
+  margin: 28px 0 0;
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(24px, 7.4vw, 31px);
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+
+.manazashi-card i {
+  width: 14px;
+  height: 14px;
+  display: block;
+  border-radius: 999px;
+  background: #8f4535;
+}
+
+.manazashi-card p {
+  max-width: 235px;
+  margin: 0;
+  color: var(--soft-ink);
   font-size: 12px;
+  font-weight: 800;
+  line-height: 1.9;
+}
+
+.main-button,
+.outline-button,
+.quiet-next {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  border-radius: 999px;
   font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.main-button {
+  min-width: 182px;
+  color: #f7eedf;
+  background: linear-gradient(180deg, #2d302c, #151817);
+  box-shadow: 0 12px 24px rgba(20, 22, 20, 0.22);
+}
+
+.dark-button {
+  background: rgba(246, 238, 222, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(247, 238, 222, 0.12);
+}
+
+.outline-button,
+.quiet-next {
+  color: var(--ink);
+  background: rgba(247, 239, 223, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.16);
+}
+
+.page-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.page-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(29, 33, 31, 0.22);
+}
+
+.page-dots .active {
+  background: var(--ink);
+}
+
+.photo-screen,
+.haiku-stage,
+.borrow-stage {
+  position: relative;
+  min-height: calc(100svh - 132px);
+  overflow: hidden;
+  border: 1px solid rgba(246, 238, 222, 0.08);
+  border-radius: 24px;
+  background: url("./assets/kotoba-forest.png") center / cover no-repeat;
+  box-shadow: 0 18px 42px rgba(8, 10, 9, 0.28);
+}
+
+.photo-screen::before,
+.haiku-stage::before,
+.borrow-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 10, 10, 0.52);
+  backdrop-filter: grayscale(1);
+}
+
+.dark-cover {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 38%, rgba(255, 247, 226, 0.08), transparent 32%);
+}
+
+.putaway-copy {
+  position: relative;
+  z-index: 1;
+  min-height: 480px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 28px;
+  padding: 58px 22px 110px;
+  text-align: center;
+}
+
+.putaway-copy p {
+  margin: 0;
+  color: #f5eddd;
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 23px;
+  line-height: 1.85;
+  letter-spacing: 0;
+}
+
+.putaway-copy small,
+.borrow-copy small {
+  color: rgba(245, 237, 221, 0.76);
+  font-size: 12px;
+  font-weight: 800;
   line-height: 1.8;
 }
 
-.opening-copy small,
-.world-paper small,
-.saved-paper small,
-.placed-paper small {
-  color: rgba(40, 42, 39, 0.66);
-  font-size: 11px;
+.phone-line {
+  width: 72px;
+  height: 48px;
+  border: 2px solid rgba(245, 237, 221, 0.68);
+  border-radius: 15px;
+  transform: rotate(-24deg);
+}
+
+.bottom-stack {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 28px;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.ghost-link {
+  color: rgba(245, 237, 221, 0.84);
+  background: transparent;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.quiet-next {
+  min-width: 160px;
+  color: #f6eedf;
+  background: rgba(246, 238, 222, 0.14);
+}
+
+.feel-paper {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.feel-paper p {
+  margin: 10px 0 0;
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.72;
+}
+
+.timer-ring {
+  --dash: 0;
+  width: 148px;
+  height: 148px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, var(--paper-light) 0 56%, transparent 57%),
+    conic-gradient(var(--ink) calc(var(--dash) * 1deg), rgba(29, 33, 31, 0.14) 0);
+  box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.09);
+}
+
+.timer-ring strong,
+.timer-ring span {
+  grid-area: 1 / 1;
+}
+
+.timer-ring strong {
+  margin-top: -12px;
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 38px;
+}
+
+.timer-ring span {
+  margin-top: 38px;
+  font-size: 12px;
   font-weight: 900;
 }
 
-.vertical-poem {
-  display: block;
-  gap: 0;
+.feel-paper small {
+  max-width: 265px;
+  color: var(--soft-ink);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.8;
+}
+
+.haiku-stage {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+  background-image: url("./assets/kotoba-mist.png");
+}
+
+.haiku-slip {
+  position: relative;
+  z-index: 1;
+  width: 144px;
+  height: 260px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 18px 12px;
+  border-radius: 4px;
+  background: rgba(238, 226, 205, 0.88);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.25);
+}
+
+.vertical-text {
+  height: 185px;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 25px;
   font-weight: 800;
-  line-height: 1.48;
-  letter-spacing: 0;
-  white-space: normal;
+  line-height: 1.45;
   overflow-wrap: anywhere;
-  line-break: anywhere;
 }
 
-.vertical-poem span {
+.vertical-text span {
   display: inline;
 }
 
-.hero-poem {
-  width: min(100%, 250px);
-  height: 250px;
-  font-size: clamp(20px, 5.8vw, 24px);
-  text-align: start;
-}
-
-.primary-button,
-.secondary-button,
-.danger-button {
-  min-height: 50px;
-  padding: 0 16px;
-  border-radius: 999px;
+.haiku-slip small {
+  color: var(--soft-ink);
+  font-size: 11px;
   font-weight: 900;
-  line-height: 1.22;
-  white-space: normal;
-  overflow-wrap: anywhere;
 }
 
-.primary-button {
-  color: #f8f0df;
-  background: linear-gradient(180deg, #303332, #15191b);
-  box-shadow: 0 12px 22px rgba(18, 22, 23, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.24);
-}
-
-.secondary-button {
-  color: var(--ink);
-  background: rgba(251, 247, 237, 0.68);
-  box-shadow: inset 0 0 0 1px rgba(26, 30, 29, 0.18);
-}
-
-.danger-button {
-  color: #fff7e9;
-  background: #7d392f;
-}
-
-.wide-button {
-  width: 100%;
-  margin-top: 14px;
-}
-
-.start-button {
+.haiku-slip b {
   position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: 18px;
-  z-index: 2;
-}
-
-.concept-card,
-.clue-paper,
-.world-paper,
-.feeling-head,
-.comment-paper,
-.empty-paper,
-.compose-paper,
-.saved-paper,
-.placed-paper,
-.history-strip {
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background:
-    linear-gradient(135deg, rgba(255, 252, 244, 0.72), rgba(231, 220, 201, 0.7)),
-    var(--paper);
-  box-shadow: 0 12px 28px rgba(35, 32, 27, 0.1);
-}
-
-.concept-card {
-  margin-top: 14px;
-  padding: 16px;
-}
-
-.concept-card span,
-.compose-label,
-.saved-paper > span,
-.history-strip > span {
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.concept-card p {
-  margin: 8px 0;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 1.62;
-  overflow-wrap: anywhere;
-}
-
-.concept-card strong {
-  display: block;
-  padding: 12px;
-  border: 1px solid rgba(25, 27, 26, 0.22);
-  border-radius: 10px;
-  color: var(--ink);
-  font-size: 11px;
-  line-height: 1.65;
-  overflow-wrap: anywhere;
-}
-
-.concept-card a {
-  min-height: 42px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 12px;
-  padding: 0 13px;
-  border-radius: 999px;
-  color: #f8f0df;
-  background: var(--ink);
-  font-size: 12px;
-  font-weight: 900;
-  text-decoration: none;
-}
-
-.clue-paper {
-  display: grid;
-  gap: 11px;
-  padding: 14px;
-}
-
-.clue-row {
-  min-height: 76px;
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid rgba(30, 33, 31, 0.14);
-  border-radius: 14px;
-  color: var(--ink);
-  background: rgba(255, 252, 243, 0.54);
-  text-align: left;
-}
-
-.clue-row div {
-  min-width: 0;
-}
-
-.clue-row > span {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  color: var(--seal);
-  background: rgba(142, 61, 46, 0.08);
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-weight: 900;
-}
-
-.clue-row strong,
-.clue-row small {
-  display: block;
-}
-
-.clue-row strong {
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: clamp(15px, 4.4vw, 18px);
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
-.clue-row small {
-  margin-top: 3px;
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.clue-row.active {
-  border-color: rgba(142, 61, 46, 0.45);
-  background: rgba(255, 249, 232, 0.9);
-}
-
-.clue-paper p,
-.map-note {
-  margin: 4px 3px 0;
-  color: var(--faint);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.8;
-}
-
-.deck {
-  position: relative;
-  height: 420px;
-  margin-top: 16px;
-}
-
-.haiku-card {
-  position: absolute;
-  top: 14px;
+  right: 12px;
   bottom: 14px;
-  left: 50%;
-  width: min(188px, 54vw);
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 14px;
-  padding: 18px 14px;
-  border: 1px solid rgba(29, 33, 32, 0.2);
-  border-radius: 13px;
-  color: var(--ink);
-  background:
-    linear-gradient(180deg, rgba(255, 252, 244, 0.78), rgba(224, 214, 194, 0.76)),
-    var(--paper);
-  box-shadow: 0 18px 34px rgba(34, 31, 26, 0.18);
-}
-
-.haiku-card .vertical-poem {
-  width: 132px;
-  max-width: 100%;
-  height: 286px;
-  font-size: clamp(19px, 5.5vw, 23px);
-}
-
-.haiku-card small {
-  color: var(--faint);
-  font-weight: 900;
-}
-
-.offset-0 {
-  transform: translateX(-112%) rotate(-7deg) scale(0.9);
-  opacity: 0.72;
-}
-
-.offset-1 {
-  z-index: 2;
-  transform: translateX(-50%) scale(1);
-}
-
-.offset-2 {
-  transform: translateX(12%) rotate(7deg) scale(0.9);
-  opacity: 0.72;
-}
-
-.swipe-hint {
-  margin: 0 0 12px;
-  color: var(--faint);
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-}
-
-.world-paper,
-.placed-paper,
-.saved-paper {
-  display: grid;
-  justify-items: center;
-  gap: 11px;
-  padding: 18px 16px;
-}
-
-.world-poem {
-  width: min(100%, 205px);
-  height: 230px;
-  font-size: clamp(21px, 6.6vw, 26px);
-}
-
-.world-meta {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.world-meta span {
-  min-height: 40px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  color: var(--ink);
-  background: rgba(255, 252, 243, 0.52);
-  font-size: 12px;
-  font-weight: 900;
+  border: 1px solid rgba(141, 66, 52, 0.54);
+  color: var(--seal);
+  font-size: 9px;
 }
 
-.world-paper p,
-.placed-paper p {
+.haiku-stage > p {
+  position: relative;
+  z-index: 1;
+  max-width: 260px;
   margin: 0;
-  color: var(--ink);
+  color: rgba(246, 238, 222, 0.8);
   font-size: 12px;
   font-weight: 800;
-  line-height: 1.72;
-  overflow-wrap: anywhere;
-}
-
-.lens-box,
-.next-clue {
-  width: 100%;
-  padding: 13px;
-  border: 1px solid rgba(29, 33, 32, 0.13);
-  border-radius: 14px;
-  background: rgba(255, 252, 243, 0.48);
-}
-
-.lens-box strong,
-.lens-box span,
-.next-clue strong,
-.next-clue p {
-  display: block;
-}
-
-.lens-box strong,
-.next-clue strong {
-  color: var(--seal);
-  font-size: 12px;
-}
-
-.lens-box span,
-.next-clue p {
-  margin: 5px 0 0;
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-.feeling-head {
-  display: grid;
-  grid-template-columns: 98px 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 15px;
-}
-
-.mini-vertical {
-  width: 82px;
-  height: 142px;
-  padding: 10px;
-  border-radius: 12px;
-  background: rgba(255, 252, 243, 0.56);
-  font-size: 15px;
-  line-height: 1.36;
-}
-
-.feeling-head p {
-  margin: 0;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 900;
   line-height: 1.8;
 }
 
-.feeling-list {
+.note-paper {
   display: grid;
-  gap: 9px;
-  margin-top: 12px;
+  gap: 18px;
+  padding: 24px 20px;
 }
 
-.feeling-row {
-  min-height: 58px;
-  display: grid;
-  grid-template-columns: minmax(66px, 84px) 1fr 38px;
-  gap: 10px;
-  align-items: center;
-  padding: 11px;
-  border-radius: 14px;
+.note-paper h2 {
+  margin: 0;
   color: var(--ink);
-  background: rgba(255, 252, 243, 0.58);
-  box-shadow: inset 0 0 0 1px rgba(28, 31, 30, 0.1);
-}
-
-.feeling-row span {
-  font-size: 12px;
-  font-weight: 900;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.feeling-row div {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(31, 34, 32, 0.11);
-}
-
-.feeling-row i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #2f3434;
-}
-
-.feeling-row b {
-  color: var(--faint);
-  font-size: 12px;
-}
-
-.feeling-row.active {
-  outline: 2px solid rgba(142, 61, 46, 0.34);
-}
-
-.comment-paper {
-  margin-top: 12px;
-  padding: 14px;
-}
-
-.comment-paper strong {
-  color: var(--ink);
-  font-size: 13px;
-}
-
-.comment-paper p {
-  margin: 8px 0 0;
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.58;
-  overflow-wrap: anywhere;
-}
-
-.notebook-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.notebook-card {
-  position: relative;
-  min-height: 208px;
-  border: 1px solid rgba(28, 31, 30, 0.16);
-  border-radius: 16px;
-  background: rgba(255, 252, 243, 0.58);
-  box-shadow: 0 10px 24px rgba(32, 29, 24, 0.1);
-}
-
-.check-button {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  z-index: 2;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  color: var(--ink);
-  background: rgba(255, 252, 243, 0.8);
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.notebook-main {
-  width: 100%;
-  min-height: 208px;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 10px;
-  padding: 26px 12px 14px;
-  color: var(--ink);
-  background: transparent;
-}
-
-.notebook-main strong {
-  width: 100%;
-  height: 112px;
-  writing-mode: vertical-rl;
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: clamp(14px, 4.1vw, 16px);
-  line-height: 1.4;
-  text-align: start;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-break: anywhere;
-}
-
-.notebook-main span,
-.notebook-main small {
-  color: var(--faint);
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.notebook-card.selected {
-  outline: 2px solid rgba(142, 61, 46, 0.5);
-}
-
-.empty-paper {
-  grid-column: 1 / -1;
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 32px 18px;
+  font-size: 17px;
+  line-height: 1.75;
   text-align: center;
 }
 
-.empty-paper b {
-  width: 78px;
-  height: 78px;
+.note-input {
+  position: relative;
+  z-index: 1;
   display: grid;
-  place-items: center;
-  border-radius: 999px;
-  color: #f8f0df;
-  background: var(--ink);
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 36px;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 12px;
+  background: rgba(216, 204, 184, 0.62);
 }
 
-.empty-paper strong,
-.empty-paper span {
-  display: block;
-}
-
-.empty-paper strong {
-  color: var(--ink);
-}
-
-.empty-paper span {
-  color: var(--faint);
+.note-input span {
+  color: rgba(29, 33, 31, 0.52);
   font-size: 12px;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.note-input textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: none;
+  border: 0;
+  outline: none;
+  color: var(--ink);
+  background: rgba(250, 244, 230, 0.62);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.note-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.note-actions button {
+  min-height: 56px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: rgba(250, 244, 230, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.12);
+  font-size: 11px;
   font-weight: 900;
 }
 
-.map-board {
+.map-panel {
   position: relative;
-  height: min(520px, calc(100svh - 214px));
-  min-height: 410px;
+  height: min(560px, calc(100svh - 188px));
+  min-height: 500px;
   overflow: hidden;
-  border: 1px solid rgba(28, 31, 30, 0.2);
-  border-radius: 24px;
-  background: #d6ccba;
-  box-shadow: 0 16px 36px rgba(40, 42, 35, 0.16);
+  border: 1px solid rgba(29, 33, 31, 0.2);
+  border-radius: 22px;
+  background: #d8ceb9;
 }
 
-.map-board img {
+.map-head span,
+.journal-head span {
+  color: var(--soft-ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.map-panel > img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) sepia(0.25) contrast(0.78) brightness(1.12);
-  opacity: 0.68;
+  filter: grayscale(1) sepia(0.2) contrast(0.82) brightness(1.1);
+  opacity: 0.65;
 }
 
-.map-grid {
+.map-layer {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(28, 31, 30, 0.08) 18.3% 18.8%, transparent 19% 31%, rgba(28, 31, 30, 0.08) 31.3% 31.8%, transparent 32%),
-    linear-gradient(90deg, rgba(28, 31, 30, 0.06), transparent 1px),
-    linear-gradient(rgba(28, 31, 30, 0.06), transparent 1px);
-  background-size: 100% 100%, 42px 42px, 42px 42px;
+    radial-gradient(circle at 50% 49%, rgba(141, 66, 52, 0.18), transparent 10%),
+    linear-gradient(180deg, rgba(244, 236, 220, 0.1), rgba(244, 236, 220, 0.28));
 }
 
-.map-pin {
+.map-dot {
   position: absolute;
   z-index: 2;
-  width: 74px;
-  min-height: 50px;
+  width: 15px;
+  height: 15px;
   transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgba(54, 60, 48, 0.74);
+  box-shadow: 0 0 0 8px rgba(54, 60, 48, 0.1);
+}
+
+.map-dot.active {
+  width: 24px;
+  height: 24px;
+  background: var(--seal);
+  box-shadow: 0 0 0 13px rgba(141, 66, 52, 0.12);
+}
+
+.map-card {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 3;
   display: grid;
-  place-items: center;
-  padding: 8px;
-  border: 1px solid rgba(28, 31, 30, 0.18);
-  border-radius: 10px;
-  color: var(--ink);
-  background: rgba(244, 236, 220, 0.82);
-  box-shadow: 0 12px 24px rgba(31, 29, 24, 0.18);
-  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.map-pin.mine {
-  color: #fff5e5;
-  background: rgba(37, 42, 42, 0.88);
-}
-
-.map-note {
-  margin-top: 12px;
-}
-
-.compose-paper,
-.saved-paper {
-  padding: 18px;
-}
-
-.compose-source {
-  width: min(100%, 180px);
-  height: 150px;
-  margin: 8px auto 12px;
-  color: rgba(24, 27, 27, 0.52);
-  font-size: 17px;
-}
-
-.compose-paper label {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 10px;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
   align-items: center;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(245, 237, 221, 0.92);
+  box-shadow: 0 12px 30px rgba(27, 29, 24, 0.16);
+}
+
+.map-card img {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 10px;
+  filter: grayscale(0.85) sepia(0.18);
+}
+
+.map-card strong,
+.map-card p,
+.map-card small {
+  display: block;
+}
+
+.map-card strong {
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 15px;
+}
+
+.map-card p {
+  margin: 5px 0;
+  color: var(--soft-ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.map-card small {
+  color: rgba(29, 33, 31, 0.58);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
   margin-top: 10px;
 }
 
-.compose-paper label span {
-  color: var(--seal);
-  font-size: 12px;
+.filter-row button {
+  min-height: 40px;
+  border-radius: 999px;
+  color: var(--soft-ink);
+  background: rgba(244, 236, 220, 0.6);
+  font-size: 10px;
   font-weight: 900;
+}
+
+.filter-row .active {
+  color: #f5ecdc;
+  background: var(--ink);
+}
+
+.borrow-stage {
+  display: grid;
+  align-content: end;
+  justify-items: center;
+  gap: 18px;
+  padding: 24px;
+  background-image: url("./assets/kotoba-sunset.png");
+}
+
+.back-float,
+.share-float {
+  position: absolute;
+  top: 18px;
+  z-index: 3;
+  color: #f4ead7;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.back-float {
+  left: 18px;
+}
+
+.share-float {
+  right: 18px;
+}
+
+.borrow-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 0 8px 20px;
   text-align: center;
 }
 
-.compose-paper input {
-  height: 44px;
-  border: 0;
-  border-bottom: 2px solid rgba(28, 31, 30, 0.22);
-  color: var(--ink);
-  background: rgba(255, 252, 243, 0.34);
+.borrow-copy h2 {
+  margin: 0;
+  color: #f5ecdc;
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: 16px;
+  font-size: clamp(22px, 6.8vw, 28px);
+  line-height: 1.62;
+}
+
+.borrow-copy p {
+  margin: 0;
+  color: rgba(245, 237, 221, 0.82);
+  font-size: 12px;
   font-weight: 800;
-  outline: none;
-  overflow-wrap: anywhere;
+  line-height: 1.8;
 }
 
-.next-clue {
-  margin-top: 5px;
-}
-
-.history-strip {
-  margin-top: 14px;
-  padding: 14px;
-}
-
-.history-strip div {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 0;
-}
-
-.history-strip > span {
-  display: none;
-}
-
-.history-strip button {
-  min-height: 58px;
-  border-radius: 10px;
+.journal-head h1 {
+  margin: 4px 0 0;
   color: var(--ink);
-  background: rgba(255, 252, 243, 0.52);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 20px;
+}
+
+.journal-list {
+  display: grid;
+  gap: 9px;
+}
+
+.journal-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 68px 1fr 30px;
+  gap: 11px;
+  align-items: center;
+  padding: 9px;
+  border-bottom: 1px solid rgba(29, 33, 31, 0.14);
+  color: var(--ink);
+  background: rgba(244, 236, 220, 0.42);
+  text-align: left;
+}
+
+.journal-row img {
+  width: 68px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  filter: grayscale(0.8) sepia(0.16);
+}
+
+.journal-row div {
+  min-width: 0;
+}
+
+.journal-row strong,
+.journal-row p,
+.journal-row small {
+  display: block;
+}
+
+.journal-row strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-row p {
+  overflow: hidden;
+  margin: 3px 0;
+  color: var(--soft-ink);
   font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-row small,
+.journal-row > span {
+  color: rgba(29, 33, 31, 0.56);
+  font-size: 10px;
   font-weight: 900;
-  line-height: 1.2;
+}
+
+.journal-row > span {
+  text-align: right;
 }
 
 .tabbar {
@@ -943,15 +851,15 @@ input {
   left: 10px;
   right: 10px;
   bottom: max(10px, var(--safe-bottom));
-  z-index: 20;
+  z-index: 35;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 5px;
   padding: 8px;
-  border: 1px solid rgba(28, 31, 30, 0.14);
+  border: 1px solid rgba(29, 33, 31, 0.14);
   border-radius: 22px;
-  background: rgba(244, 236, 220, 0.9);
-  box-shadow: 0 -10px 28px rgba(32, 29, 24, 0.08);
+  background: rgba(239, 229, 210, 0.9);
+  box-shadow: 0 -10px 28px rgba(31, 29, 24, 0.08);
   backdrop-filter: blur(16px);
 }
 
@@ -962,7 +870,7 @@ input {
   place-items: center;
   gap: 2px;
   border-radius: 16px;
-  color: rgba(28, 31, 30, 0.58);
+  color: rgba(29, 33, 31, 0.58);
   background: transparent;
   font-size: 10px;
   font-weight: 900;
@@ -975,17 +883,17 @@ input {
   place-items: center;
   border-radius: 999px;
   color: inherit;
-  background: rgba(28, 31, 30, 0.08);
+  background: rgba(29, 33, 31, 0.08);
   font-size: 12px;
 }
 
 .tab.active {
-  color: #f8f0df;
-  background: #1d2224;
+  color: #f7eedf;
+  background: var(--ink);
 }
 
 .tab.active .tab-icon {
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .toast {
@@ -998,8 +906,8 @@ input {
   padding: 12px 16px;
   border-radius: 999px;
   color: #fff;
-  background: rgba(29, 34, 36, 0.92);
-  box-shadow: 0 12px 32px rgba(29, 34, 36, 0.22);
+  background: rgba(29, 33, 31, 0.92);
+  box-shadow: 0 12px 32px rgba(29, 33, 31, 0.22);
   font-size: 13px;
   font-weight: 900;
   opacity: 0;
@@ -1026,61 +934,21 @@ input {
   }
 
   .view {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
-  .opening-card {
-    min-height: calc(100svh - 178px);
+  .manazashi-card {
+    min-height: calc(100svh - 154px);
   }
 
-  .opening-copy {
-    min-height: calc(100svh - 256px);
+  .photo-screen,
+  .haiku-stage,
+  .borrow-stage {
+    min-height: calc(100svh - 118px);
   }
 
-  .hero-poem {
-    height: 224px;
-    font-size: 20px;
-  }
-
-  .deck {
-    height: 392px;
-  }
-
-  .haiku-card {
-    width: 168px;
-    padding: 16px 12px;
-  }
-
-  .haiku-card .vertical-poem {
-    width: 118px;
-    height: 260px;
-    font-size: 19px;
-  }
-
-  .world-poem {
-    height: 208px;
-    font-size: 22px;
-  }
-
-  .clue-row {
-    grid-template-columns: 48px 1fr;
-    gap: 9px;
-  }
-
-  .clue-row > span {
-    width: 40px;
-    height: 40px;
-  }
-
-  .notebook-main strong {
-    height: 104px;
-    font-size: 14px;
-  }
-
-  .map-pin {
-    width: 64px;
-    min-height: 46px;
-    font-size: 12px;
+  .map-panel {
+    min-height: 480px;
   }
 }
