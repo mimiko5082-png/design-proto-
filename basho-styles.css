@@ -54,7 +54,7 @@ button {
   position: relative;
   width: min(100%, 420px);
   height: min(900px, calc(100svh - 36px));
-  min-height: 700px;
+  min-height: min(700px, calc(100svh - 36px));
   overflow: hidden;
   border: 6px solid #172021;
   border-radius: 34px;
@@ -1510,18 +1510,20 @@ button {
 }
 
 .poster-shell {
-  display: block;
+  display: grid;
+  place-items: center;
   min-height: 100svh;
-  overflow-x: auto;
-  padding: 14px;
+  overflow: hidden;
+  padding: 18px 12px;
 }
 
 .live-phone {
-  display: none;
+  display: block;
 }
 
 .award-board {
   position: relative;
+  display: none;
   width: 1560px;
   min-height: 1060px;
   margin: 0 auto;
