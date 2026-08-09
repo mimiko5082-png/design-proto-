@@ -101,8 +101,8 @@ const haiku = [
 const sampleEntries = [
   {
     id: "sample-1",
-    title: "旅に病んで",
-    body: "雨の日はもっと濃い。",
+    title: "赤いポストが、\n雨の日はもっと赤い。",
+    body: "濡れた色が、町の端を少し明るくしていた。",
     date: "2024.5.12",
     category: "色",
     image: "./assets/kotoba-forest.png",
@@ -112,8 +112,8 @@ const sampleEntries = [
   },
   {
     id: "sample-2",
-    title: "風が抜けるたび",
-    body: "線路のそばを過ぎたら。",
+    title: "風が抜けるたび、",
+    body: "線が低くのびるように見上がる。",
     date: "2024.5.10",
     category: "風",
     image: "./assets/kotoba-lake.png",
@@ -123,7 +123,7 @@ const sampleEntries = [
   },
   {
     id: "sample-3",
-    title: "この道だけ",
+    title: "この道では、",
     body: "鳥の声がよく聞こえる。",
     date: "2024.5.8",
     category: "音",
@@ -134,7 +134,7 @@ const sampleEntries = [
   },
   {
     id: "sample-4",
-    title: "夕方だけ",
+    title: "夕方だけ、",
     body: "この壁が金色になる。",
     date: "2024.5.7",
     category: "光",
@@ -143,7 +143,51 @@ const sampleEntries = [
     x: 62,
     y: 69,
   },
+  {
+    id: "sample-5",
+    title: "雨にぬれて、",
+    body: "芭蕉は静かにゆめり返る。",
+    date: "2024.5.6",
+    category: "俳句",
+    image: "./assets/kotoba-mist.png",
+    promptId: "old",
+    x: 42,
+    y: 63,
+  },
 ];
+
+const noteSuggestions = {
+  red: {
+    title: "ポストの赤だけ、\n雨のあと少し深くなる。",
+    body: "赤いものを探していたら、濡れた色が残っていました。",
+    category: "色",
+    image: "./assets/kotoba-forest.png",
+  },
+  sound: {
+    title: "電車が通ったあと、\n一瞬だけ町が静かになる。",
+    body: "音が消える間に、道の広さが見えました。",
+    category: "音",
+    image: "./assets/kotoba-sunset.png",
+  },
+  light: {
+    title: "夕方だけ、\nこの壁が金色になる。",
+    body: "光の角度が変わると、いつもの壁が別の場所に見えました。",
+    category: "光",
+    image: "./assets/kotoba-sunset.png",
+  },
+  wind: {
+    title: "風が抜けるたび、\n線が低くのびるように見える。",
+    body: "角を曲がる風が、見えない道を描いていました。",
+    category: "風",
+    image: "./assets/kotoba-lake.png",
+  },
+  old: {
+    title: "古い看板の下で、\n新しい花が揺れている。",
+    body: "時間の重なりが、足元に残っていました。",
+    category: "手ぶり",
+    image: "./assets/kotoba-mist.png",
+  },
+};
 
 const state = {
   view: "home",
@@ -192,6 +236,7 @@ tabbar.addEventListener("click", (event) => {
 function render() {
   const views = {
     home: renderHome,
+    walk: renderPutAway,
     putaway: renderPutAway,
     feel: renderFeel,
     haiku: renderHaiku,
@@ -252,7 +297,7 @@ function renderFeel() {
       <button class="x-button" type="button" data-nav="putaway" aria-label="閉じる">×</button>
     </header>
     <section class="feel-paper">
-      <span class="screen-label">03　立ち止まり、感じる</span>
+      <span class="screen-label">03　立ち止まる</span>
       <p>今いる場所で<br>30秒、立ち止まってください。</p>
       <div class="timer-ring" data-el="timer" style="--dash:${dash}">
         <strong>${remaining}</strong>
@@ -282,25 +327,25 @@ function renderHaiku() {
 }
 
 function renderNote() {
-  const example = currentPrompt().borrowed;
+  const suggestion = currentNoteSuggestion();
+  const date = formatDate(new Date());
   return `<div class="view note-view">
     <header class="simple-head">
       <button class="back-button" type="button" data-nav="haiku" aria-label="戻る">←</button>
-      <button class="menu-dots" type="button" aria-label="メニュー">…</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
-    <section class="note-paper">
+    <section class="note-paper note-card-view">
       <span class="screen-label">05　自分の気づきを残す</span>
-      <h2>この場所で、<br>あなたが気づいたことを<br>残してください。</h2>
-      <label class="note-input">
-        <span>例）${escapeHtml(example)}</span>
-        <textarea data-note-input maxlength="54" placeholder="ここに残すことばを書く">${escapeHtml(state.note)}</textarea>
-      </label>
-      <div class="note-actions">
-        <button type="button" data-action="mode" data-mode="ことば">ことばで残す</button>
-        <button type="button" data-action="mode" data-mode="俳句">俳句にする</button>
-        <button type="button" data-action="mode" data-mode="写真">写真を残す</button>
-      </div>
-      <button class="main-button" type="button" data-action="save-note">残す</button>
+      <p class="note-kicker">あなたの気づきが<br>次の人の手がかりになります。</p>
+      <article class="note-preview-card">
+        <img src="${escapeAttr(suggestion.image)}" alt="" />
+        <div>
+          <h2>${lineBreak(suggestion.title)}</h2>
+          <p>${escapeHtml(suggestion.category)}｜${escapeHtml(date)}<br>あなた</p>
+        </div>
+        <span class="note-person" aria-hidden="true">●</span>
+      </article>
+      <button class="main-button" type="button" data-action="save-note">この気づきを残す</button>
     </section>
   </div>`;
 }
@@ -343,7 +388,7 @@ function renderMap() {
       </article>
     </section>
     <nav class="filter-row">
-      <button class="active">すべて</button><button>光</button><button>音</button><button>風</button><button>暮らし</button><button>季節</button>
+      <button class="active">すべて</button><button>光</button><button>音</button><button>風</button><button>手ぶり</button><button>季節</button>
     </nav>
   </div>`;
 }
@@ -381,7 +426,7 @@ function renderBorrow() {
 function renderNotebook() {
   const entries = allEntries().slice(0, 8);
   const selectedIds = new Set(state.selectedEntryIds || []);
-  const editLabel = state.notebookEditing ? "完了" : "編集";
+  const editLabel = state.notebookEditing ? "完了" : "☰";
   const cards = entries.length
     ? entries.map((entry) => {
         const isSelected = selectedIds.has(entry.id);
@@ -407,17 +452,22 @@ function renderNotebook() {
         <button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button>
       </div>`
     : "";
-  return `<div class="view notebook-view">
+  return `<div class="view notebook-view ${state.notebookEditing ? "editing" : ""}">
     <header class="journal-head">
+      <button class="back-button" type="button" data-nav="borrow" aria-label="戻る">←</button>
       <div>
         <span>08　句帳にためる</span>
         <h1>わたしの句帳</h1>
       </div>
-      <button class="round-button" type="button" aria-label="メニュー">☰</button>
+      <button class="menu-dots" type="button" data-action="toggle-notebook-edit" aria-label="句帳を編集">${editLabel}</button>
     </header>
-    <div class="journal-tools">
-      <button class="journal-edit-button" type="button" data-action="toggle-notebook-edit">${editLabel}</button>
-    </div>
+    <nav class="journal-filter-row" aria-label="句帳の分類">
+      <button class="active" type="button">すべて</button>
+      <button type="button">色</button>
+      <button type="button">音</button>
+      <button type="button">風</button>
+      <button type="button">光</button>
+    </nav>
     ${deleteBar}
     <section class="journal-list">${cards}</section>
   </div>`;
@@ -503,14 +553,15 @@ function navigate(view) {
 
 function saveNote() {
   const prompt = currentPrompt();
-  const text = state.note.trim() || prompt.borrowed;
+  const suggestion = currentNoteSuggestion();
+  const text = state.note.trim() || suggestion.title;
   const entry = {
     id: `entry-${Date.now()}`,
-    title: text.length > 14 ? `${text.slice(0, 14)}。` : text,
-    body: prompt.note.replace("ください。", "ました。"),
+    title: text,
+    body: suggestion.body,
     date: formatDate(new Date()),
-    category: prompt.category,
-    image: "./assets/kotoba-sunset.png",
+    category: suggestion.category || prompt.category,
+    image: suggestion.image,
     promptId: prompt.id,
     x: 30 + ((Date.now() / 17) % 44),
     y: 28 + ((Date.now() / 29) % 48),
@@ -552,6 +603,16 @@ function ensureDaily(force = false) {
 
 function currentPrompt() {
   return prompts.find((prompt) => prompt.id === state.promptId) || prompts[0];
+}
+
+function currentNoteSuggestion() {
+  const prompt = currentPrompt();
+  return noteSuggestions[prompt.id] || {
+    title: prompt.borrowed,
+    body: prompt.note.replace("ください。", "ました。"),
+    category: prompt.category,
+    image: "./assets/kotoba-sunset.png",
+  };
 }
 
 function currentHaiku() {

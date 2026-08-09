@@ -604,6 +604,79 @@ button {
   font-weight: 900;
 }
 
+.note-card-view {
+  align-content: center;
+  justify-items: center;
+  gap: 17px;
+  padding: 24px 20px 30px;
+}
+
+.note-kicker {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--soft-ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.note-preview-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  gap: 13px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(245, 237, 221, 0.84);
+  box-shadow: 0 14px 32px rgba(31, 29, 24, 0.16);
+}
+
+.note-preview-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  filter: grayscale(0.78) sepia(0.18) contrast(0.9);
+}
+
+.note-preview-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(20px, 6vw, 24px);
+  line-height: 1.62;
+  text-align: left;
+}
+
+.note-preview-card p {
+  margin: 10px 0 0;
+  color: rgba(29, 33, 31, 0.62);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.7;
+}
+
+.note-person {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: rgba(29, 33, 31, 0.46);
+  background: rgba(29, 33, 31, 0.12);
+  font-size: 8px;
+}
+
+.note-card-view .main-button {
+  width: min(100%, 270px);
+}
+
 .map-panel {
   position: relative;
   height: min(560px, calc(100svh - 188px));
@@ -691,6 +764,7 @@ button {
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   font-size: 15px;
+  white-space: pre-line;
 }
 
 .map-card p {
@@ -770,6 +844,7 @@ button {
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   font-size: clamp(22px, 6.8vw, 28px);
   line-height: 1.62;
+  white-space: pre-line;
 }
 
 .borrow-copy p {
@@ -780,11 +855,55 @@ button {
   line-height: 1.8;
 }
 
+.notebook-view .journal-head {
+  display: grid;
+  grid-template-columns: 38px 1fr 38px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.notebook-view .journal-head > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.notebook-view.editing .menu-dots {
+  width: 56px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.notebook-view.editing .journal-head {
+  grid-template-columns: 38px 1fr 56px;
+}
+
 .journal-head h1 {
   margin: 4px 0 0;
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   font-size: 20px;
+}
+
+.journal-filter-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.journal-filter-row button {
+  min-height: 30px;
+  border-radius: 999px;
+  color: var(--soft-ink);
+  background: rgba(244, 236, 220, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.1);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.journal-filter-row .active {
+  color: #f5ecdc;
+  background: var(--ink);
 }
 
 .journal-list {
@@ -851,6 +970,14 @@ button {
   overflow: hidden;
 }
 
+.notebook-view:not(.editing) .journal-row {
+  grid-template-columns: 1fr;
+}
+
+.notebook-view:not(.editing) .journal-select {
+  display: none;
+}
+
 .journal-row.selected {
   background: rgba(141, 66, 52, 0.09);
   box-shadow: inset 0 0 0 1px rgba(141, 66, 52, 0.2);
@@ -891,8 +1018,10 @@ button {
   color: var(--ink);
   font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
   font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.45;
 }
 
 .journal-row p {
