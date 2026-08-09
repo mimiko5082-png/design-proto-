@@ -1,100 +1,83 @@
-const STORAGE_KEY = "basho_manazashi_board_v1";
+const STORAGE_KEY = "basho_manazashi_board_v2";
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
 
-const prompts = [
-  {
-    id: "red",
-    title: "赤いものを\n3つ見つける",
-    short: "赤いものを3つ見つける",
-    note: "街の中で、赤いものを3つ見つけて、その瞬間を覚えておいてください。",
-    borrowed: "夕方だけ、この壁が金色になる。",
-    category: "色",
-  },
+const gazes = [
   {
     id: "sound",
-    title: "聞こえた音を\nひとつ覚える",
-    short: "聞こえた音をひとつ覚える",
-    note: "いちばん近い音、いちばん遠い音、消えていった音を聞いてください。",
-    borrowed: "この道だけ、鳥の声がよく聞こえる。",
+    prompt: "赤いものを\n3つ見つける",
+    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
+    source: "青空文庫「おくのほそ道」",
+    sourceNote: "静けさの中の、音に耳を澄ます。",
+    haiku: "閑さや\n岩にしみ入る\n蝉の声",
+    encounterNote: "芭蕉も「音」から景色を見ていた。",
+    pauseTask: "いちばん遠い音を、ひとつ覚えてください。",
+    noteExample: "電車が通ったあと、一瞬だけ町が静かになる。",
     category: "音",
+    color: "#25496f",
+    image: "./assets/kotoba-sunset.png",
   },
   {
     id: "light",
-    title: "光の変わる場所を\n見つける",
-    short: "光の変わる場所を見つける",
-    note: "影が薄くなる場所、光が止まって見える場所を探してください。",
-    borrowed: "雨上がりだけ、石畳が鏡みたいになる。",
+    prompt: "光が変わる場所を\nひとつ見つける",
+    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
+    source: "青空文庫「おくのほそ道」",
+    sourceNote: "旅の道で、光の残り方を見る。",
+    haiku: "五月雨を\nあつめて早し\n最上川",
+    encounterNote: "芭蕉も「流れ」から景色を見ていた。",
+    pauseTask: "いま一番明るい場所を、ひとつ覚えてください。",
+    noteExample: "夕方だけ、この壁が金色になる。",
     category: "光",
+    color: "#8d4234",
+    image: "./assets/kotoba-forest.png",
   },
   {
     id: "wind",
-    title: "風が抜ける角を\n探す",
-    short: "風が抜ける角を探す",
-    note: "髪や服が少し動く場所で、一度だけ足を止めてください。",
-    borrowed: "この角で、風の向きが変わる。",
+    prompt: "風が抜ける角を\n探す",
+    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
+    source: "青空文庫「おくのほそ道」",
+    sourceNote: "旅の途中で、見えない気配を読む。",
+    haiku: "旅に病んで\n夢は枯野を\nかけ廻る",
+    encounterNote: "芭蕉も「風」から景色を見ていた。",
+    pauseTask: "風が少し変わる場所を、ひとつ覚えてください。",
+    noteExample: "風が抜けるたび、線が低くのびる。",
     category: "風",
-  },
-  {
-    id: "old",
-    title: "古いものと新しいものを\n並べて見る",
-    short: "古いものと新しいものを見る",
-    note: "ひび、貼り紙、新しい看板。街の時間が重なった場所を見つけてください。",
-    borrowed: "古い看板の下に、新しい花が置かれていた。",
-    category: "時",
+    color: "#5b6251",
+    image: "./assets/kotoba-lake.png",
   },
 ];
 
-const haiku = [
+const seeds = [
   {
-    id: "oldpond",
-    promptId: "sound",
-    text: "古池や蛙飛びこむ水の音",
-    author: "松尾芭蕉",
-    note: "芭蕉も「音」から景色を見ていたのかもしれません。",
+    id: "seed-1",
+    title: "五月雨を あつめて早し 最上川",
+    task: "流れが集まる場所を探す",
+    source: "青空文庫",
+    category: "季節",
+    image: "./assets/kotoba-forest.png",
+    x: 52,
+    y: 48,
   },
   {
-    id: "silence",
-    promptId: "sound",
-    text: "閑さや岩にしみ入る蝉の声",
-    author: "松尾芭蕉",
-    note: "大きな音の奥にある静けさを、耳で見つける一句です。",
+    id: "seed-2",
+    title: "涼しさを 我宿にしてねまる也",
+    task: "涼しさのある場所を見つける",
+    source: "青空文庫",
+    category: "暮らし",
+    image: "./assets/kotoba-lake.png",
+    x: 31,
+    y: 32,
   },
   {
-    id: "violet",
-    promptId: "red",
-    text: "山路来て何やらゆかしすみれ草",
-    author: "松尾芭蕉",
-    note: "足元の小さな色に、歩く速さを合わせる一句です。",
-  },
-  {
-    id: "autumn",
-    promptId: "wind",
-    text: "秋深き隣は何をする人ぞ",
-    author: "松尾芭蕉",
-    note: "見えない人の気配まで、街の景色として感じる一句です。",
-  },
-  {
-    id: "grass",
-    promptId: "old",
-    text: "夏草や兵どもが夢の跡",
-    author: "松尾芭蕉",
-    note: "今ある草の下に、過ぎた時間を重ねて見る一句です。",
-  },
-  {
-    id: "moon",
-    promptId: "light",
-    text: "名月や池をめぐりて夜もすがら",
-    author: "松尾芭蕉",
-    note: "ひとつの光を、角度を変えながら見続ける一句です。",
-  },
-  {
-    id: "sick",
-    promptId: "wind",
-    text: "旅に病んで夢は枯野をかけ廻る",
-    author: "松尾芭蕉",
-    note: "体は止まっていても、まなざしだけが歩いていく一句です。",
+    id: "seed-3",
+    title: "有難や 雪をかほらす 南谷",
+    task: "季節が残っている場所を探す",
+    source: "青空文庫",
+    category: "光",
+    image: "./assets/kotoba-mist.png",
+    x: 70,
+    y: 42,
   },
 ];
 
@@ -102,104 +85,45 @@ const sampleEntries = [
   {
     id: "sample-1",
     title: "赤いポストが、\n雨の日はもっと赤い。",
-    body: "濡れた色が、町の端を少し明るくしていた。",
-    date: "2024.5.12",
+    body: "おくのほそ道から、街の色を見つける。",
+    date: "2024.5.11",
     category: "色",
     image: "./assets/kotoba-forest.png",
-    promptId: "red",
-    x: 52,
-    y: 48,
+    x: 60,
+    y: 36,
   },
   {
     id: "sample-2",
-    title: "風が抜けるたび、",
-    body: "線が低くのびるように見上がる。",
+    title: "風が抜けるたび、\n端がそっと透明になる。",
+    body: "風に揺れるものを探す。",
     date: "2024.5.10",
     category: "風",
     image: "./assets/kotoba-lake.png",
-    promptId: "wind",
-    x: 31,
-    y: 32,
+    x: 28,
+    y: 28,
   },
   {
     id: "sample-3",
-    title: "この道では、",
-    body: "鳥の声がよく聞こえる。",
-    date: "2024.5.8",
-    category: "音",
-    image: "./assets/kotoba-mist.png",
-    promptId: "sound",
-    x: 70,
-    y: 42,
-  },
-  {
-    id: "sample-4",
-    title: "夕方だけ、",
-    body: "この壁が金色になる。",
-    date: "2024.5.7",
-    category: "光",
+    title: "夜の路地が、\n石の匂いをゆっくり返す。",
+    body: "匂いに耳を澄ます。",
+    date: "2024.4.30",
+    category: "匂い",
     image: "./assets/kotoba-sunset.png",
-    promptId: "light",
-    x: 62,
-    y: 69,
-  },
-  {
-    id: "sample-5",
-    title: "雨にぬれて、",
-    body: "芭蕉は静かにゆめり返る。",
-    date: "2024.5.6",
-    category: "俳句",
-    image: "./assets/kotoba-mist.png",
-    promptId: "old",
-    x: 42,
-    y: 63,
+    x: 72,
+    y: 58,
   },
 ];
-
-const noteSuggestions = {
-  red: {
-    title: "ポストの赤だけ、\n雨のあと少し深くなる。",
-    body: "赤いものを探していたら、濡れた色が残っていました。",
-    category: "色",
-    image: "./assets/kotoba-forest.png",
-  },
-  sound: {
-    title: "電車が通ったあと、\n一瞬だけ町が静かになる。",
-    body: "音が消える間に、道の広さが見えました。",
-    category: "音",
-    image: "./assets/kotoba-sunset.png",
-  },
-  light: {
-    title: "夕方だけ、\nこの壁が金色になる。",
-    body: "光の角度が変わると、いつもの壁が別の場所に見えました。",
-    category: "光",
-    image: "./assets/kotoba-sunset.png",
-  },
-  wind: {
-    title: "風が抜けるたび、\n線が低くのびるように見える。",
-    body: "角を曲がる風が、見えない道を描いていました。",
-    category: "風",
-    image: "./assets/kotoba-lake.png",
-  },
-  old: {
-    title: "古い看板の下で、\n新しい花が揺れている。",
-    body: "時間の重なりが、足元に残っていました。",
-    category: "手ぶり",
-    image: "./assets/kotoba-mist.png",
-  },
-};
 
 const state = {
   view: "home",
   date: "",
-  promptId: "",
-  haikuId: "",
-  note: "",
-  photoData: "",
-  mode: "ことば",
+  gazeId: "sound",
   timerStartedAt: 0,
+  note: "",
+  noteCategory: "音",
+  notePhoto: "",
   entries: [],
-  activeEntryId: "sample-4",
+  activeEntryId: "sample-1",
   notebookEditing: false,
   selectedEntryIds: [],
   deletedEntryIds: [],
@@ -223,7 +147,7 @@ screen.addEventListener("click", (event) => {
 
 screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-note-input]")) {
-    state.note = event.target.value.slice(0, 54);
+    state.note = event.target.value.slice(0, 68);
     saveState();
   }
 });
@@ -243,14 +167,14 @@ tabbar.addEventListener("click", (event) => {
 function render() {
   const views = {
     home: renderHome,
-    walk: renderPutAway,
-    putaway: renderPutAway,
-    feel: renderFeel,
-    haiku: renderHaiku,
+    classic: renderClassic,
+    pause: renderPause,
     note: renderNote,
+    encounter: renderEncounter,
+    seeds: renderSeeds,
     map: renderMap,
-    borrow: renderBorrow,
     notebook: renderNotebook,
+    settings: renderSettings,
   };
   screen.innerHTML = (views[state.view] || views.home)();
   updateTabs();
@@ -258,199 +182,156 @@ function render() {
 }
 
 function renderHome() {
-  const prompt = currentPrompt();
+  const gaze = currentGaze();
   return `<div class="view home-view">
     <header class="topbar">
       <button class="round-button" type="button" aria-label="メニュー">☰</button>
       <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
     </header>
-
-    <section class="manazashi-card">
+    <section class="manazashi-card source-home-card">
       <span class="screen-label">01　まなざしを受け取る</span>
       <div class="ink-branch"></div>
-      <h1>${lineBreak(prompt.title)}</h1>
-      <i></i>
-      <p>${escapeHtml(prompt.note)}</p>
-      <button class="main-button" type="button" data-nav="putaway">歩きはじめる</button>
-      <div class="page-dots" aria-hidden="true"><span class="active"></span><span></span><span></span><span></span><span></span></div>
+      <h1>${lineBreak(gaze.prompt)}</h1>
+      <i style="background:${escapeAttr(gaze.color)}"></i>
+      <p>${escapeHtml(gaze.homeNote)}</p>
+      <span class="source-badge">出典：${escapeHtml(gaze.source)}</span>
+      <button class="main-button" type="button" data-nav="classic">この視点で歩き始める</button>
     </section>
   </div>`;
 }
 
-function renderPutAway() {
-  return `<div class="view dark-view putaway-view">
-    <section class="photo-screen">
-      <span class="screen-label light">02　スマホをしまう</span>
-      <div class="dark-cover"></div>
-      <div class="putaway-copy">
-        <p>では、スマホを<br>しまってください。</p>
-        <div class="phone-line" aria-hidden="true"></div>
-        <small>10分後に、そっとお知らせします。</small>
-      </div>
-      <div class="bottom-stack">
-        <button class="ghost-link" type="button" data-nav="home">やめる</button>
-        <button class="quiet-next" type="button" data-nav="feel">10分後へ</button>
-      </div>
+function renderClassic() {
+  const gaze = currentGaze();
+  return `<div class="view classic-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
+      <button class="menu-dots" type="button" aria-label="保存">□</button>
+    </header>
+    <section class="classic-card">
+      <span class="screen-label">02　原典を読む</span>
+      <article class="classic-slip">
+        <div class="vertical-text">${vertical(gaze.haiku)}</div>
+        <small>（おくのほそ道より）</small>
+      </article>
+      <p>${escapeHtml(gaze.sourceNote)}</p>
+      <button class="text-next" type="button" data-nav="pause">青空文庫で原文を読む　→</button>
     </section>
   </div>`;
 }
 
-function renderFeel() {
+function renderPause() {
+  const gaze = currentGaze();
   const remaining = timerRemaining();
   const progress = 1 - remaining / 30;
   const dash = Math.round(276 * progress);
   return `<div class="view feel-view">
     <header class="minimal-head">
-      <button class="x-button" type="button" data-nav="putaway" aria-label="閉じる">×</button>
+      <button class="x-button" type="button" data-nav="classic" aria-label="閉じる">×</button>
     </header>
     <section class="feel-paper">
       <span class="screen-label">03　立ち止まる</span>
-      <p>今いる場所で<br>30秒、立ち止まってください。</p>
+      <p>30秒、<br>ここで立ち止まる</p>
       <div class="timer-ring" data-el="timer" style="--dash:${dash}">
         <strong>${remaining}</strong>
         <span>秒</span>
       </div>
-      <small>風の音、遠くの音、足音、ひとの声。<br>いちばん心に残った音を、ひとつ、覚えておいてください。</small>
-      <button class="outline-button" type="button" data-nav="haiku">終わった</button>
-    </section>
-  </div>`;
-}
-
-function renderHaiku() {
-  const item = currentHaiku();
-  return `<div class="view dark-view haiku-view">
-    <section class="haiku-stage">
-      <span class="screen-label light">04　芭蕉と出会う</span>
-      <div class="haiku-backdrop"></div>
-      <article class="haiku-slip">
-        <div class="vertical-text">${vertical(item.text)}</div>
-        <small>${escapeHtml(item.author)}</small>
-        <b>印</b>
-      </article>
-      <p>${escapeHtml(item.note)}</p>
-      <button class="main-button dark-button" type="button" data-action="go-note">次へ</button>
+      <small>${escapeHtml(gaze.pauseTask)}</small>
+      <button class="outline-button" type="button" data-nav="note">終わった</button>
     </section>
   </div>`;
 }
 
 function renderNote() {
-  const activeMode = state.mode || "ことば";
+  const gaze = currentGaze();
+  const photo = state.notePhoto
+    ? `<img class="mini-photo" src="${escapeAttr(state.notePhoto)}" alt="選択した写真" />`
+    : "";
   return `<div class="view note-view">
     <header class="simple-head">
-      <button class="back-button" type="button" data-nav="haiku" aria-label="戻る">←</button>
-      <button class="menu-dots" type="button" aria-label="メニュー">…</button>
+      <button class="back-button" type="button" data-nav="pause" aria-label="戻る">←</button>
+      <button class="save-link" type="button" data-action="save-note">保存</button>
     </header>
-    <section class="note-paper">
-      <span class="screen-label">05　自分の気づきを残す</span>
-      <h2>この場所で、<br>あなたが気づいたことを<br>残してください。</h2>
-      ${renderNoteBody(activeMode)}
-      <div class="note-actions">
-        <button class="${activeMode === "ことば" ? "active" : ""}" type="button" data-action="mode" data-mode="ことば">ことばで残す</button>
-        <button class="${activeMode === "俳句" ? "active" : ""}" type="button" data-action="mode" data-mode="俳句">俳句にする</button>
-        <button class="${activeMode === "写真" ? "active" : ""}" type="button" data-action="mode" data-mode="写真">写真を残す</button>
+    <section class="note-paper note-board">
+      <span class="screen-label">04　気づきを残す</span>
+      <p class="note-lead">いまの気づきを、ひとこと。<br>自由に書きとめましょう。</p>
+      <label class="note-memory">
+        <textarea data-note-input maxlength="68" placeholder="電車が通ったあと、&#10;一瞬だけ町が&#10;静かになる。">${escapeHtml(state.note)}</textarea>
+      </label>
+      <div class="category-line">
+        <span>見つめたカテゴリ（複数可）</span>
+        ${["音", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
-      <button class="main-button" type="button" data-action="save-note">残す</button>
+      <div class="memo-row">
+        <small>場所のメモ（任意）<br>例：駅のホーム、風鈴の角 など</small>
+        <label class="camera-mini" aria-label="写真を添える">
+          ${photo || "▧"}
+          <input type="file" accept="image/*" data-photo-input hidden />
+        </label>
+      </div>
     </section>
   </div>`;
 }
 
-function renderNoteBody(mode) {
-  const example = currentPrompt().borrowed;
-  if (mode === "俳句") {
-    return `<label class="note-input haiku-input">
-      <span>五・七・五にしなくても大丈夫。見えたままを短く置いてください。</span>
-      <textarea data-note-input maxlength="54" placeholder="夕風や&#10;この壁だけが&#10;金になる">${escapeHtml(state.note)}</textarea>
-    </label>`;
-  }
-  if (mode === "写真") {
-    const preview = state.photoData
-      ? `<img class="photo-preview" src="${escapeAttr(state.photoData)}" alt="選択した写真" />`
-      : `<div class="photo-empty">この場所の写真を<br>一枚選んでください。</div>`;
-    return `<div class="note-input photo-note-input">
-      <span>写真を一枚だけ残せます。あとから句帳に並びます。</span>
-      ${preview}
-      <label class="photo-picker">
-        写真を選択
-        <input type="file" accept="image/*" data-photo-input hidden />
-      </label>
-      <textarea data-note-input maxlength="32" placeholder="写真にひとこと添える">${escapeHtml(state.note)}</textarea>
-    </div>`;
-  }
-  return `<label class="note-input">
-    <span>例）${escapeHtml(example)}</span>
-    <textarea data-note-input maxlength="54" placeholder="ここに残すことばを書く">${escapeHtml(state.note)}</textarea>
-  </label>`;
+function renderEncounter() {
+  const gaze = currentGaze();
+  return `<div class="view encounter-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-nav="note" aria-label="戻る">←</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+    </header>
+    <section class="encounter-card">
+      <span class="screen-label">05　芭蕉と出会う</span>
+      <p>あなたの気づきは、<br>芭蕉のまなざしとつながります。</p>
+      <article class="classic-slip small-slip">
+        <div class="vertical-text">${vertical(gaze.haiku)}</div>
+        <small>（おくのほそ道より）</small>
+      </article>
+      <p>${escapeHtml(gaze.encounterNote)}</p>
+      <span class="source-badge">出典：${escapeHtml(gaze.source)}</span>
+      <button class="main-button" type="button" data-nav="seeds">まなざしの種を見る</button>
+    </section>
+  </div>`;
+}
+
+function renderSeeds() {
+  const cards = seeds.map((seed) => `<button class="seed-row" type="button" data-action="open-seed" data-seed-id="${escapeAttr(seed.id)}">
+    <strong>${escapeHtml(seed.title)}</strong>
+    <span>${escapeHtml(seed.task)}</span>
+    <small>${escapeHtml(seed.source)}</small>
+  </button>`).join("");
+  return `<div class="view seeds-view">
+    <header class="map-head">
+      <span>06　まなざしの種を見る</span>
+      <button class="round-button" type="button" aria-label="絞り込み">☷</button>
+    </header>
+    <nav class="journal-filter-row seed-filter" aria-label="分類">
+      <button class="active" type="button">すべて</button><button type="button">音</button><button type="button">光</button><button type="button">季節</button><button type="button">暮らし</button>
+    </nav>
+    <section class="seed-list">${cards}</section>
+  </div>`;
 }
 
 function renderMap() {
-  const entries = allEntries();
-  if (!entries.length) {
-    return `<div class="view map-view">
-      <header class="map-head">
-        <span>まなざしの地図</span>
-        <button class="round-button" type="button" aria-label="調整">☷</button>
-      </header>
-      <section class="empty-map">
-        <span class="screen-label">06　他の人のまなざしを見る</span>
-        <h2>まだ地図に残っているまなざしはありません。</h2>
-        <p>新しい気づきを句帳に残すと、ここに点が戻ってきます。</p>
-        <button class="main-button" type="button" data-nav="home">まなざしを受け取る</button>
-      </section>
-    </div>`;
-  }
   const entry = activeEntry();
-  const pins = entries.map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
+  const pins = mapEntries().map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
   return `<div class="view map-view">
     <header class="map-head">
-      <span>まなざしの地図</span>
-      <button class="round-button" type="button" aria-label="調整">☷</button>
+      <span>07　まなざしの地図</span>
+      <button class="round-button" type="button" aria-label="絞り込み">▽</button>
     </header>
     <section class="map-panel">
-      <span class="screen-label">06　他の人のまなざしを見る</span>
       <img src="./assets/kotoba-map.png" alt="まなざしの地図" />
       <div class="map-layer"></div>
       ${pins}
       <article class="map-card">
         <img src="${escapeAttr(entry.image || "./assets/kotoba-sunset.png")}" alt="" />
         <div>
-          <strong>${escapeHtml(entry.title)}</strong>
+          <strong>${lineBreak(entry.title)}</strong>
           <p>${escapeHtml(entry.body)}</p>
           <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
         </div>
       </article>
-    </section>
-    <nav class="filter-row">
-      <button class="active">すべて</button><button>光</button><button>音</button><button>風</button><button>手ぶり</button><button>季節</button>
-    </nav>
-  </div>`;
-}
-
-function renderBorrow() {
-  const entry = activeEntry();
-  if (!entry) {
-    return `<div class="view dark-view borrow-view">
-      <section class="borrow-stage">
-        <div class="dark-cover"></div>
-        <div class="borrow-copy">
-          <small>この場所には、まだ借りられるまなざしがありません。</small>
-          <h2>新しい気づきを<br>置きにいきましょう。</h2>
-        </div>
-        <button class="main-button dark-button" type="button" data-nav="home">まなざしを受け取る</button>
-      </section>
-    </div>`;
-  }
-  return `<div class="view dark-view borrow-view">
-    <section class="borrow-stage">
-      <span class="screen-label light">07　誰かのまなざしを借りて歩く</span>
-      <button class="back-float" type="button" data-nav="map">←</button>
-      <button class="share-float" type="button" aria-label="共有">⇧</button>
-      <div class="dark-cover"></div>
-      <div class="borrow-copy">
-        <small>この人のまなざしを借りて<br>歩いてみましょう。</small>
-        <h2>${escapeHtml(entry.title)}<br>${escapeHtml(entry.body)}</h2>
-        <p>ここで、その変化を<br>探してみてください。</p>
-      </div>
-      <button class="main-button dark-button" type="button" data-nav="notebook">この視点で歩きはじめる</button>
+      <button class="map-borrow-button" type="button" data-action="borrow-gaze">このまなざしを借りる</button>
     </section>
   </div>`;
 }
@@ -459,69 +340,104 @@ function renderNotebook() {
   const entries = allEntries().slice(0, 8);
   const selectedIds = new Set(state.selectedEntryIds || []);
   const editLabel = state.notebookEditing ? "完了" : "☰";
-  const cards = entries.length
+  const rows = entries.length
     ? entries.map((entry) => {
-        const isSelected = selectedIds.has(entry.id);
-        return `<article class="journal-row ${isSelected ? "selected" : ""}">
+        const selected = selectedIds.has(entry.id);
+        return `<article class="journal-row ${selected ? "selected" : ""}">
           <button class="journal-open" type="button" data-action="open-entry" data-entry-id="${escapeAttr(entry.id)}">
             <img src="${escapeAttr(entry.image || "./assets/kotoba-mist.png")}" alt="" />
             <div>
-              <strong>${escapeHtml(entry.title)}</strong>
+              <strong>${lineBreak(entry.title)}</strong>
               <p>${escapeHtml(entry.body)}</p>
               <small>${escapeHtml(entry.date)}</small>
             </div>
             <span>${escapeHtml(entry.category)}</span>
           </button>
-          <button class="journal-select" type="button" data-action="toggle-entry-select" data-entry-id="${escapeAttr(entry.id)}" aria-pressed="${isSelected ? "true" : "false"}" aria-label="削除する句を選ぶ">
-            <span>${isSelected ? "✓" : ""}</span>
+          <button class="journal-select" type="button" data-action="toggle-entry-select" data-entry-id="${escapeAttr(entry.id)}" aria-pressed="${selected ? "true" : "false"}" aria-label="削除する句を選ぶ">
+            <span>${selected ? "✓" : ""}</span>
           </button>
         </article>`;
       }).join("")
-    : `<div class="journal-empty">まだ句帳に残っているまなざしはありません。</div>`;
+    : `<div class="journal-empty">まだ句帳にまなざしはありません。</div>`;
   const deleteBar = state.notebookEditing
-    ? `<div class="journal-delete-bar">
-        <span>${selectedIds.size}件選択中</span>
-        <button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button>
-      </div>`
+    ? `<div class="journal-delete-bar"><span>${selectedIds.size}件選択中</span><button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button></div>`
     : "";
   return `<div class="view notebook-view ${state.notebookEditing ? "editing" : ""}">
     <header class="journal-head">
-      <button class="back-button" type="button" data-nav="borrow" aria-label="戻る">←</button>
+      <button class="back-button" type="button" data-nav="map" aria-label="戻る">←</button>
       <div>
-        <span>08　句帳にためる</span>
+        <span>08　わたしの句帳</span>
         <h1>わたしの句帳</h1>
       </div>
       <button class="menu-dots" type="button" data-action="toggle-notebook-edit" aria-label="句帳を編集">${editLabel}</button>
     </header>
     <nav class="journal-filter-row" aria-label="句帳の分類">
-      <button class="active" type="button">すべて</button>
-      <button type="button">色</button>
-      <button type="button">音</button>
-      <button type="button">風</button>
-      <button type="button">光</button>
+      <button class="active" type="button">すべて</button><button type="button">気づき</button><button type="button">俳句風</button><button type="button">原典とつなぐ</button>
     </nav>
     ${deleteBar}
-    <section class="journal-list">${cards}</section>
+    <section class="journal-list">${rows}</section>
+  </div>`;
+}
+
+function renderSettings() {
+  return `<div class="view settings-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+    </header>
+    <section class="source-flow-panel">
+      <span class="screen-label">出典の流れ</span>
+      <h2>青空文庫<br>「おくのほそ道」</h2>
+      <div class="flow-icons">
+        <span>開く</span><b>↓</b><span>芭蕉の句を読む</span><b>↓</b><span>観察のしかたを抽出</span><b>↓</b><span>今日のまなざしに変換</span><b>↓</b><span>街で気づく</span>
+      </div>
+      <p>すべてのまなざしは、青空文庫の原典に基づきます。</p>
+      <small>引用・出典：青空文庫　松尾芭蕉「おくのほそ道」</small>
+    </section>
   </div>`;
 }
 
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === "today") {
-    ensureDaily(true);
-    render();
+    rotateGaze();
+    return;
   }
-  if (action === "mode") {
-    state.mode = target.dataset.mode || "ことば";
-    showToast(`${state.mode}で残します。`);
+  if (action === "category") {
+    state.noteCategory = target.dataset.category || "音";
     saveState();
     render();
+    return;
   }
-  if (action === "save-note") saveNote();
-  if (action === "go-note") navigate("note");
-  if (action === "toggle-notebook-edit") toggleNotebookEdit();
-  if (action === "toggle-entry-select") toggleEntrySelection(target.dataset.entryId);
-  if (action === "delete-selected-entries") deleteSelectedEntries();
+  if (action === "save-note") {
+    saveNote();
+    return;
+  }
+  if (action === "open-seed") {
+    const seed = seeds.find((item) => item.id === target.dataset.seedId);
+    if (seed) {
+      state.activeEntryId = seed.id;
+      saveState();
+    }
+    navigate("map");
+    return;
+  }
+  if (action === "borrow-gaze") {
+    showToast("このまなざしを借りました。");
+    return;
+  }
+  if (action === "toggle-notebook-edit") {
+    toggleNotebookEdit();
+    return;
+  }
+  if (action === "toggle-entry-select") {
+    toggleEntrySelection(target.dataset.entryId);
+    return;
+  }
+  if (action === "delete-selected-entries") {
+    deleteSelectedEntries();
+    return;
+  }
   if (action === "open-entry") {
     if (state.notebookEditing) {
       toggleEntrySelection(target.dataset.entryId);
@@ -529,8 +445,18 @@ function handleAction(target) {
     }
     state.activeEntryId = target.dataset.entryId;
     saveState();
-    navigate("borrow");
+    navigate("map");
   }
+}
+
+function rotateGaze() {
+  const index = gazes.findIndex((item) => item.id === state.gazeId);
+  const next = gazes[(index + 1 + gazes.length) % gazes.length];
+  state.gazeId = next.id;
+  state.noteCategory = next.category;
+  state.date = todayKey();
+  saveState();
+  render();
 }
 
 function toggleNotebookEdit() {
@@ -543,11 +469,8 @@ function toggleNotebookEdit() {
 function toggleEntrySelection(entryId) {
   if (!entryId) return;
   const selectedIds = new Set(state.selectedEntryIds || []);
-  if (selectedIds.has(entryId)) {
-    selectedIds.delete(entryId);
-  } else {
-    selectedIds.add(entryId);
-  }
+  if (selectedIds.has(entryId)) selectedIds.delete(entryId);
+  else selectedIds.add(entryId);
   state.selectedEntryIds = Array.from(selectedIds);
   saveState();
   render();
@@ -559,17 +482,13 @@ function deleteSelectedEntries() {
     showToast("削除する句を選んでください。");
     return;
   }
-
   state.entries = state.entries.filter((entry) => !selectedIds.has(entry.id));
   state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...selectedIds]));
   state.selectedEntryIds = [];
   state.notebookEditing = false;
-
-  const remaining = allEntries();
-  if (!remaining.some((entry) => entry.id === state.activeEntryId)) {
-    state.activeEntryId = remaining[0]?.id || "";
+  if (!mapEntries().some((entry) => entry.id === state.activeEntryId)) {
+    state.activeEntryId = mapEntries()[0]?.id || "";
   }
-
   saveState();
   showToast("選んだ句を句帳から消しました。");
   render();
@@ -579,54 +498,36 @@ function navigate(view) {
   state.view = view;
   state.notebookEditing = false;
   state.selectedEntryIds = [];
-  if (view === "feel") state.timerStartedAt = Date.now();
+  if (view === "pause") state.timerStartedAt = Date.now();
   saveState();
   render();
 }
 
 function saveNote() {
-  const prompt = currentPrompt();
-  const suggestion = currentNoteSuggestion();
-  const mode = state.mode || "ことば";
-  const text = state.note.trim();
-  if (mode === "写真" && !state.photoData) {
-    showToast("写真を選んでください。");
-    return;
-  }
-  const title =
-    text ||
-    (mode === "俳句" ? "夕風や\nこの壁だけが\n金になる" : suggestion.title);
-  const body =
-    mode === "写真"
-      ? "写真として、この場所のまなざしを残しました。"
-      : mode === "俳句"
-        ? "この場所で生まれた一句です。"
-        : suggestion.body;
+  const gaze = currentGaze();
+  const text = state.note.trim() || gaze.noteExample;
   const entry = {
     id: `entry-${Date.now()}`,
-    title,
-    body,
+    title: text,
+    body: `${gaze.source}から、街の${state.noteCategory}を見つける。`,
     date: formatDate(new Date()),
-    category: mode === "俳句" ? "俳句" : mode === "写真" ? "写真" : suggestion.category || prompt.category,
-    image: mode === "写真" && state.photoData ? state.photoData : suggestion.image,
-    promptId: prompt.id,
-    x: 30 + ((Date.now() / 17) % 44),
+    category: state.noteCategory || gaze.category,
+    image: state.notePhoto || gaze.image,
+    x: 35 + ((Date.now() / 17) % 42),
     y: 28 + ((Date.now() / 29) % 48),
   };
   state.entries.unshift(entry);
   state.activeEntryId = entry.id;
   state.note = "";
-  state.photoData = "";
-  state.mode = "ことば";
+  state.notePhoto = "";
   saveState();
-  showToast("まなざしを残しました。");
-  navigate("map");
+  showToast("気づきを残しました。");
+  navigate("encounter");
 }
 
 function handlePhotoInput(input) {
   const file = input.files?.[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = () => {
     const image = new Image();
@@ -640,7 +541,7 @@ function handlePhotoInput(input) {
       canvas.height = height;
       const context = canvas.getContext("2d");
       context.drawImage(image, 0, 0, width, height);
-      state.photoData = canvas.toDataURL("image/jpeg", 0.78);
+      state.notePhoto = canvas.toDataURL("image/jpeg", 0.78);
       saveState();
       render();
     };
@@ -666,34 +567,17 @@ function timerRemaining() {
   return Math.max(0, 30 - elapsed);
 }
 
-function ensureDaily(force = false) {
+function ensureDaily() {
   const today = todayKey();
-  if (!force && state.date === today && state.promptId && state.haikuId) return;
-  const prompt = prompts[seededNumber(`${today}-prompt`, prompts.length)];
-  const candidates = haiku.filter((item) => item.promptId === prompt.id);
-  const list = candidates.length ? candidates : haiku;
+  if (state.date === today && state.gazeId) return;
   state.date = today;
-  state.promptId = prompt.id;
-  state.haikuId = list[seededNumber(`${today}-${prompt.id}-haiku`, list.length)].id;
+  state.gazeId = gazes[0].id;
+  state.noteCategory = currentGaze().category;
   saveState();
 }
 
-function currentPrompt() {
-  return prompts.find((prompt) => prompt.id === state.promptId) || prompts[0];
-}
-
-function currentNoteSuggestion() {
-  const prompt = currentPrompt();
-  return noteSuggestions[prompt.id] || {
-    title: prompt.borrowed,
-    body: prompt.note.replace("ください。", "ました。"),
-    category: prompt.category,
-    image: "./assets/kotoba-sunset.png",
-  };
-}
-
-function currentHaiku() {
-  return haiku.find((item) => item.id === state.haikuId) || haiku[0];
+function currentGaze() {
+  return gazes.find((gaze) => gaze.id === state.gazeId) || gazes[0];
 }
 
 function allEntries() {
@@ -701,9 +585,14 @@ function allEntries() {
   return [...state.entries, ...sampleEntries].filter((entry) => !deletedIds.has(entry.id));
 }
 
+function mapEntries() {
+  const deletedIds = new Set(state.deletedEntryIds || []);
+  return [...state.entries, ...seeds, ...sampleEntries].filter((entry) => !deletedIds.has(entry.id));
+}
+
 function activeEntry() {
-  const entries = allEntries();
-  return entries.find((entry) => entry.id === state.activeEntryId) || entries[0];
+  const entries = mapEntries();
+  return entries.find((entry) => entry.id === state.activeEntryId) || entries[0] || sampleEntries[0];
 }
 
 function updateTabs() {
@@ -711,7 +600,7 @@ function updateTabs() {
     const nav = tab.dataset.nav;
     const active =
       state.view === nav ||
-      (["putaway", "feel", "haiku", "note", "borrow"].includes(state.view) && nav === "walk");
+      (["classic", "pause", "note", "encounter", "seeds"].includes(state.view) && nav === "home");
     tab.classList.toggle("active", active);
   });
 }
@@ -720,10 +609,12 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
+    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook", "settings"];
+    if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
-    if (typeof state.photoData !== "string") state.photoData = "";
+    if (typeof state.notePhoto !== "string") state.notePhoto = "";
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -740,12 +631,6 @@ function todayKey() {
 
 function formatDate(date) {
   return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
-}
-
-function seededNumber(value, length) {
-  let total = 0;
-  for (let i = 0; i < value.length; i += 1) total += value.charCodeAt(i) * (i + 3);
-  return total % length;
 }
 
 function lineBreak(value) {
