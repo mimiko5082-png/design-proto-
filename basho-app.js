@@ -155,6 +155,9 @@ const state = {
   timerStartedAt: 0,
   entries: [],
   activeEntryId: "sample-4",
+  notebookEditing: false,
+  selectedEntryIds: [],
+  deletedEntryIds: [],
 };
 
 loadState();
@@ -303,8 +306,23 @@ function renderNote() {
 }
 
 function renderMap() {
+  const entries = allEntries();
+  if (!entries.length) {
+    return `<div class="view map-view">
+      <header class="map-head">
+        <span>まなざしの地図</span>
+        <button class="round-button" type="button" aria-label="調整">☷</button>
+      </header>
+      <section class="empty-map">
+        <span class="screen-label">06　他の人のまなざしを見る</span>
+        <h2>まだ地図に残っているまなざしはありません。</h2>
+        <p>新しい気づきを句帳に残すと、ここに点が戻ってきます。</p>
+        <button class="main-button" type="button" data-nav="home">まなざしを受け取る</button>
+      </section>
+    </div>`;
+  }
   const entry = activeEntry();
-  const pins = allEntries().map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
+  const pins = entries.map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
   return `<div class="view map-view">
     <header class="map-head">
       <span>まなざしの地図</span>
@@ -332,6 +350,18 @@ function renderMap() {
 
 function renderBorrow() {
   const entry = activeEntry();
+  if (!entry) {
+    return `<div class="view dark-view borrow-view">
+      <section class="borrow-stage">
+        <div class="dark-cover"></div>
+        <div class="borrow-copy">
+          <small>この場所には、まだ借りられるまなざしがありません。</small>
+          <h2>新しい気づきを<br>置きにいきましょう。</h2>
+        </div>
+        <button class="main-button dark-button" type="button" data-nav="home">まなざしを受け取る</button>
+      </section>
+    </div>`;
+  }
   return `<div class="view dark-view borrow-view">
     <section class="borrow-stage">
       <span class="screen-label light">07　誰かのまなざしを借りて歩く</span>
@@ -349,15 +379,34 @@ function renderBorrow() {
 }
 
 function renderNotebook() {
-  const cards = allEntries().slice(0, 8).map((entry) => `<button class="journal-row" type="button" data-action="open-entry" data-entry-id="${escapeAttr(entry.id)}">
-    <img src="${escapeAttr(entry.image || "./assets/kotoba-mist.png")}" alt="" />
-    <div>
-      <strong>${escapeHtml(entry.title)}</strong>
-      <p>${escapeHtml(entry.body)}</p>
-      <small>${escapeHtml(entry.date)}</small>
-    </div>
-    <span>${escapeHtml(entry.category)}</span>
-  </button>`).join("");
+  const entries = allEntries().slice(0, 8);
+  const selectedIds = new Set(state.selectedEntryIds || []);
+  const editLabel = state.notebookEditing ? "完了" : "編集";
+  const cards = entries.length
+    ? entries.map((entry) => {
+        const isSelected = selectedIds.has(entry.id);
+        return `<article class="journal-row ${isSelected ? "selected" : ""}">
+          <button class="journal-open" type="button" data-action="open-entry" data-entry-id="${escapeAttr(entry.id)}">
+            <img src="${escapeAttr(entry.image || "./assets/kotoba-mist.png")}" alt="" />
+            <div>
+              <strong>${escapeHtml(entry.title)}</strong>
+              <p>${escapeHtml(entry.body)}</p>
+              <small>${escapeHtml(entry.date)}</small>
+            </div>
+            <span>${escapeHtml(entry.category)}</span>
+          </button>
+          <button class="journal-select" type="button" data-action="toggle-entry-select" data-entry-id="${escapeAttr(entry.id)}" aria-pressed="${isSelected ? "true" : "false"}" aria-label="削除する句を選ぶ">
+            <span>${isSelected ? "✓" : ""}</span>
+          </button>
+        </article>`;
+      }).join("")
+    : `<div class="journal-empty">まだ句帳に残っているまなざしはありません。</div>`;
+  const deleteBar = state.notebookEditing
+    ? `<div class="journal-delete-bar">
+        <span>${selectedIds.size}件選択中</span>
+        <button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button>
+      </div>`
+    : "";
   return `<div class="view notebook-view">
     <header class="journal-head">
       <div>
@@ -366,6 +415,10 @@ function renderNotebook() {
       </div>
       <button class="round-button" type="button" aria-label="メニュー">☰</button>
     </header>
+    <div class="journal-tools">
+      <button class="journal-edit-button" type="button" data-action="toggle-notebook-edit">${editLabel}</button>
+    </div>
+    ${deleteBar}
     <section class="journal-list">${cards}</section>
   </div>`;
 }
@@ -383,15 +436,66 @@ function handleAction(target) {
   }
   if (action === "save-note") saveNote();
   if (action === "go-note") navigate("note");
+  if (action === "toggle-notebook-edit") toggleNotebookEdit();
+  if (action === "toggle-entry-select") toggleEntrySelection(target.dataset.entryId);
+  if (action === "delete-selected-entries") deleteSelectedEntries();
   if (action === "open-entry") {
+    if (state.notebookEditing) {
+      toggleEntrySelection(target.dataset.entryId);
+      return;
+    }
     state.activeEntryId = target.dataset.entryId;
     saveState();
     navigate("borrow");
   }
 }
 
+function toggleNotebookEdit() {
+  state.notebookEditing = !state.notebookEditing;
+  state.selectedEntryIds = [];
+  saveState();
+  render();
+}
+
+function toggleEntrySelection(entryId) {
+  if (!entryId) return;
+  const selectedIds = new Set(state.selectedEntryIds || []);
+  if (selectedIds.has(entryId)) {
+    selectedIds.delete(entryId);
+  } else {
+    selectedIds.add(entryId);
+  }
+  state.selectedEntryIds = Array.from(selectedIds);
+  saveState();
+  render();
+}
+
+function deleteSelectedEntries() {
+  const selectedIds = new Set(state.selectedEntryIds || []);
+  if (!selectedIds.size) {
+    showToast("削除する句を選んでください。");
+    return;
+  }
+
+  state.entries = state.entries.filter((entry) => !selectedIds.has(entry.id));
+  state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...selectedIds]));
+  state.selectedEntryIds = [];
+  state.notebookEditing = false;
+
+  const remaining = allEntries();
+  if (!remaining.some((entry) => entry.id === state.activeEntryId)) {
+    state.activeEntryId = remaining[0]?.id || "";
+  }
+
+  saveState();
+  showToast("選んだ句を句帳から消しました。");
+  render();
+}
+
 function navigate(view) {
   state.view = view;
+  state.notebookEditing = false;
+  state.selectedEntryIds = [];
   if (view === "feel") state.timerStartedAt = Date.now();
   saveState();
   render();
@@ -455,11 +559,13 @@ function currentHaiku() {
 }
 
 function allEntries() {
-  return [...state.entries, ...sampleEntries];
+  const deletedIds = new Set(state.deletedEntryIds || []);
+  return [...state.entries, ...sampleEntries].filter((entry) => !deletedIds.has(entry.id));
 }
 
 function activeEntry() {
-  return allEntries().find((entry) => entry.id === state.activeEntryId) || allEntries()[0];
+  const entries = allEntries();
+  return entries.find((entry) => entry.id === state.activeEntryId) || entries[0];
 }
 
 function updateTabs() {
@@ -477,6 +583,8 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     if (!Array.isArray(state.entries)) state.entries = [];
+    if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
+    if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
