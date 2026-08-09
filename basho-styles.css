@@ -2566,3 +2566,43 @@ button {
     min-height: 480px;
   }
 }
+
+@media (max-width: 760px) {
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .poster-shell {
+    display: grid;
+    place-items: stretch;
+    min-height: 100dvh;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .award-board {
+    display: none;
+  }
+
+  .live-phone {
+    display: block;
+  }
+
+  .phone {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .toast {
+    bottom: calc(18px + var(--safe-bottom));
+  }
+}
