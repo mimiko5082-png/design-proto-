@@ -1,4 +1,4 @@
-const STORAGE_KEY = "basho_manazashi_board_v2";
+const STORAGE_KEY = "basho_manazashi_v3";
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
