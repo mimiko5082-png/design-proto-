@@ -324,7 +324,7 @@ function renderEncounter() {
         <div><span>今日の体験</span><strong>${escapeHtml(gaze.modernTask)}</strong></div>
       </section>
       <span class="source-badge">引用：${escapeHtml(gaze.source)}</span>
-      <button class="main-button" type="button" data-nav="seeds">まなざしの種を見る</button>
+      <button class="main-button encounter-next-button" type="button" data-nav="seeds">次に</button>
     </section>
   </div>`;
 }

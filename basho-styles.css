@@ -112,6 +112,7 @@ button {
 .view {
   position: relative;
   z-index: 1;
+  height: 100%;
   min-height: 100%;
   padding: calc(42px + var(--safe-top)) 18px calc(94px + var(--safe-bottom));
   overflow: auto;
@@ -1264,6 +1265,12 @@ button {
 .transform-card {
   align-content: start;
   gap: 12px;
+  margin-bottom: 34px;
+}
+
+.classic-view,
+.encounter-view {
+  padding-bottom: calc(132px + var(--safe-bottom));
 }
 
 .classic-card::after,
@@ -1386,7 +1393,12 @@ button {
 
 .classic-next-button {
   width: min(100%, 220px);
-  margin-top: 2px;
+  margin: 2px 0 24px;
+}
+
+.encounter-next-button {
+  width: min(100%, 220px);
+  margin: 4px 0 22px;
 }
 
 .classic-card p,
