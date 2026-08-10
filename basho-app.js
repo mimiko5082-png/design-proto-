@@ -6,12 +6,15 @@ const tabbar = document.querySelector(".tabbar");
 const gazes = [
   {
     id: "sound",
-    prompt: "赤いものを\n3つ見つける",
-    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
-    source: "青空文庫「おくのほそ道」",
-    sourceNote: "静けさの中の、音に耳を澄ます。",
+    prompt: "一番遠くの音を\n探す",
+    homeNote: "芭蕉の観察を、今日の街歩きの手がかりに変えたものです。",
+    inspiration: "着想：松尾芭蕉『おくのほそ道』",
+    source: "松尾芭蕉『おくのほそ道』立石寺",
+    sourceNote: "山寺で、物の音が聞こえないほどの静けさを感じた場面。",
     haiku: "閑さや\n岩にしみ入る\n蝉の声",
-    encounterNote: "芭蕉も「音」から景色を見ていた。",
+    observation: "静けさの中にある音を聴く",
+    modernTask: "30秒立ち止まり、一番遠くの音を探す",
+    encounterNote: "あなたの気づきは、静けさの中の音を聴くまなざしにつながります。",
     pauseTask: "いちばん遠い音を、ひとつ覚えてください。",
     noteExample: "電車が通ったあと、一瞬だけ町が静かになる。",
     category: "音",
@@ -19,62 +22,71 @@ const gazes = [
     image: "./assets/kotoba-sunset.png",
   },
   {
-    id: "light",
-    prompt: "光が変わる場所を\nひとつ見つける",
-    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
-    source: "青空文庫「おくのほそ道」",
-    sourceNote: "旅の道で、光の残り方を見る。",
+    id: "flow",
+    prompt: "流れが集まる場所を\n探す",
+    homeNote: "芭蕉の観察を、今日の街歩きの手がかりに変えたものです。",
+    inspiration: "着想：松尾芭蕉『おくのほそ道』",
+    source: "松尾芭蕉『おくのほそ道』最上川",
+    sourceNote: "雨の水を集めて速く流れる川を見た場面。",
     haiku: "五月雨を\nあつめて早し\n最上川",
-    encounterNote: "芭蕉も「流れ」から景色を見ていた。",
-    pauseTask: "いま一番明るい場所を、ひとつ覚えてください。",
-    noteExample: "夕方だけ、この壁が金色になる。",
-    category: "光",
+    observation: "小さなものが集まり、景色の速さを変える",
+    modernTask: "水・人・風が集まって流れる場所を見る",
+    encounterNote: "あなたの気づきは、流れが景色を変えるまなざしにつながります。",
+    pauseTask: "流れが集まっている場所を、ひとつ覚えてください。",
+    noteExample: "細い道から人が集まって、角だけ少し速くなる。",
+    category: "流れ",
     color: "#8d4234",
-    image: "./assets/kotoba-forest.png",
+    image: "./assets/kotoba-lake.png",
   },
   {
-    id: "wind",
-    prompt: "風が抜ける角を\n探す",
-    homeNote: "青空文庫の原典から、今日のまなざしをひらきます。",
-    source: "青空文庫「おくのほそ道」",
-    sourceNote: "旅の途中で、見えない気配を読む。",
-    haiku: "旅に病んで\n夢は枯野を\nかけ廻る",
-    encounterNote: "芭蕉も「風」から景色を見ていた。",
-    pauseTask: "風が少し変わる場所を、ひとつ覚えてください。",
-    noteExample: "風が抜けるたび、線が低くのびる。",
-    category: "風",
+    id: "trace",
+    prompt: "時間の跡を\nひとつ見つける",
+    homeNote: "芭蕉の観察を、今日の街歩きの手がかりに変えたものです。",
+    inspiration: "着想：松尾芭蕉『おくのほそ道』",
+    source: "松尾芭蕉『おくのほそ道』平泉",
+    sourceNote: "かつての栄華が草の中に残っていると感じた場面。",
+    haiku: "夏草や\n兵どもが\n夢の跡",
+    observation: "過ぎた時間の痕跡を見る",
+    modernTask: "古い看板、擦れた壁、残った跡をひとつ探す",
+    encounterNote: "あなたの気づきは、時間の跡から場所を見るまなざしにつながります。",
+    pauseTask: "時間が残っている跡を、ひとつ覚えてください。",
+    noteExample: "消えかけた店名だけが、まだ壁に残っている。",
+    category: "跡",
     color: "#5b6251",
-    image: "./assets/kotoba-lake.png",
+    image: "./assets/kotoba-mist.png",
   },
 ];
 
 const seeds = [
   {
     id: "seed-1",
-    title: "五月雨を あつめて早し 最上川",
-    task: "流れが集まる場所を探す",
-    source: "青空文庫",
-    category: "季節",
-    image: "./assets/kotoba-forest.png",
+    title: "閑さや 岩にしみ入る 蝉の声",
+    task: "静けさの中にある音を聴く",
+    body: "30秒立ち止まり、一番遠くの音を探す",
+    source: "松尾芭蕉『おくのほそ道』立石寺",
+    category: "音",
+    image: "./assets/kotoba-sunset.png",
     x: 52,
     y: 48,
   },
   {
     id: "seed-2",
-    title: "涼しさを 我宿にしてねまる也",
-    task: "涼しさのある場所を見つける",
-    source: "青空文庫",
-    category: "暮らし",
+    title: "五月雨を あつめて早し 最上川",
+    task: "流れが集まる場所を探す",
+    body: "水・人・風が集まる場所を見る",
+    source: "松尾芭蕉『おくのほそ道』最上川",
+    category: "流れ",
     image: "./assets/kotoba-lake.png",
     x: 31,
     y: 32,
   },
   {
     id: "seed-3",
-    title: "有難や 雪をかほらす 南谷",
-    task: "季節が残っている場所を探す",
-    source: "青空文庫",
-    category: "光",
+    title: "夏草や 兵どもが 夢の跡",
+    task: "過ぎた時間の痕跡を見る",
+    body: "古い看板や擦れた壁に残る時間を見る",
+    source: "松尾芭蕉『おくのほそ道』平泉",
+    category: "跡",
     image: "./assets/kotoba-mist.png",
     x: 70,
     y: 42,
@@ -84,30 +96,30 @@ const seeds = [
 const sampleEntries = [
   {
     id: "sample-1",
-    title: "赤いポストが、\n雨の日はもっと赤い。",
-    body: "おくのほそ道から、街の色を見つける。",
-    date: "2024.5.11",
-    category: "色",
+    title: "電車が通ったあと、\n一瞬だけ町が静かになる。",
+    body: "Aさんのまなざし：静けさの中の音を聴く",
+    date: "5.12",
+    category: "音",
     image: "./assets/kotoba-forest.png",
     x: 60,
     y: 36,
   },
   {
     id: "sample-2",
-    title: "風が抜けるたび、\n端がそっと透明になる。",
-    body: "風に揺れるものを探す。",
-    date: "2024.5.10",
-    category: "風",
+    title: "窓の反射が消えると、\n路地の奥の音が戻る。",
+    body: "Bさんが借りて見つけた別の気づき",
+    date: "5.13",
+    category: "音",
     image: "./assets/kotoba-lake.png",
     x: 28,
     y: 28,
   },
   {
     id: "sample-3",
-    title: "夜の路地が、\n石の匂いをゆっくり返す。",
-    body: "匂いに耳を澄ます。",
-    date: "2024.4.30",
-    category: "匂い",
+    title: "細い道から人が集まり、\n角だけ少し速くなる。",
+    body: "流れが集まる場所を探す",
+    date: "5.18",
+    category: "流れ",
     image: "./assets/kotoba-sunset.png",
     x: 72,
     y: 58,
@@ -194,8 +206,8 @@ function renderHome() {
       <h1>${lineBreak(gaze.prompt)}</h1>
       <i style="background:${escapeAttr(gaze.color)}"></i>
       <p>${escapeHtml(gaze.homeNote)}</p>
-      <span class="source-badge">出典：${escapeHtml(gaze.source)}</span>
-      <button class="main-button" type="button" data-nav="classic">この視点で歩き始める</button>
+      <span class="source-badge">${escapeHtml(gaze.inspiration)}</span>
+      <button class="main-button" type="button" data-nav="classic">このまなざしで歩き始める</button>
     </section>
   </div>`;
 }
@@ -207,14 +219,30 @@ function renderClassic() {
       <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
       <button class="menu-dots" type="button" aria-label="保存">□</button>
     </header>
-    <section class="classic-card">
+    <section class="classic-card transform-card">
       <span class="screen-label">02　原典を読む</span>
       <article class="classic-slip">
         <div class="vertical-text">${vertical(gaze.haiku)}</div>
-        <small>（おくのほそ道より）</small>
+        <small>おくのほそ道</small>
       </article>
       <p>${escapeHtml(gaze.sourceNote)}</p>
-      <button class="text-next" type="button" data-nav="pause">青空文庫で原文を読む　→</button>
+      <section class="translation-card" aria-label="まなざしの変換">
+        <div>
+          <span>原典</span>
+          <strong>${lineBreak(gaze.haiku)}</strong>
+        </div>
+        <b>↓</b>
+        <div>
+          <span>芭蕉の観察</span>
+          <strong>${escapeHtml(gaze.observation)}</strong>
+        </div>
+        <b>↓</b>
+        <div>
+          <span>現代のまなざし</span>
+          <strong>${escapeHtml(gaze.modernTask)}</strong>
+        </div>
+      </section>
+      <button class="text-next" type="button" data-nav="pause">このまなざしで立ち止まる　→</button>
     </section>
   </div>`;
 }
@@ -235,6 +263,7 @@ function renderPause() {
         <strong>${remaining}</strong>
         <span>秒</span>
       </div>
+      <p class="pause-task">${escapeHtml(gaze.modernTask)}</p>
       <small>${escapeHtml(gaze.pauseTask)}</small>
       <button class="outline-button" type="button" data-nav="note">終わった</button>
     </section>
@@ -259,7 +288,7 @@ function renderNote() {
       </label>
       <div class="category-line">
         <span>見つめたカテゴリ（複数可）</span>
-        ${["音", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
+        ${["音", "流れ", "跡", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
       <div class="memo-row">
         <small>場所のメモ（任意）<br>例：駅のホーム、風鈴の角 など</small>
@@ -284,10 +313,17 @@ function renderEncounter() {
       <p>あなたの気づきは、<br>芭蕉のまなざしとつながります。</p>
       <article class="classic-slip small-slip">
         <div class="vertical-text">${vertical(gaze.haiku)}</div>
-        <small>（おくのほそ道より）</small>
+        <small>おくのほそ道</small>
       </article>
       <p>${escapeHtml(gaze.encounterNote)}</p>
-      <span class="source-badge">出典：${escapeHtml(gaze.source)}</span>
+      <section class="translation-card compact-translation" aria-label="原典からまなざしへの変換">
+        <div><span>原典</span><strong>${lineBreak(gaze.haiku)}</strong></div>
+        <b>↓</b>
+        <div><span>観察</span><strong>${escapeHtml(gaze.observation)}</strong></div>
+        <b>↓</b>
+        <div><span>今日の体験</span><strong>${escapeHtml(gaze.modernTask)}</strong></div>
+      </section>
+      <span class="source-badge">引用：${escapeHtml(gaze.source)}</span>
       <button class="main-button" type="button" data-nav="seeds">まなざしの種を見る</button>
     </section>
   </div>`;
@@ -305,7 +341,7 @@ function renderSeeds() {
       <button class="round-button" type="button" aria-label="絞り込み">☷</button>
     </header>
     <nav class="journal-filter-row seed-filter" aria-label="分類">
-      <button class="active" type="button">すべて</button><button type="button">音</button><button type="button">光</button><button type="button">季節</button><button type="button">暮らし</button>
+      <button class="active" type="button">すべて</button><button type="button">音</button><button type="button">流れ</button><button type="button">跡</button>
     </nav>
     <section class="seed-list">${cards}</section>
   </div>`;
@@ -374,6 +410,12 @@ function renderNotebook() {
     <nav class="journal-filter-row" aria-label="句帳の分類">
       <button class="active" type="button">すべて</button><button type="button">気づき</button><button type="button">俳句風</button><button type="button">原典とつなぐ</button>
     </nav>
+    <section class="inheritance-card" aria-label="まなざしが受け継がれる例">
+      <span>受け継ぎの例</span>
+      <p><b>Aさん</b> 電車が通ったあと、一瞬だけ町が静かになる。</p>
+      <strong>↓</strong>
+      <p><b>Bさん</b> 同じ場所で、窓の反射が消えた瞬間の音に気づく。</p>
+    </section>
     ${deleteBar}
     <section class="journal-list">${rows}</section>
   </div>`;
@@ -386,13 +428,13 @@ function renderSettings() {
       <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
     <section class="source-flow-panel">
-      <span class="screen-label">出典の流れ</span>
-      <h2>青空文庫<br>「おくのほそ道」</h2>
+      <span class="screen-label">出典と変換</span>
+      <h2>原典を、<br>街の見方に変える</h2>
       <div class="flow-icons">
-        <span>開く</span><b>↓</b><span>芭蕉の句を読む</span><b>↓</b><span>観察のしかたを抽出</span><b>↓</b><span>今日のまなざしに変換</span><b>↓</b><span>街で気づく</span>
+        <span>原典：松尾芭蕉『おくのほそ道』</span><b>↓</b><span>芭蕉の観察を読む</span><b>↓</b><span>観察のしかたを抽出</span><b>↓</b><span>今日のまなざしに変換</span><b>↓</b><span>街で気づきを残す</span>
       </div>
-      <p>すべてのまなざしは、青空文庫の原典に基づきます。</p>
-      <small>引用・出典：青空文庫　松尾芭蕉「おくのほそ道」</small>
+      <p>「お題」は原文そのものではありません。芭蕉の観察を、今の街で試せる形に翻訳したものです。</p>
+      <small>引用・底本：青空文庫　松尾芭蕉『おくのほそ道』　杉浦正一郎校註　作品ID 61619</small>
     </section>
   </div>`;
 }
@@ -509,7 +551,7 @@ function saveNote() {
   const entry = {
     id: `entry-${Date.now()}`,
     title: text,
-    body: `${gaze.source}から、街の${state.noteCategory}を見つける。`,
+    body: `${gaze.observation}から、街の${state.noteCategory}を見つける。`,
     date: formatDate(new Date()),
     category: state.noteCategory || gaze.category,
     image: state.notePhoto || gaze.image,
@@ -569,11 +611,16 @@ function timerRemaining() {
 
 function ensureDaily() {
   const today = todayKey();
-  if (state.date === today && state.gazeId) return;
+  const hasValidGaze = gazes.some((gaze) => gaze.id === state.gazeId);
+  if (state.date === today && hasValidGaze) return;
   state.date = today;
-  state.gazeId = gazes[0].id;
+  state.gazeId = gazes[dailyIndex(today)].id;
   state.noteCategory = currentGaze().category;
   saveState();
+}
+
+function dailyIndex(key) {
+  return [...key].reduce((sum, char) => sum + char.charCodeAt(0), 0) % gazes.length;
 }
 
 function currentGaze() {
