@@ -2617,7 +2617,7 @@ button {
   bottom: max(10px, var(--safe-bottom));
   z-index: 35;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 5px;
   padding: 8px;
   border: 1px solid rgba(29, 33, 31, 0.14);

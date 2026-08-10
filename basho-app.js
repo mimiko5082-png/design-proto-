@@ -186,7 +186,6 @@ function render() {
     seeds: renderSeeds,
     map: renderMap,
     notebook: renderNotebook,
-    settings: renderSettings,
   };
   screen.innerHTML = (views[state.view] || views.home)();
   updateTabs();
@@ -656,7 +655,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
-    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook", "settings"];
+    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
