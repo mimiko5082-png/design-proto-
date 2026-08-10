@@ -242,7 +242,7 @@ function renderClassic() {
           <strong>${escapeHtml(gaze.modernTask)}</strong>
         </div>
       </section>
-      <button class="text-next" type="button" data-nav="pause">このまなざしで立ち止まる　→</button>
+      <button class="main-button classic-next-button" type="button" data-nav="pause">次に</button>
     </section>
   </div>`;
 }

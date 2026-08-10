@@ -1384,6 +1384,11 @@ button {
   font-size: 12px;
 }
 
+.classic-next-button {
+  width: min(100%, 220px);
+  margin-top: 2px;
+}
+
 .classic-card p,
 .encounter-card p {
   position: relative;
