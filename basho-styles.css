@@ -766,6 +766,49 @@ button {
   background: #d8ceb9;
 }
 
+.location-status-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid rgba(37, 73, 111, 0.16);
+  border-radius: 16px;
+  background: rgba(247, 239, 223, 0.78);
+  box-shadow: 0 10px 24px rgba(31, 29, 24, 0.08);
+}
+
+.location-status-card strong,
+.location-status-card p {
+  display: block;
+}
+
+.location-status-card strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.location-status-card p {
+  margin: 4px 0 0;
+  color: var(--soft-ink);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.55;
+}
+
+.location-status-card button {
+  min-width: 94px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #f7eedf;
+  background: #25496f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .map-head span,
 .journal-head span {
   color: var(--soft-ink);
@@ -773,14 +816,23 @@ button {
   font-weight: 900;
 }
 
-.map-panel > img {
+.map-panel > img,
+.real-map-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.map-panel > img {
   object-fit: cover;
   filter: grayscale(1) sepia(0.2) contrast(0.82) brightness(1.1);
   opacity: 0.65;
+}
+
+.real-map-frame {
+  border: 0;
+  filter: grayscale(0.25) sepia(0.08) contrast(0.9);
 }
 
 .map-layer {
@@ -789,6 +841,11 @@ button {
   background:
     radial-gradient(circle at 50% 49%, rgba(141, 66, 52, 0.18), transparent 10%),
     linear-gradient(180deg, rgba(244, 236, 220, 0.1), rgba(244, 236, 220, 0.28));
+  pointer-events: none;
+}
+
+.real-location-map .map-layer {
+  background: linear-gradient(180deg, rgba(244, 236, 220, 0.04), rgba(244, 236, 220, 0.08));
 }
 
 .map-dot {
@@ -809,11 +866,31 @@ button {
   box-shadow: 0 0 0 13px rgba(141, 66, 52, 0.12);
 }
 
+.current-location-pin {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255, 255, 255, 0.94);
+  border-radius: 999px;
+  color: #fff;
+  background: #25496f;
+  box-shadow: 0 0 0 18px rgba(37, 73, 111, 0.16), 0 14px 28px rgba(24, 31, 34, 0.28);
+  font-size: 11px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
 .map-card {
   position: absolute;
   left: 18px;
   right: 18px;
-  bottom: 18px;
+  bottom: 86px;
   z-index: 3;
   display: grid;
   grid-template-columns: 92px 1fr;
@@ -858,6 +935,34 @@ button {
   color: rgba(29, 33, 31, 0.58);
   font-size: 11px;
   font-weight: 900;
+}
+
+.map-actions {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 9px;
+}
+
+.map-actions.no-location {
+  grid-template-columns: 1fr;
+}
+
+.external-map-link {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #25496f;
+  background: rgba(247, 239, 223, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(37, 73, 111, 0.18), 0 10px 20px rgba(31, 29, 24, 0.12);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .filter-row {
@@ -1599,11 +1704,6 @@ button {
 }
 
 .map-borrow-button {
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  bottom: 18px;
-  z-index: 4;
   min-height: 48px;
   border-radius: 999px;
   color: #f7eedf;
@@ -1613,7 +1713,7 @@ button {
 }
 
 .map-panel .map-card {
-  bottom: 78px;
+  bottom: 86px;
 }
 
 .source-flow-panel h2 {

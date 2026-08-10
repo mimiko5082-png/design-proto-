@@ -139,6 +139,8 @@ const state = {
   notebookEditing: false,
   selectedEntryIds: [],
   deletedEntryIds: [],
+  currentLocation: null,
+  locationStatus: "idle",
 };
 
 loadState();
@@ -348,14 +350,37 @@ function renderSeeds() {
 
 function renderMap() {
   const entry = activeEntry();
-  const pins = mapEntries().map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
+  const location = state.currentLocation;
+  const hasLocation = typeof location?.lat === "number" && typeof location?.lng === "number";
+  const pins = hasLocation
+    ? ""
+    : mapEntries().map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
+  const locationStatusText =
+    state.locationStatus === "loading"
+      ? "現在地を取得しています"
+      : hasLocation
+        ? `現在地 ${formatCoordinate(location.lat)}, ${formatCoordinate(location.lng)}`
+        : "現在地を取得すると、この地図が今いる場所に切り替わります。";
+  const realMap = hasLocation
+    ? `<iframe class="real-map-frame" title="現在地の地図" src="${escapeAttr(mapEmbedUrl(location))}" loading="lazy"></iframe><span class="current-location-pin">現在地</span>`
+    : `<img src="./assets/kotoba-map.png" alt="まなざしの地図" />`;
+  const mapLink = hasLocation
+    ? `<a class="external-map-link" href="${escapeAttr(mapExternalUrl(location))}" target="_blank" rel="noopener">外部地図で開く</a>`
+    : "";
   return `<div class="view map-view">
     <header class="map-head">
       <span>07　まなざしの地図</span>
-      <button class="round-button" type="button" aria-label="絞り込み">▽</button>
+      <button class="round-button" type="button" data-action="request-location" aria-label="現在地を表示">⌖</button>
     </header>
-    <section class="map-panel">
-      <img src="./assets/kotoba-map.png" alt="まなざしの地図" />
+    <section class="location-status-card">
+      <div>
+        <strong>${hasLocation ? "現在地を表示中" : "現在地で見る"}</strong>
+        <p>${escapeHtml(locationStatusText)}</p>
+      </div>
+      <button type="button" data-action="request-location">${hasLocation ? "更新" : "現在地を表示"}</button>
+    </section>
+    <section class="map-panel ${hasLocation ? "real-location-map" : ""}">
+      ${realMap}
       <div class="map-layer"></div>
       ${pins}
       <article class="map-card">
@@ -366,7 +391,10 @@ function renderMap() {
           <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
         </div>
       </article>
-      <button class="map-borrow-button" type="button" data-action="borrow-gaze">このまなざしを借りる</button>
+      <div class="map-actions ${hasLocation ? "has-location" : "no-location"}">
+        ${mapLink}
+        <button class="map-borrow-button" type="button" data-action="borrow-gaze">このまなざしを借りる</button>
+      </div>
     </section>
   </div>`;
 }
@@ -467,6 +495,10 @@ function handleAction(target) {
     showToast("このまなざしを借りました。");
     return;
   }
+  if (action === "request-location") {
+    requestCurrentLocation();
+    return;
+  }
   if (action === "toggle-notebook-edit") {
     toggleNotebookEdit();
     return;
@@ -533,6 +565,46 @@ function deleteSelectedEntries() {
   saveState();
   showToast("選んだ句を句帳から消しました。");
   render();
+}
+
+function requestCurrentLocation() {
+  if (!navigator.geolocation) {
+    state.locationStatus = "error";
+    saveState();
+    showToast("この端末では現在地を使えません。");
+    render();
+    return;
+  }
+
+  state.locationStatus = "loading";
+  saveState();
+  render();
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      state.currentLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: Math.round(position.coords.accuracy || 0),
+        updatedAt: Date.now(),
+      };
+      state.locationStatus = "ready";
+      saveState();
+      showToast("現在地を表示しました。");
+      render();
+    },
+    () => {
+      state.locationStatus = "error";
+      saveState();
+      showToast("位置情報を許可すると現在地を表示できます。");
+      render();
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000,
+    }
+  );
 }
 
 function navigate(view) {
@@ -661,6 +733,11 @@ function loadState() {
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
     if (typeof state.notePhoto !== "string") state.notePhoto = "";
+    if (!state.currentLocation || typeof state.currentLocation.lat !== "number" || typeof state.currentLocation.lng !== "number") {
+      state.currentLocation = null;
+    }
+    if (!["idle", "loading", "ready", "error"].includes(state.locationStatus)) state.locationStatus = "idle";
+    if (state.locationStatus === "loading") state.locationStatus = state.currentLocation ? "ready" : "idle";
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -677,6 +754,24 @@ function todayKey() {
 
 function formatDate(date) {
   return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
+}
+
+function formatCoordinate(value) {
+  return Number(value).toFixed(5);
+}
+
+function mapEmbedUrl(location) {
+  const lat = Number(location.lat);
+  const lng = Number(location.lng);
+  const delta = 0.006;
+  const bbox = [lng - delta, lat - delta, lng + delta, lat + delta].map((value) => value.toFixed(6)).join(",");
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(6)},${lng.toFixed(6)}`;
+}
+
+function mapExternalUrl(location) {
+  const lat = Number(location.lat).toFixed(6);
+  const lng = Number(location.lng).toFixed(6);
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
 function lineBreak(value) {
