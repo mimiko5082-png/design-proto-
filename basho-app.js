@@ -289,7 +289,7 @@ function renderPause() {
 function renderNote() {
   const gaze = currentGaze();
   const photo = state.notePhoto
-    ? `<img class="mini-photo" src="${escapeAttr(state.notePhoto)}" alt="選択した写真" />`
+    ? `<div class="note-photo-preview"><img src="${escapeAttr(state.notePhoto)}" alt="添付した写真" /><span>写真を変更</span></div>`
     : "";
   return `<div class="view note-view">
     <header class="simple-head">
@@ -306,10 +306,13 @@ function renderNote() {
         <span>見つめたカテゴリ（複数可）</span>
         ${["音", "流れ", "跡", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
-      <div class="memo-row">
-        <small>場所のメモ（任意）<br>例：駅のホーム、風鈴の角 など</small>
-        <label class="camera-mini" aria-label="写真を添える">
-          ${photo || "▧"}
+      <div class="memo-row photo-attach-row">
+        <div>
+          <strong>写真を添える</strong>
+          <small>気づいた景色を1枚だけ添付できます。</small>
+        </div>
+        <label class="camera-mini photo-attach-button" aria-label="写真を添える">
+          ${photo || `<span class="photo-add-icon">▧</span><b>写真を選ぶ</b>`}
           <input type="file" accept="image/*" data-photo-input hidden />
         </label>
       </div>
@@ -520,7 +523,12 @@ function renderBook() {
   const pages = [
     `<article class="book-page cover"><small>今日の</small><strong>まなざし帖</strong><span>${formatDate(new Date())}</span><div class="wanderer-mark small"></div></article>`,
     `<article class="book-page haiku"><small>芭蕉の句</small><strong>${escapeHtml(currentGaze().haiku)}</strong><span>松尾芭蕉</span></article>`,
-    ...entries.map((entry, index) => `<article class="book-page note-page"><small>${index + 1}ページ目</small><strong>${lineBreak(entry.title)}</strong><span>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</span></article>`),
+    ...entries.map((entry, index) => `<article class="book-page note-page">
+      <small>${index + 1}ページ目</small>
+      ${entry.image ? `<img class="book-photo" src="${escapeAttr(entry.image)}" alt="" />` : ""}
+      <strong>${lineBreak(entry.title)}</strong>
+      <span>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</span>
+    </article>`),
     `<article class="book-page back-cover"><strong>次のまなざしを<br>誰に渡しますか？</strong><div class="wanderer-mark small"></div></article>`,
   ];
   return `<div class="view book-view">
@@ -586,7 +594,7 @@ function handleAction(target) {
     return;
   }
   if (action === "print-book") {
-    showToast("まなざし帖を作成しました。");
+    printBook();
     return;
   }
   if (action === "open-entry") {
@@ -972,6 +980,16 @@ async function shareManazashi() {
   } catch {
     showToast("友達に渡すカードを作りました。");
   }
+}
+
+function printBook() {
+  if (state.view !== "book") {
+    navigate("book");
+    requestAnimationFrame(() => window.print());
+    return;
+  }
+  showToast("印刷画面を開きます。");
+  requestAnimationFrame(() => window.print());
 }
 
 function loadState() {

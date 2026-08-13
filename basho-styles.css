@@ -1384,6 +1384,15 @@ button {
   white-space: pre-line;
 }
 
+.book-photo {
+  width: 100%;
+  max-height: 116px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(29, 33, 31, 0.12);
+  filter: grayscale(0.34) sepia(0.1);
+}
+
 .notebook-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1904,12 +1913,21 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 42px;
+  grid-template-columns: 1fr;
   align-items: center;
   gap: 12px;
 }
 
+.memo-row strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .memo-row small {
+  display: block;
   color: rgba(29, 33, 31, 0.58);
   font-size: 10px;
   font-weight: 900;
@@ -1917,8 +1935,8 @@ button {
 }
 
 .camera-mini {
-  width: 42px;
-  height: 42px;
+  width: 100%;
+  min-height: 74px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1926,6 +1944,48 @@ button {
   color: var(--soft-ink);
   background: rgba(250, 244, 230, 0.75);
   box-shadow: inset 0 0 0 1px rgba(29, 33, 31, 0.12);
+  font-weight: 900;
+}
+
+.photo-attach-button {
+  padding: 12px;
+  cursor: pointer;
+}
+
+.photo-add-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 5px;
+  border-radius: 999px;
+  background: rgba(77, 104, 76, 0.12);
+  color: #4d684c;
+  font-size: 18px;
+}
+
+.photo-attach-button b {
+  font-size: 12px;
+}
+
+.note-photo-preview {
+  width: 100%;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+
+.note-photo-preview img {
+  width: 100%;
+  height: 126px;
+  object-fit: cover;
+  border-radius: 9px;
+  filter: grayscale(0.28) sepia(0.08);
+}
+
+.note-photo-preview span {
+  color: #4d684c;
+  font-size: 11px;
   font-weight: 900;
 }
 
@@ -3127,5 +3187,109 @@ button {
 
   .toast {
     bottom: calc(18px + var(--safe-bottom));
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    width: auto;
+    min-height: auto;
+    overflow: visible;
+    background: #fbf8ef;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .phone,
+  .screen,
+  .book-view,
+  .book-panel,
+  .book-strip,
+  .book-page,
+  .book-page *,
+  .book-panel .screen-label {
+    visibility: visible;
+  }
+
+  .app-shell {
+    display: block;
+    min-height: auto;
+    padding: 0;
+    background: #fbf8ef;
+  }
+
+  .phone {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .screen {
+    position: static;
+    inset: auto;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .screen::before,
+  .screen::after,
+  .status-bar,
+  .tabbar,
+  .book-view .simple-head,
+  .book-panel > .main-button,
+  .toast {
+    display: none !important;
+  }
+
+  .view.book-view {
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .book-panel {
+    display: block;
+  }
+
+  .book-panel .screen-label {
+    margin: 0 0 8mm;
+    font-size: 16pt;
+    color: #1d211f;
+  }
+
+  .book-strip {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: row;
+    gap: 7mm;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .book-page {
+    min-height: 120mm;
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid rgba(29, 33, 31, 0.22);
+    background: #fffdf5;
+  }
+
+  .book-photo {
+    max-height: 42mm;
   }
 }
