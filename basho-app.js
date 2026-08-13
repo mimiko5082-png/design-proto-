@@ -152,10 +152,13 @@ const state = {
   cloudStatus: "idle",
   cloudEmail: "",
   cloudUpdatedAt: 0,
+  incomingManazashi: null,
+  borrowedManazashi: null,
 };
 
 loadState();
 ensureDaily();
+processIncomingManazashi();
 render();
 initFirebaseSync();
 setInterval(updateTimer, 1000);
@@ -197,6 +200,7 @@ function render() {
     pause: renderPause,
     note: renderNote,
     encounter: renderEncounter,
+    receive: renderReceive,
     seeds: renderSeeds,
     map: renderMap,
     notebook: renderNotebook,
@@ -337,6 +341,39 @@ function renderEncounter() {
         <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
       </article>
       <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
+    </section>
+  </div>`;
+}
+
+function renderReceive() {
+  const item = normalizeSharedManazashi(state.incomingManazashi) || normalizeSharedManazashi(state.borrowedManazashi);
+  if (!item) {
+    return `<div class="view receive-view">
+      <section class="share-card receive-card quiet-card">
+        <span class="screen-label">まなざしを受け取る</span>
+        <p>届いたまなざしを読み込めませんでした。</p>
+        <button class="main-button" type="button" data-nav="home">まなざしへ戻る</button>
+      </section>
+    </div>`;
+  }
+  return `<div class="view receive-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-action="dismiss-manazashi" aria-label="閉じる">←</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+    </header>
+    <section class="share-card receive-card quiet-card">
+      <span class="screen-label">友達から届いたまなざし</span>
+      <p>${escapeHtml(item.from)}から、<br>街を見るための小さな視点が届きました。</p>
+      <article class="pass-card incoming-pass-card">
+        <small>届いたまなざし</small>
+        <strong>${lineBreak(item.title)}</strong>
+        <span>${escapeHtml(item.date)}　${escapeHtml(item.category)}</span>
+      </article>
+      <p class="share-hint">同じ答えを探すのではなく、この視点を借りて30秒だけ街を見ます。</p>
+      <div class="receive-actions">
+        <button class="main-button" type="button" data-action="accept-manazashi">受け取る</button>
+        <button class="outline-button" type="button" data-action="dismiss-manazashi">また今度</button>
+      </div>
     </section>
   </div>`;
 }
@@ -570,7 +607,15 @@ function handleAction(target) {
     return;
   }
   if (action === "borrow-gaze") {
-    showToast("このまなざしを借りました。");
+    borrowActiveManazashi();
+    return;
+  }
+  if (action === "accept-manazashi") {
+    acceptSharedManazashi();
+    return;
+  }
+  if (action === "dismiss-manazashi") {
+    dismissSharedManazashi();
     return;
   }
   if (action === "request-location") {
@@ -828,6 +873,10 @@ function navigate(view) {
   state.view = view;
   state.notebookEditing = false;
   state.selectedEntryIds = [];
+  if (view === "home") {
+    state.incomingManazashi = null;
+    state.borrowedManazashi = null;
+  }
   if (view === "pause") state.timerStartedAt = Date.now();
   saveState();
   render();
@@ -854,6 +903,8 @@ function saveNote() {
   state.activeEntryId = entry.id;
   state.note = "";
   state.notePhoto = "";
+  state.incomingManazashi = null;
+  state.borrowedManazashi = null;
   saveEntriesOnly();
   saveState();
   showToast("まなざしを残しました。");
@@ -917,8 +968,50 @@ function dailyIndex(key) {
   return [...key].reduce((sum, char) => sum + char.charCodeAt(0), 0) % gazes.length;
 }
 
+function processIncomingManazashi() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("manazashi");
+  if (!encoded) return;
+  const incoming = decodeSharedManazashi(encoded);
+  if (!incoming) {
+    showToast("まなざしを読み込めませんでした。");
+    return;
+  }
+  state.incomingManazashi = incoming;
+  state.borrowedManazashi = null;
+  state.view = "receive";
+  saveState();
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("manazashi");
+    window.history.replaceState({}, "", url);
+  } catch {}
+}
+
 function currentGaze() {
+  const borrowed = normalizeSharedManazashi(state.borrowedManazashi);
+  if (borrowed && ["pause", "note"].includes(state.view)) return borrowedGaze(borrowed);
   return gazes.find((gaze) => gaze.id === state.gazeId) || gazes[0];
+}
+
+function borrowedGaze(item) {
+  return {
+    id: "borrowed",
+    prompt: item.title,
+    homeNote: "友達から受け取ったまなざしです。",
+    inspiration: "友達から届いたまなざし",
+    source: "友達から届いたまなざし",
+    sourceNote: "誰かが街で残した気づきを、次の人の観察の入口にします。",
+    haiku: item.title,
+    observation: `${item.from}の気づきを借りる`,
+    modernTask: `30秒立ち止まり、「${oneLine(item.title)}」という視点で街を見る`,
+    encounterNote: "あなたの気づきは、次の誰かのまなざしになります。",
+    pauseTask: "同じものを探すのではなく、その視点で別の気づきを見つけてください。",
+    noteExample: item.title,
+    category: item.category,
+    color: "#4d684c",
+    image: "./assets/kotoba-forest.png",
+  };
 }
 
 function allEntries() {
@@ -936,6 +1029,14 @@ function mapEntries() {
 function activeEntry() {
   const entries = mapEntries();
   return entries.find((entry) => entry.id === state.activeEntryId) || entries[0] || sampleEntries[0];
+}
+
+function borrowActiveManazashi() {
+  const entry = activeEntry();
+  state.incomingManazashi = sharedManazashiFromEntry(entry, "誰か");
+  state.borrowedManazashi = null;
+  saveState();
+  navigate("receive");
 }
 
 function isTodaySavedEntry(entry) {
@@ -967,19 +1068,91 @@ function updateTabs() {
 
 async function shareManazashi() {
   const entry = activeEntry();
-  const text = `芭蕉のまなざし\n${entry.title.replace(/\n/g, " ")}\n30秒だけ、このまなざしで街を見てみてください。`;
+  const link = sharedManazashiLink(entry);
+  const text = `芭蕉のまなざし\n${entry.title.replace(/\n/g, " ")}\n30秒だけ、このまなざしで街を見てみてください。\n${link}`;
   if (navigator.share) {
     try {
-      await navigator.share({ title: "芭蕉のまなざし", text });
+      await navigator.share({ title: "友達から届いたまなざし", text, url: link });
       return;
     } catch {}
   }
   try {
     await navigator.clipboard.writeText(text);
-    showToast("まなざしをコピーしました。");
+    showToast("受け取りリンクをコピーしました。");
   } catch {
     showToast("友達に渡すカードを作りました。");
   }
+}
+
+function sharedManazashiLink(entry) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("manazashi", encodeSharedManazashi(sharedManazashiFromEntry(entry, "友達")));
+  return url.toString();
+}
+
+function sharedManazashiFromEntry(entry, from = "友達") {
+  return normalizeSharedManazashi({
+    title: entry?.title || "一番遠くの音を探す",
+    category: entry?.category || "音",
+    date: entry?.date || formatDate(new Date()),
+    from,
+  });
+}
+
+function encodeSharedManazashi(item) {
+  const normalized = normalizeSharedManazashi(item);
+  const json = JSON.stringify(normalized);
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function decodeSharedManazashi(value) {
+  try {
+    const padded = String(value || "").replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(String(value || "").length / 4) * 4, "=");
+    return normalizeSharedManazashi(JSON.parse(decodeURIComponent(escape(atob(padded)))));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeSharedManazashi(item) {
+  if (!item || typeof item !== "object") return null;
+  const title = String(item.title || "").trim().slice(0, 68);
+  if (!title) return null;
+  return {
+    title,
+    category: String(item.category || "音").trim().slice(0, 12) || "音",
+    date: String(item.date || formatDate(new Date())).trim().slice(0, 16),
+    from: String(item.from || "友達").trim().slice(0, 16) || "友達",
+  };
+}
+
+function acceptSharedManazashi() {
+  const item = normalizeSharedManazashi(state.incomingManazashi);
+  if (!item) {
+    showToast("まなざしを読み込めませんでした。");
+    navigate("home");
+    return;
+  }
+  state.borrowedManazashi = item;
+  state.incomingManazashi = null;
+  state.noteCategory = item.category;
+  state.note = "";
+  state.notePhoto = "";
+  showToast("まなざしを受け取りました。");
+  navigate("pause");
+}
+
+function dismissSharedManazashi() {
+  state.incomingManazashi = null;
+  state.borrowedManazashi = null;
+  saveState();
+  navigate("home");
+}
+
+function oneLine(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
 function printBook() {
@@ -997,7 +1170,7 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook", "share", "book"];
+    const allowedViews = ["home", "classic", "pause", "note", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
@@ -1012,6 +1185,8 @@ function loadState() {
     if (state.cloudStatus === "syncing") state.cloudStatus = "idle";
     if (typeof state.cloudEmail !== "string") state.cloudEmail = "";
     if (typeof state.cloudUpdatedAt !== "number") state.cloudUpdatedAt = 0;
+    state.incomingManazashi = normalizeSharedManazashi(state.incomingManazashi);
+    state.borrowedManazashi = normalizeSharedManazashi(state.borrowedManazashi);
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }

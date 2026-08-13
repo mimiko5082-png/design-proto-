@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v29-photo-print";
+const CACHE_NAME = "basho-manazashi-v30-receive";
 const APP_SHELL = [
   "./",
   "./index.html",
