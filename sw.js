@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v27-delete-sync";
+const CACHE_NAME = "basho-manazashi-v28-passbook";
 const APP_SHELL = [
   "./",
   "./index.html",

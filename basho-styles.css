@@ -218,6 +218,40 @@ button {
   text-align: center;
 }
 
+.quiet-card {
+  background:
+    radial-gradient(circle at 72% 74%, rgba(117, 143, 99, 0.18), transparent 22%),
+    linear-gradient(135deg, rgba(255, 252, 244, 0.96), rgba(242, 238, 226, 0.92)),
+    var(--paper-light);
+  border-color: rgba(42, 54, 46, 0.16);
+  box-shadow: 0 16px 34px rgba(36, 34, 28, 0.1);
+}
+
+.today-copy {
+  margin: 0 0 -8px;
+  color: var(--soft-ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.wanderer-mark {
+  width: 92px;
+  height: 116px;
+  background:
+    radial-gradient(circle at 50% 17%, transparent 0 11px, #263129 12px 13px, transparent 14px),
+    linear-gradient(90deg, transparent 47%, #263129 48% 51%, transparent 52%),
+    linear-gradient(135deg, transparent 50%, #263129 51% 53%, transparent 54%),
+    linear-gradient(45deg, transparent 50%, #263129 51% 53%, transparent 54%);
+  opacity: 0.78;
+}
+
+.wanderer-mark.small {
+  width: 58px;
+  height: 76px;
+  transform: scale(0.82);
+}
+
 .ink-branch {
   position: absolute;
   left: -28px;
@@ -1237,6 +1271,132 @@ button {
   color: #25496f;
   background: transparent;
   font-size: 10px;
+  font-weight: 900;
+}
+
+.saved-card,
+.share-card {
+  min-height: 560px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(29, 33, 31, 0.18);
+  border-radius: 24px;
+  text-align: center;
+}
+
+.saved-card p,
+.share-card p {
+  margin: 0;
+  color: var(--soft-ink);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.8;
+}
+
+.saved-note-preview,
+.pass-card {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(29, 33, 31, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 252, 244, 0.84);
+  box-shadow: 0 12px 24px rgba(31, 29, 24, 0.08);
+}
+
+.saved-note-preview strong,
+.pass-card strong {
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.saved-note-preview small,
+.pass-card small,
+.pass-card span,
+.share-hint {
+  color: rgba(29, 33, 31, 0.58);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pass-card {
+  min-height: 220px;
+  align-content: center;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(117, 143, 99, 0.18), transparent 32%),
+    rgba(255, 252, 244, 0.9);
+}
+
+.book-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.book-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 74%);
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  scroll-snap-type: x mandatory;
+}
+
+.book-page {
+  min-height: 300px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 22px 18px;
+  border: 1px solid rgba(29, 33, 31, 0.13);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 76% 80%, rgba(117, 143, 99, 0.16), transparent 25%),
+    #fbf8ef;
+  box-shadow: 0 12px 24px rgba(31, 29, 24, 0.1);
+  scroll-snap-align: center;
+  text-align: center;
+}
+
+.book-page strong {
+  color: var(--ink);
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 19px;
+  line-height: 1.75;
+}
+
+.book-page small,
+.book-page span {
+  color: rgba(29, 33, 31, 0.56);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.book-page.haiku strong {
+  writing-mode: vertical-rl;
+  white-space: pre-line;
+}
+
+.notebook-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.notebook-actions button {
+  min-height: 42px;
+  border-radius: 999px;
+  color: #f7eedf;
+  background: #4d684c;
+  font-size: 12px;
   font-weight: 900;
 }
 

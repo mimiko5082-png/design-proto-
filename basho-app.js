@@ -200,6 +200,8 @@ function render() {
     seeds: renderSeeds,
     map: renderMap,
     notebook: renderNotebook,
+    share: renderShare,
+    book: renderBook,
   };
   screen.innerHTML = (views[state.view] || views.home)();
   updateTabs();
@@ -213,14 +215,15 @@ function renderHome() {
       <button class="round-button" type="button" aria-label="メニュー">☰</button>
       <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
     </header>
-    <section class="manazashi-card source-home-card">
-      <span class="screen-label">01　まなざしを受け取る</span>
+    <section class="manazashi-card source-home-card quiet-card">
+      <span class="screen-label">今日のまなざし</span>
       <div class="ink-branch"></div>
+      <p class="today-copy">今日は、</p>
       <h1>${lineBreak(gaze.prompt)}</h1>
       <i style="background:${escapeAttr(gaze.color)}"></i>
-      <p>${escapeHtml(gaze.homeNote)}</p>
-      <span class="source-badge">${escapeHtml(gaze.inspiration)}</span>
-      <button class="main-button" type="button" data-nav="classic">このまなざしで歩き始める</button>
+      <p>芭蕉の句から受け取った、いつもの街を見るための小さな視点です。</p>
+      <span class="source-badge">1分以内で完了</span>
+      <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
   </div>`;
 }
@@ -267,18 +270,18 @@ function renderPause() {
   const dash = Math.round(276 * progress);
   return `<div class="view feel-view">
     <header class="minimal-head">
-      <button class="x-button" type="button" data-nav="classic" aria-label="閉じる">×</button>
+      <button class="x-button" type="button" data-nav="home" aria-label="閉じる">×</button>
     </header>
-    <section class="feel-paper">
-      <span class="screen-label">03　立ち止まる</span>
-      <p>30秒、<br>ここで立ち止まる</p>
+    <section class="feel-paper quiet-card">
+      <span class="screen-label">30秒、まわりを見る</span>
+      <p>スマホを下ろして、<br>いつもの景色を見つめてみよう。</p>
       <div class="timer-ring" data-el="timer" style="--dash:${dash}">
         <strong>${remaining}</strong>
         <span>秒</span>
       </div>
       <p class="pause-task">${escapeHtml(gaze.modernTask)}</p>
       <small>${escapeHtml(gaze.pauseTask)}</small>
-      <button class="outline-button" type="button" data-nav="note">終わった</button>
+      <button class="outline-button" type="button" data-nav="note">気づきを残す</button>
     </section>
   </div>`;
 }
@@ -293,9 +296,9 @@ function renderNote() {
       <button class="back-button" type="button" data-nav="pause" aria-label="戻る">←</button>
       <button class="save-link" type="button" data-action="save-note">保存</button>
     </header>
-    <section class="note-paper note-board">
-      <span class="screen-label">04　気づきを残す</span>
-      <p class="note-lead">いまの気づきを、ひとこと。<br>自由に書きとめましょう。</p>
+    <section class="note-paper note-board quiet-card">
+      <span class="screen-label">何が気になりましたか？</span>
+      <p class="note-lead">一語でも、一文でも。<br>今の気づきを残してください。</p>
       <label class="note-memory">
         <textarea data-note-input maxlength="68" placeholder="電車が通ったあと、&#10;一瞬だけ町が&#10;静かになる。">${escapeHtml(state.note)}</textarea>
       </label>
@@ -316,28 +319,21 @@ function renderNote() {
 
 function renderEncounter() {
   const gaze = currentGaze();
+  const entry = activeEntry();
   return `<div class="view encounter-view">
     <header class="simple-head">
       <button class="back-button" type="button" data-nav="note" aria-label="戻る">←</button>
       <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
-    <section class="encounter-card">
-      <span class="screen-label">05　芭蕉と出会う</span>
-      <p>あなたの気づきは、<br>芭蕉のまなざしとつながります。</p>
-      <article class="classic-slip small-slip">
-        <div class="vertical-text">${vertical(gaze.haiku)}</div>
-        <small>おくのほそ道</small>
+    <section class="encounter-card saved-card quiet-card">
+      <span class="screen-label">まなざしを残しました</span>
+      <div class="wanderer-mark"></div>
+      <p>今日のまなざしを<br>1つ残しました。</p>
+      <article class="saved-note-preview">
+        <strong>${lineBreak(entry.title)}</strong>
+        <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
       </article>
-      <p>${escapeHtml(gaze.encounterNote)}</p>
-      <section class="translation-card compact-translation" aria-label="原典からまなざしへの変換">
-        <div><span>原典</span><strong>${lineBreak(gaze.haiku)}</strong></div>
-        <b>↓</b>
-        <div><span>観察</span><strong>${escapeHtml(gaze.observation)}</strong></div>
-        <b>↓</b>
-        <div><span>今日の体験</span><strong>${escapeHtml(gaze.modernTask)}</strong></div>
-      </section>
-      <span class="source-badge">引用：${escapeHtml(gaze.source)}</span>
-      <button class="main-button encounter-next-button" type="button" data-nav="seeds">次に</button>
+      <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
     </section>
   </div>`;
 }
@@ -461,6 +457,10 @@ function renderNotebook() {
     </nav>
     ${syncCard}
     ${todaySavedCard}
+    <section class="notebook-actions">
+      <button type="button" data-nav="share">友達に渡す</button>
+      <button type="button" data-nav="book">まなざし帖にする</button>
+    </section>
     <section class="inheritance-card" aria-label="まなざしが受け継がれる例">
       <span>受け継ぎの例</span>
       <p><b>Aさん</b> 電車が通ったあと、一瞬だけ町が静かになる。</p>
@@ -492,6 +492,48 @@ function renderSettings() {
 
 function renderSyncCard() {
   return "";
+}
+
+function renderShare() {
+  const entry = activeEntry();
+  return `<div class="view share-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">←</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+    </header>
+    <section class="share-card quiet-card">
+      <span class="screen-label">まなざしを渡す</span>
+      <p>このまなざしを、<br>次の人へ渡してみよう。</p>
+      <article class="pass-card">
+        <small>まなざしカード</small>
+        <strong>${lineBreak(entry.title)}</strong>
+        <span>from あなた</span>
+      </article>
+      <p class="share-hint">友達はこのまなざしで、30秒だけ街を見つめます。</p>
+      <button class="main-button" type="button" data-action="share-manazashi">友達に渡す</button>
+    </section>
+  </div>`;
+}
+
+function renderBook() {
+  const entries = allEntries().filter((entry) => entry.id?.startsWith("entry-")).slice(0, 4);
+  const pages = [
+    `<article class="book-page cover"><small>今日の</small><strong>まなざし帖</strong><span>${formatDate(new Date())}</span><div class="wanderer-mark small"></div></article>`,
+    `<article class="book-page haiku"><small>芭蕉の句</small><strong>${escapeHtml(currentGaze().haiku)}</strong><span>松尾芭蕉</span></article>`,
+    ...entries.map((entry, index) => `<article class="book-page note-page"><small>${index + 1}ページ目</small><strong>${lineBreak(entry.title)}</strong><span>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</span></article>`),
+    `<article class="book-page back-cover"><strong>次のまなざしを<br>誰に渡しますか？</strong><div class="wanderer-mark small"></div></article>`,
+  ];
+  return `<div class="view book-view">
+    <header class="simple-head">
+      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">←</button>
+      <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
+    </header>
+    <section class="book-panel">
+      <span class="screen-label">今日の記録を、まなざし帖にする</span>
+      <div class="book-strip">${pages.join("")}</div>
+      <button class="main-button" type="button" data-action="print-book">まなざし帖をつくる</button>
+    </section>
+  </div>`;
 }
 
 function handleAction(target) {
@@ -537,6 +579,14 @@ function handleAction(target) {
   }
   if (action === "delete-selected-entries") {
     deleteSelectedEntries();
+    return;
+  }
+  if (action === "share-manazashi") {
+    shareManazashi();
+    return;
+  }
+  if (action === "print-book") {
+    showToast("まなざし帖を作成しました。");
     return;
   }
   if (action === "open-entry") {
@@ -798,8 +848,8 @@ function saveNote() {
   state.notePhoto = "";
   saveEntriesOnly();
   saveState();
-  showToast("句帳に保存しました。");
-  navigate("notebook");
+  showToast("まなざしを残しました。");
+  navigate("encounter");
   saveEntryToFirebase(entry);
 }
 
@@ -901,9 +951,27 @@ function updateTabs() {
     const nav = tab.dataset.nav;
     const active =
       state.view === nav ||
-      (["classic", "pause", "note", "encounter", "seeds"].includes(state.view) && nav === "home");
+      (["classic", "pause", "note", "encounter", "seeds"].includes(state.view) && nav === "home") ||
+      (["share", "book"].includes(state.view) && nav === "notebook");
     tab.classList.toggle("active", active);
   });
+}
+
+async function shareManazashi() {
+  const entry = activeEntry();
+  const text = `芭蕉のまなざし\n${entry.title.replace(/\n/g, " ")}\n30秒だけ、このまなざしで街を見てみてください。`;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "芭蕉のまなざし", text });
+      return;
+    } catch {}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("まなざしをコピーしました。");
+  } catch {
+    showToast("友達に渡すカードを作りました。");
+  }
 }
 
 function loadState() {
@@ -911,7 +979,7 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook"];
+    const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook", "share", "book"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
