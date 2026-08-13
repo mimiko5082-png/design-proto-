@@ -1,5 +1,8 @@
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
+const SYNC_CODE_LENGTH = 8;
+const SYNC_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+let bashoSupabaseClient = null;
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
@@ -142,6 +145,10 @@ const state = {
   deletedEntryIds: [],
   currentLocation: null,
   locationStatus: "idle",
+  syncCode: "",
+  syncInput: "",
+  syncStatus: "idle",
+  syncUpdatedAt: 0,
 };
 
 loadState();
@@ -163,6 +170,11 @@ screen.addEventListener("click", (event) => {
 screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-note-input]")) {
     state.note = event.target.value.slice(0, 68);
+    saveState();
+  }
+  if (event.target.matches("[data-sync-input]")) {
+    state.syncInput = cleanSyncCode(event.target.value);
+    event.target.value = state.syncInput;
     saveState();
   }
 });
@@ -405,6 +417,7 @@ function renderNotebook() {
   const todaySavedEntries = entries.filter(isTodaySavedEntry);
   const selectedIds = new Set(state.selectedEntryIds || []);
   const editLabel = state.notebookEditing ? "完了" : "☰";
+  const syncCard = renderSyncCard();
   const rows = entries.length
     ? entries.map((entry) => {
         const selected = selectedIds.has(entry.id);
@@ -447,6 +460,7 @@ function renderNotebook() {
     <nav class="journal-filter-row" aria-label="句帳の分類">
       <button class="active" type="button">すべて</button><button type="button">気づき</button><button type="button">俳句風</button><button type="button">原典とつなぐ</button>
     </nav>
+    ${syncCard}
     ${todaySavedCard}
     <section class="inheritance-card" aria-label="まなざしが受け継がれる例">
       <span>受け継ぎの例</span>
@@ -475,6 +489,26 @@ function renderSettings() {
       <small>引用・底本：青空文庫　松尾芭蕉『おくのほそ道』　杉浦正一郎校註　作品ID 61619</small>
     </section>
   </div>`;
+}
+
+function renderSyncCard() {
+  const configured = isSupabaseConfigured();
+  const status = syncStatusText();
+  const code = state.syncCode
+    ? `<div class="sync-code" aria-label="同期コード">${escapeHtml(state.syncCode)}</div>`
+    : `<button class="sync-primary" type="button" data-action="create-sync-code">コードを作る</button>`;
+  return `<section class="sync-card" aria-label="端末同期">
+    <div class="sync-card-head">
+      <span>端末同期</span>
+      <small>${escapeHtml(status)}</small>
+    </div>
+    <p>スマホで作ったコードをPCにも入れると、同じ句帳を表示できます。</p>
+    ${configured ? code : `<div class="sync-disabled">Supabase設定後に使えます。</div>`}
+    <div class="sync-input-row">
+      <input type="text" value="${escapeAttr(state.syncInput || "")}" maxlength="${SYNC_CODE_LENGTH}" inputmode="latin" autocomplete="off" placeholder="コードを入力" data-sync-input />
+      <button type="button" data-action="join-sync-code" ${configured ? "" : "disabled"}>同期</button>
+    </div>
+  </section>`;
 }
 
 function handleAction(target) {
@@ -520,6 +554,14 @@ function handleAction(target) {
   }
   if (action === "delete-selected-entries") {
     deleteSelectedEntries();
+    return;
+  }
+  if (action === "create-sync-code") {
+    createSyncCode();
+    return;
+  }
+  if (action === "join-sync-code") {
+    joinSyncCode();
     return;
   }
   if (action === "open-entry") {
@@ -619,6 +661,95 @@ function requestCurrentLocation() {
   );
 }
 
+async function createSyncCode() {
+  if (!isSupabaseConfigured()) {
+    showToast("Supabase設定後に使えます。");
+    return;
+  }
+  state.syncStatus = "syncing";
+  if (!state.syncCode) state.syncCode = makeSyncCode();
+  saveState();
+  render();
+  await pushSyncEntries(state.syncCode);
+}
+
+async function joinSyncCode() {
+  const code = cleanSyncCode(state.syncInput || state.syncCode || "");
+  if (!code) {
+    showToast("同期コードを入力してください。");
+    return;
+  }
+  if (!isSupabaseConfigured()) {
+    showToast("Supabase設定後に使えます。");
+    return;
+  }
+  state.syncCode = code;
+  state.syncStatus = "syncing";
+  saveState();
+  render();
+  await pullSyncEntries(code);
+}
+
+async function pushSyncEntries(code) {
+  try {
+    const client = getSupabaseClient();
+    const payload = allEntries()
+      .filter((entry) => entry.id?.startsWith("entry-"))
+      .map(compactEntry);
+    const { data, error } = await client.rpc("sync_basho_entries", {
+      sync_code_input: code,
+      entries_input: payload,
+    });
+    if (error) throw error;
+    mergeSyncedEntries(data);
+    state.syncStatus = "synced";
+    state.syncUpdatedAt = Date.now();
+    saveState();
+    showToast("句帳を同期しました。");
+  } catch (error) {
+    console.error(error);
+    state.syncStatus = "error";
+    saveState();
+    showToast("同期できませんでした。");
+  }
+  render();
+}
+
+async function pullSyncEntries(code) {
+  try {
+    const client = getSupabaseClient();
+    const { data, error } = await client.rpc("get_basho_entries", {
+      sync_code_input: code,
+    });
+    if (error) throw error;
+    mergeSyncedEntries(data);
+    state.syncStatus = "synced";
+    state.syncUpdatedAt = Date.now();
+    saveState();
+    showToast("句帳を読み込みました。");
+  } catch (error) {
+    console.error(error);
+    state.syncStatus = "error";
+    saveState();
+    showToast("同期コードを確認してください。");
+  }
+  render();
+}
+
+function mergeSyncedEntries(entries) {
+  if (!Array.isArray(entries)) return;
+  state.entries = uniqueEntriesById([...entries.map(normalizeSyncedEntry), ...(state.entries || [])]);
+  saveEntriesOnly();
+}
+
+function normalizeSyncedEntry(entry) {
+  return compactEntry({
+    ...entry,
+    x: typeof entry.x === "number" ? entry.x : 50,
+    y: typeof entry.y === "number" ? entry.y : 48,
+  });
+}
+
 function navigate(view) {
   state.view = view;
   state.notebookEditing = false;
@@ -653,6 +784,9 @@ function saveNote() {
   saveState();
   showToast("句帳に保存しました。");
   navigate("notebook");
+  if (state.syncCode && isSupabaseConfigured()) {
+    pushSyncEntries(state.syncCode);
+  }
 }
 
 function handlePhotoInput(input) {
@@ -774,6 +908,11 @@ function loadState() {
     }
     if (!["idle", "loading", "ready", "error"].includes(state.locationStatus)) state.locationStatus = "idle";
     if (state.locationStatus === "loading") state.locationStatus = state.currentLocation ? "ready" : "idle";
+    state.syncCode = cleanSyncCode(state.syncCode || "");
+    state.syncInput = cleanSyncCode(state.syncInput || "");
+    if (!["idle", "syncing", "synced", "error"].includes(state.syncStatus)) state.syncStatus = "idle";
+    if (state.syncStatus === "syncing") state.syncStatus = "idle";
+    if (typeof state.syncUpdatedAt !== "number") state.syncUpdatedAt = 0;
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -792,7 +931,9 @@ function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(leanState));
     } catch {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...leanState, entries: [] }));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...leanState, entries: [] }));
+      } catch {}
     }
   }
 }
@@ -810,7 +951,9 @@ function saveEntriesOnly() {
   try {
     localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify((state.entries || []).map(compactEntry)));
   } catch {
-    localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify((state.entries || []).map((entry) => compactEntry({ ...entry, image: "" }))));
+    try {
+      localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify((state.entries || []).map((entry) => compactEntry({ ...entry, image: "" }))));
+    } catch {}
   }
 }
 
@@ -867,6 +1010,42 @@ function mapExternalUrl(location) {
   const lat = Number(location.lat).toFixed(6);
   const lng = Number(location.lng).toFixed(6);
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
+function isSupabaseConfigured() {
+  const config = window.BASHO_SUPABASE || {};
+  return Boolean(config.url && config.publishableKey && window.supabase?.createClient);
+}
+
+function getSupabaseClient() {
+  if (bashoSupabaseClient) return bashoSupabaseClient;
+  const config = window.BASHO_SUPABASE || {};
+  bashoSupabaseClient = window.supabase.createClient(config.url, config.publishableKey);
+  return bashoSupabaseClient;
+}
+
+function makeSyncCode() {
+  if (!globalThis.crypto?.getRandomValues) {
+    return Array.from({ length: SYNC_CODE_LENGTH }, () => SYNC_CODE_ALPHABET[Math.floor(Math.random() * SYNC_CODE_ALPHABET.length)]).join("");
+  }
+  const values = new Uint32Array(SYNC_CODE_LENGTH);
+  crypto.getRandomValues(values);
+  return Array.from(values, (value) => SYNC_CODE_ALPHABET[value % SYNC_CODE_ALPHABET.length]).join("");
+}
+
+function cleanSyncCode(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, SYNC_CODE_LENGTH);
+}
+
+function syncStatusText() {
+  if (!isSupabaseConfigured()) return "未設定";
+  if (state.syncStatus === "syncing") return "同期中";
+  if (state.syncStatus === "synced") return "同期済み";
+  if (state.syncStatus === "error") return "確認が必要";
+  return "未同期";
 }
 
 function lineBreak(value) {

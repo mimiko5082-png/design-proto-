@@ -1,9 +1,10 @@
-const CACHE_NAME = "basho-manazashi-v23";
+const CACHE_NAME = "basho-manazashi-v24";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./basho-styles.css",
   "./basho-app.js",
+  "./supabase-config.js",
   "./manifest.webmanifest",
   "./assets/kotoba-mist.png",
   "./assets/kotoba-forest.png",

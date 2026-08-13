@@ -1166,6 +1166,86 @@ button {
   font-weight: 900;
 }
 
+.sync-card {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid rgba(37, 73, 111, 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(247, 239, 223, 0.9), rgba(221, 211, 192, 0.48)),
+    var(--paper-light);
+  box-shadow: 0 12px 26px rgba(31, 29, 24, 0.08);
+}
+
+.sync-card-head,
+.sync-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.sync-card-head span {
+  color: #25496f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sync-card-head small,
+.sync-card p,
+.sync-disabled {
+  color: var(--soft-ink);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.sync-card p {
+  margin: 0;
+}
+
+.sync-code {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  border: 1px solid rgba(37, 73, 111, 0.2);
+  border-radius: 13px;
+  color: #25496f;
+  background: rgba(255, 249, 238, 0.8);
+  font-size: 20px;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+}
+
+.sync-primary,
+.sync-input-row button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: #f7eedf;
+  background: #25496f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sync-input-row input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(29, 33, 31, 0.16);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgba(255, 249, 238, 0.72);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sync-input-row button:disabled {
+  opacity: 0.42;
+}
+
 .journal-list {
   display: grid;
   gap: 9px;
