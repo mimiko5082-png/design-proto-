@@ -401,18 +401,20 @@ function renderMap() {
 
 function renderNotebook() {
   const entries = allEntries().slice(0, 8);
+  const todaySavedEntries = entries.filter(isTodaySavedEntry);
   const selectedIds = new Set(state.selectedEntryIds || []);
   const editLabel = state.notebookEditing ? "完了" : "☰";
   const rows = entries.length
     ? entries.map((entry) => {
         const selected = selectedIds.has(entry.id);
-        return `<article class="journal-row ${selected ? "selected" : ""}">
+        const savedToday = isTodaySavedEntry(entry);
+        return `<article class="journal-row ${selected ? "selected" : ""} ${savedToday ? "today-entry" : ""}">
           <button class="journal-open" type="button" data-action="open-entry" data-entry-id="${escapeAttr(entry.id)}">
             <img src="${escapeAttr(entry.image || "./assets/kotoba-mist.png")}" alt="" />
             <div>
               <strong>${lineBreak(entry.title)}</strong>
               <p>${escapeHtml(entry.body)}</p>
-              <small>${escapeHtml(entry.date)}</small>
+              <small>${escapeHtml(entry.date)}${savedToday ? "　今日保存" : ""}</small>
             </div>
             <span>${escapeHtml(entry.category)}</span>
           </button>
@@ -424,6 +426,13 @@ function renderNotebook() {
     : `<div class="journal-empty">まだ句帳にまなざしはありません。</div>`;
   const deleteBar = state.notebookEditing
     ? `<div class="journal-delete-bar"><span>${selectedIds.size}件選択中</span><button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button></div>`
+    : "";
+  const todaySavedCard = todaySavedEntries.length
+    ? `<section class="today-saved-card">
+        <span>今日保存した句</span>
+        <strong>${lineBreak(todaySavedEntries[0].title)}</strong>
+        <small>句帳の先頭に反映されています。</small>
+      </section>`
     : "";
   return `<div class="view notebook-view ${state.notebookEditing ? "editing" : ""}">
     <header class="journal-head">
@@ -437,6 +446,7 @@ function renderNotebook() {
     <nav class="journal-filter-row" aria-label="句帳の分類">
       <button class="active" type="button">すべて</button><button type="button">気づき</button><button type="button">俳句風</button><button type="button">原典とつなぐ</button>
     </nav>
+    ${todaySavedCard}
     <section class="inheritance-card" aria-label="まなざしが受け継がれる例">
       <span>受け継ぎの例</span>
       <p><b>Aさん</b> 電車が通ったあと、一瞬だけ町が静かになる。</p>
@@ -618,16 +628,18 @@ function navigate(view) {
 
 function saveNote() {
   const gaze = currentGaze();
+  const now = Date.now();
   const text = state.note.trim() || gaze.noteExample;
   const entry = {
-    id: `entry-${Date.now()}`,
+    id: `entry-${now}`,
     title: text,
     body: `${gaze.observation}から、街の${state.noteCategory}を見つける。`,
-    date: formatDate(new Date()),
+    date: formatDate(new Date(now)),
+    savedAt: now,
     category: state.noteCategory || gaze.category,
     image: state.notePhoto || gaze.image,
-    x: 35 + ((Date.now() / 17) % 42),
-    y: 28 + ((Date.now() / 29) % 48),
+    x: 35 + ((now / 17) % 42),
+    y: 28 + ((now / 29) % 48),
   };
   state.entries.unshift(entry);
   state.activeEntryId = entry.id;
@@ -700,7 +712,9 @@ function currentGaze() {
 
 function allEntries() {
   const deletedIds = new Set(state.deletedEntryIds || []);
-  return [...state.entries, ...sampleEntries].filter((entry) => !deletedIds.has(entry.id));
+  return [...state.entries, ...sampleEntries]
+    .filter((entry) => !deletedIds.has(entry.id))
+    .sort((a, b) => entrySortTime(b) - entrySortTime(a));
 }
 
 function mapEntries() {
@@ -711,6 +725,22 @@ function mapEntries() {
 function activeEntry() {
   const entries = mapEntries();
   return entries.find((entry) => entry.id === state.activeEntryId) || entries[0] || sampleEntries[0];
+}
+
+function isTodaySavedEntry(entry) {
+  if (!entry?.id?.startsWith("entry-")) return false;
+  const savedAt = Number(entry.savedAt || entry.id.replace("entry-", ""));
+  if (!Number.isFinite(savedAt)) return false;
+  return formatDate(new Date(savedAt)) === formatDate(new Date());
+}
+
+function entrySortTime(entry) {
+  if (entry?.savedAt) return Number(entry.savedAt);
+  if (entry?.id?.startsWith("entry-")) {
+    const idTime = Number(entry.id.replace("entry-", ""));
+    if (Number.isFinite(idTime)) return idTime;
+  }
+  return 0;
 }
 
 function updateTabs() {
