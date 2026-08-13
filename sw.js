@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v26-firebase";
+const CACHE_NAME = "basho-manazashi-v27-delete-sync";
 const APP_SHELL = [
   "./",
   "./index.html",

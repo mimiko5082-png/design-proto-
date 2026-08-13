@@ -1,9 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
 let bashoFirebaseDatabase = null;
+let bashoRootRef = null;
 let bashoEntriesRef = null;
 let bashoFirebaseReady = false;
 const screen = document.getElementById("screen");
@@ -576,25 +577,27 @@ function toggleEntrySelection(entryId) {
   render();
 }
 
-function deleteSelectedEntries() {
+async function deleteSelectedEntries() {
   const selectedIds = new Set(state.selectedEntryIds || []);
   if (!selectedIds.size) {
     showToast("削除する句を選んでください。");
     return;
   }
-  const idsToDelete = Array.from(selectedIds).filter((id) => id?.startsWith("entry-"));
+
+  const idsToDelete = Array.from(selectedIds).filter(Boolean);
   state.entries = state.entries.filter((entry) => !selectedIds.has(entry.id));
-  saveEntriesOnly();
-  state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...selectedIds]));
+  state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...idsToDelete]));
   state.selectedEntryIds = [];
   state.notebookEditing = false;
   if (!mapEntries().some((entry) => entry.id === state.activeEntryId)) {
     state.activeEntryId = mapEntries()[0]?.id || "";
   }
+  saveEntriesOnly();
   saveState();
-  showToast("選んだ句を句帳から消しました。");
   render();
-  deleteEntriesFromFirebase(idsToDelete);
+
+  const deletedOnline = await deleteEntriesFromFirebase(idsToDelete);
+  showToast(deletedOnline ? "削除をほかの端末にも反映しました。" : "句帳から削除しました。");
 }
 
 function requestCurrentLocation() {
@@ -648,29 +651,43 @@ async function initFirebaseSync() {
   try {
     const app = initializeApp(window.BASHO_FIREBASE);
     bashoFirebaseDatabase = getDatabase(app);
+    bashoRootRef = ref(bashoFirebaseDatabase);
     bashoEntriesRef = ref(bashoFirebaseDatabase, "entries");
     bashoFirebaseReady = true;
     state.cloudStatus = "syncing";
     saveState();
 
-    // この端末に既にある句を、初回アクセス時に共有句帳へ移します。
-    const localEntries = (state.entries || []).filter((entry) => entry?.id?.startsWith("entry-"));
+    // 先にクラウド側の削除履歴を読み、別端末で消した句を復活させないようにします。
+    const initialSnapshot = await get(bashoRootRef);
+    const initialValue = initialSnapshot.val() || {};
+    const remoteDeletedIds = Object.keys(initialValue.deletedEntries || {});
+    state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...remoteDeletedIds]));
+    const deletedSet = new Set(state.deletedEntryIds);
+
+    // この端末にだけ残っている既存の句は初回同期します。ただし削除済みの句は再アップロードしません。
+    const localEntries = (state.entries || []).filter(
+      (entry) => entry?.id?.startsWith("entry-") && !deletedSet.has(entry.id)
+    );
     if (localEntries.length) {
       const updates = {};
       localEntries.forEach((entry) => {
-        updates[entry.id] = cloudEntry(entry);
+        updates[`entries/${entry.id}`] = cloudEntry(entry);
       });
-      await update(bashoEntriesRef, updates);
+      await update(bashoRootRef, updates);
     }
 
-    // スマホ/PCのどちらで変更しても、開いている端末へ自動反映します。
+    // entries と deletedEntries を同じスナップショットで監視し、保存も削除も全端末へ反映します。
     onValue(
-      bashoEntriesRef,
+      bashoRootRef,
       (snapshot) => {
         const value = snapshot.val() || {};
-        const remoteEntries = Object.values(value)
-          .filter((entry) => entry && typeof entry === "object" && entry.id)
+        const deletedIds = Object.keys(value.deletedEntries || {});
+        const deletedIdsSet = new Set(deletedIds);
+        const remoteEntries = Object.values(value.entries || {})
+          .filter((entry) => entry && typeof entry === "object" && entry.id && !deletedIdsSet.has(entry.id))
           .map(normalizeSyncedEntry);
+
+        state.deletedEntryIds = deletedIds;
         state.entries = uniqueEntriesById(remoteEntries);
         state.cloudStatus = "synced";
         state.cloudUpdatedAt = Date.now();
@@ -692,27 +709,42 @@ async function initFirebaseSync() {
 }
 
 async function saveEntryToFirebase(entry) {
-  if (!bashoFirebaseReady || !bashoFirebaseDatabase || !entry?.id) return;
+  if (!bashoFirebaseReady || !bashoRootRef || !entry?.id) return false;
   try {
-    await set(ref(bashoFirebaseDatabase, `entries/${entry.id}`), cloudEntry(entry));
+    await update(bashoRootRef, {
+      [`entries/${entry.id}`]: cloudEntry(entry),
+      [`deletedEntries/${entry.id}`]: null,
+    });
     state.cloudStatus = "synced";
     state.cloudUpdatedAt = Date.now();
     saveState();
+    return true;
   } catch (error) {
     console.error(error);
     state.cloudStatus = "error";
     saveState();
     showToast("オンライン保存に失敗しました。通信を確認してください。");
+    return false;
   }
 }
 
 async function deleteEntriesFromFirebase(entryIds) {
-  if (!bashoFirebaseReady || !bashoFirebaseDatabase || !Array.isArray(entryIds)) return;
+  if (!bashoFirebaseReady || !bashoRootRef || !Array.isArray(entryIds) || !entryIds.length) return false;
   try {
-    await Promise.all(entryIds.map((id) => remove(ref(bashoFirebaseDatabase, `entries/${id}`))));
+    const deletedAt = Date.now();
+    const updates = {};
+    entryIds.forEach((id) => {
+      updates[`entries/${id}`] = null;
+      updates[`deletedEntries/${id}`] = deletedAt;
+    });
+    await update(bashoRootRef, updates);
+    return true;
   } catch (error) {
     console.error(error);
-    showToast("オンライン側の削除に失敗しました。");
+    state.cloudStatus = "error";
+    saveState();
+    showToast("オンライン側の削除に失敗しました。通信を確認してください。");
+    return false;
   }
 }
 
