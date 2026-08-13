@@ -18,10 +18,6 @@
   <body>
     <main class="app-shell" aria-label="芭蕉のまなざし Webアプリ">
       <section class="phone" aria-live="polite">
-        <div class="status-bar" aria-hidden="true">
-          <span>9:41</span>
-          <span>5G</span>
-        </div>
         <section class="screen" id="screen"></section>
         <nav class="tabbar" aria-label="メインメニュー">
           <button class="tab active" type="button" data-nav="home"><span class="tab-icon">◎</span>まなざし</button>
@@ -31,8 +27,8 @@
       </section>
       <div class="toast" id="toast" role="status"></div>
     </main>
-    <script src="./firebase-config.js?v=20260814-basho-receive-v30"></script>
-    <script type="module" src="./basho-app.js?v=20260814-basho-receive-v30"></script>
+    <script src="./firebase-config.js?v=20260814-basho-no-status-v31"></script>
+    <script type="module" src="./basho-app.js?v=20260814-basho-no-status-v31"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

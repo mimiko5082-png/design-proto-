@@ -62,19 +62,6 @@ button {
   box-shadow: 0 26px 76px rgba(26, 27, 23, 0.22), 0 9px 22px rgba(20, 22, 20, 0.18);
 }
 
-.status-bar {
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 30;
-  display: flex;
-  justify-content: space-between;
-  padding: max(13px, var(--safe-top)) 22px 0;
-  color: rgba(24, 28, 27, 0.8);
-  font-size: 12px;
-  font-weight: 900;
-  pointer-events: none;
-}
-
 .screen {
   position: absolute;
   inset: 0;
@@ -114,7 +101,7 @@ button {
   z-index: 1;
   height: 100%;
   min-height: 100%;
-  padding: calc(42px + var(--safe-top)) 18px calc(94px + var(--safe-bottom));
+  padding: calc(22px + var(--safe-top)) 18px calc(94px + var(--safe-bottom));
   overflow: auto;
   scrollbar-width: none;
 }
@@ -3269,7 +3256,6 @@ button {
 
   .screen::before,
   .screen::after,
-  .status-bar,
   .tabbar,
   .book-view .simple-head,
   .book-panel > .main-button,
