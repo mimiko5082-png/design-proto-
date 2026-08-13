@@ -8,10 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="芭蕉のまなざし" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta
-      name="description"
-      content="芭蕉のまなざしは、目的地ではなく街の見方を受け取り、原典から抽出した観察を今の街歩きへ変えるスマホWebアプリです。"
-    />
+    <meta name="description" content="芭蕉のまなざしは、目的地ではなく街の見方を受け取り、原典から抽出した観察を今の街歩きへ変えるスマホWebアプリです。" />
     <title>芭蕉のまなざし</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
@@ -25,31 +22,17 @@
           <span>9:41</span>
           <span>5G</span>
         </div>
-
         <section class="screen" id="screen"></section>
-
         <nav class="tabbar" aria-label="メインメニュー">
-          <button class="tab active" type="button" data-nav="home">
-            <span class="tab-icon">◎</span>
-            まなざし
-          </button>
-          <button class="tab" type="button" data-nav="map">
-            <span class="tab-icon">▰</span>
-            地図
-          </button>
-          <button class="tab" type="button" data-nav="notebook">
-            <span class="tab-icon">▤</span>
-            句帳
-          </button>
+          <button class="tab active" type="button" data-nav="home"><span class="tab-icon">◎</span>まなざし</button>
+          <button class="tab" type="button" data-nav="map"><span class="tab-icon">▰</span>地図</button>
+          <button class="tab" type="button" data-nav="notebook"><span class="tab-icon">▤</span>句帳</button>
         </nav>
       </section>
-
       <div class="toast" id="toast" role="status"></div>
     </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./supabase-config.js?v=20260813-basho-manazashi-v25"></script>
-    <script src="./basho-app.js?v=20260813-basho-manazashi-v25"></script>
+    <script src="./firebase-config.js?v=20260813-basho-firebase-v26"></script>
+    <script type="module" src="./basho-app.js?v=20260813-basho-firebase-v26"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

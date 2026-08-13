@@ -1,7 +1,11 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
-let bashoSupabaseClient = null;
-let bashoCloudUser = null;
+let bashoFirebaseDatabase = null;
+let bashoEntriesRef = null;
+let bashoFirebaseReady = false;
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
@@ -152,7 +156,7 @@ const state = {
 loadState();
 ensureDaily();
 render();
-initCloudAuth();
+initFirebaseSync();
 setInterval(updateTimer, 1000);
 
 screen.addEventListener("click", (event) => {
@@ -486,26 +490,7 @@ function renderSettings() {
 }
 
 function renderSyncCard() {
-  const configured = isSupabaseConfigured();
-  const signedIn = Boolean(bashoCloudUser);
-  const status = cloudStatusText();
-  const mainAction = !configured
-    ? `<div class="sync-disabled">Supabase設定後に使えます。</div>`
-    : signedIn
-      ? `<button class="sync-primary" type="button" data-action="cloud-refresh">クラウドから読み込む</button>`
-      : `<button class="sync-primary" type="button" data-action="google-login">Googleでログイン</button>`;
-  const account = signedIn
-    ? `<div class="sync-account"><span>${escapeHtml(state.cloudEmail || "ログイン中")}</span><button type="button" data-action="google-logout">ログアウト</button></div>`
-    : "";
-  return `<section class="sync-card" aria-label="クラウド保存">
-    <div class="sync-card-head">
-      <span>クラウド保存</span>
-      <small>${escapeHtml(status)}</small>
-    </div>
-    <p>Googleでログインすると、スマホでもPCでも同じ句帳が自動で表示されます。</p>
-    ${mainAction}
-    ${account}
-  </section>`;
+  return "";
 }
 
 function handleAction(target) {
@@ -553,18 +538,6 @@ function handleAction(target) {
     deleteSelectedEntries();
     return;
   }
-  if (action === "google-login") {
-    signInWithGoogle();
-    return;
-  }
-  if (action === "google-logout") {
-    signOutGoogle();
-    return;
-  }
-  if (action === "cloud-refresh") {
-    loadCloudEntries();
-    return;
-  }
   if (action === "open-entry") {
     if (state.notebookEditing) {
       toggleEntrySelection(target.dataset.entryId);
@@ -609,6 +582,7 @@ function deleteSelectedEntries() {
     showToast("削除する句を選んでください。");
     return;
   }
+  const idsToDelete = Array.from(selectedIds).filter((id) => id?.startsWith("entry-"));
   state.entries = state.entries.filter((entry) => !selectedIds.has(entry.id));
   saveEntriesOnly();
   state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...selectedIds]));
@@ -620,6 +594,7 @@ function deleteSelectedEntries() {
   saveState();
   showToast("選んだ句を句帳から消しました。");
   render();
+  deleteEntriesFromFirebase(idsToDelete);
 }
 
 function requestCurrentLocation() {
@@ -662,130 +637,101 @@ function requestCurrentLocation() {
   );
 }
 
-async function initCloudAuth() {
-  if (!isSupabaseConfigured()) {
-    render();
+async function initFirebaseSync() {
+  if (!isFirebaseConfigured()) {
+    console.warn("Firebase設定が見つかりません。");
+    state.cloudStatus = "error";
+    saveState();
     return;
   }
+
   try {
-    const client = getSupabaseClient();
-    const { data } = await client.auth.getSession();
-    await setCloudUser(data?.session?.user || null);
-    client.auth.onAuthStateChange((event, session) => {
-      setCloudUser(session?.user || null);
-    });
+    const app = initializeApp(window.BASHO_FIREBASE);
+    bashoFirebaseDatabase = getDatabase(app);
+    bashoEntriesRef = ref(bashoFirebaseDatabase, "entries");
+    bashoFirebaseReady = true;
+    state.cloudStatus = "syncing";
+    saveState();
+
+    // この端末に既にある句を、初回アクセス時に共有句帳へ移します。
+    const localEntries = (state.entries || []).filter((entry) => entry?.id?.startsWith("entry-"));
+    if (localEntries.length) {
+      const updates = {};
+      localEntries.forEach((entry) => {
+        updates[entry.id] = cloudEntry(entry);
+      });
+      await update(bashoEntriesRef, updates);
+    }
+
+    // スマホ/PCのどちらで変更しても、開いている端末へ自動反映します。
+    onValue(
+      bashoEntriesRef,
+      (snapshot) => {
+        const value = snapshot.val() || {};
+        const remoteEntries = Object.values(value)
+          .filter((entry) => entry && typeof entry === "object" && entry.id)
+          .map(normalizeSyncedEntry);
+        state.entries = uniqueEntriesById(remoteEntries);
+        state.cloudStatus = "synced";
+        state.cloudUpdatedAt = Date.now();
+        saveEntriesOnly();
+        saveState();
+        if (state.view === "notebook" || state.view === "map") render();
+      },
+      (error) => {
+        console.error(error);
+        state.cloudStatus = "error";
+        saveState();
+      }
+    );
   } catch (error) {
     console.error(error);
     state.cloudStatus = "error";
     saveState();
-    render();
   }
 }
 
-async function setCloudUser(user) {
-  bashoCloudUser = user;
-  state.cloudEmail = user?.email || "";
-  if (user) {
-    state.cloudStatus = "syncing";
-    saveState();
-    render();
-    await syncCloudEntries();
-  } else {
-    state.cloudStatus = isSupabaseConfigured() ? "signed-out" : "idle";
-    saveState();
-    render();
-  }
-}
-
-async function signInWithGoogle() {
-  if (!isSupabaseConfigured()) {
-    showToast("Supabase設定後に使えます。");
-    return;
-  }
-  const client = getSupabaseClient();
-  const { error } = await client.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: location.href.split("#")[0],
-    },
-  });
-  if (error) {
-    console.error(error);
-    showToast("Googleログインを開始できませんでした。");
-  }
-}
-
-async function signOutGoogle() {
-  if (!isSupabaseConfigured()) return;
-  const client = getSupabaseClient();
-  await client.auth.signOut();
-  await setCloudUser(null);
-  showToast("ログアウトしました。");
-}
-
-async function syncCloudEntries() {
-  if (!bashoCloudUser || !isSupabaseConfigured()) return;
+async function saveEntryToFirebase(entry) {
+  if (!bashoFirebaseReady || !bashoFirebaseDatabase || !entry?.id) return;
   try {
-    const client = getSupabaseClient();
-    const payload = allEntries()
-      .filter((entry) => entry.id?.startsWith("entry-"))
-      .map(compactEntry);
-    const { data, error } = await client.rpc("sync_basho_user_entries", {
-      entries_input: payload,
-    });
-    if (error) throw error;
-    mergeSyncedEntries(data);
+    await set(ref(bashoFirebaseDatabase, `entries/${entry.id}`), cloudEntry(entry));
     state.cloudStatus = "synced";
     state.cloudUpdatedAt = Date.now();
     saveState();
-    showToast("クラウドに保存しました。");
   } catch (error) {
     console.error(error);
     state.cloudStatus = "error";
     saveState();
-    showToast("クラウド保存できませんでした。");
+    showToast("オンライン保存に失敗しました。通信を確認してください。");
   }
-  render();
 }
 
-async function loadCloudEntries() {
-  if (!bashoCloudUser || !isSupabaseConfigured()) {
-    showToast("Googleログインしてください。");
-    return;
-  }
+async function deleteEntriesFromFirebase(entryIds) {
+  if (!bashoFirebaseReady || !bashoFirebaseDatabase || !Array.isArray(entryIds)) return;
   try {
-    const client = getSupabaseClient();
-    state.cloudStatus = "syncing";
-    saveState();
-    render();
-    const { data, error } = await client.rpc("get_basho_user_entries");
-    if (error) throw error;
-    mergeSyncedEntries(data);
-    state.cloudStatus = "synced";
-    state.cloudUpdatedAt = Date.now();
-    saveState();
-    showToast("句帳を読み込みました。");
+    await Promise.all(entryIds.map((id) => remove(ref(bashoFirebaseDatabase, `entries/${id}`))));
   } catch (error) {
     console.error(error);
-    state.cloudStatus = "error";
-    saveState();
-    showToast("クラウドから読み込めませんでした。");
+    showToast("オンライン側の削除に失敗しました。");
   }
-  render();
 }
 
-function mergeSyncedEntries(entries) {
-  if (!Array.isArray(entries)) return;
-  state.entries = uniqueEntriesById([...entries.map(normalizeSyncedEntry), ...(state.entries || [])]);
-  saveEntriesOnly();
+function cloudEntry(entry) {
+  return {
+    id: String(entry.id || ""),
+    title: String(entry.title || ""),
+    body: String(entry.body || ""),
+    date: String(entry.date || ""),
+    savedAt: Number(entry.savedAt || 0),
+    category: String(entry.category || ""),
+    image: typeof entry.image === "string" ? entry.image : "",
+    x: Number.isFinite(Number(entry.x)) ? Number(entry.x) : 50,
+    y: Number.isFinite(Number(entry.y)) ? Number(entry.y) : 48,
+  };
 }
 
 function normalizeSyncedEntry(entry) {
-  return compactEntry({
-    ...entry,
-    x: typeof entry.x === "number" ? entry.x : 50,
-    y: typeof entry.y === "number" ? entry.y : 48,
-  });
+  return cloudEntry(entry);
 }
 
 function navigate(view) {
@@ -822,9 +768,7 @@ function saveNote() {
   saveState();
   showToast("句帳に保存しました。");
   navigate("notebook");
-  if (bashoCloudUser && isSupabaseConfigured()) {
-    syncCloudEntries();
-  }
+  saveEntryToFirebase(entry);
 }
 
 function handlePhotoInput(input) {
@@ -1049,25 +993,9 @@ function mapExternalUrl(location) {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
-function isSupabaseConfigured() {
-  const config = window.BASHO_SUPABASE || {};
-  return Boolean(config.url && config.publishableKey && window.supabase?.createClient);
-}
-
-function getSupabaseClient() {
-  if (bashoSupabaseClient) return bashoSupabaseClient;
-  const config = window.BASHO_SUPABASE || {};
-  bashoSupabaseClient = window.supabase.createClient(config.url, config.publishableKey);
-  return bashoSupabaseClient;
-}
-
-function cloudStatusText() {
-  if (!isSupabaseConfigured()) return "未設定";
-  if (state.cloudStatus === "syncing") return "同期中";
-  if (state.cloudStatus === "synced") return "同期済み";
-  if (state.cloudStatus === "error") return "確認が必要";
-  if (bashoCloudUser) return "ログイン中";
-  return "未ログイン";
+function isFirebaseConfigured() {
+  const config = window.BASHO_FIREBASE || {};
+  return Boolean(config.apiKey && config.projectId && config.appId && config.databaseURL);
 }
 
 function lineBreak(value) {

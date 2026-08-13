@@ -1,10 +1,10 @@
-const CACHE_NAME = "basho-manazashi-v25";
+const CACHE_NAME = "basho-manazashi-v26-firebase";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./basho-styles.css",
   "./basho-app.js",
-  "./supabase-config.js",
+  "./firebase-config.js",
   "./manifest.webmanifest",
   "./assets/kotoba-mist.png",
   "./assets/kotoba-forest.png",
@@ -15,29 +15,17 @@ const APP_SHELL = [
   "./assets/kotoba-icon-512.png",
   "./assets/apple-touch-icon.png"
 ];
-
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
-
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
-
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html")))
-  );
+  event.respondWith(fetch(event.request).then((response) => {
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    return response;
+  }).catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html"))));
 });
