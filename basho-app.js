@@ -1,8 +1,7 @@
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
-const SYNC_CODE_LENGTH = 8;
-const SYNC_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 let bashoSupabaseClient = null;
+let bashoCloudUser = null;
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
@@ -145,15 +144,15 @@ const state = {
   deletedEntryIds: [],
   currentLocation: null,
   locationStatus: "idle",
-  syncCode: "",
-  syncInput: "",
-  syncStatus: "idle",
-  syncUpdatedAt: 0,
+  cloudStatus: "idle",
+  cloudEmail: "",
+  cloudUpdatedAt: 0,
 };
 
 loadState();
 ensureDaily();
 render();
+initCloudAuth();
 setInterval(updateTimer, 1000);
 
 screen.addEventListener("click", (event) => {
@@ -170,11 +169,6 @@ screen.addEventListener("click", (event) => {
 screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-note-input]")) {
     state.note = event.target.value.slice(0, 68);
-    saveState();
-  }
-  if (event.target.matches("[data-sync-input]")) {
-    state.syncInput = cleanSyncCode(event.target.value);
-    event.target.value = state.syncInput;
     saveState();
   }
 });
@@ -493,21 +487,24 @@ function renderSettings() {
 
 function renderSyncCard() {
   const configured = isSupabaseConfigured();
-  const status = syncStatusText();
-  const code = state.syncCode
-    ? `<div class="sync-code" aria-label="同期コード">${escapeHtml(state.syncCode)}</div>`
-    : `<button class="sync-primary" type="button" data-action="create-sync-code">コードを作る</button>`;
-  return `<section class="sync-card" aria-label="端末同期">
+  const signedIn = Boolean(bashoCloudUser);
+  const status = cloudStatusText();
+  const mainAction = !configured
+    ? `<div class="sync-disabled">Supabase設定後に使えます。</div>`
+    : signedIn
+      ? `<button class="sync-primary" type="button" data-action="cloud-refresh">クラウドから読み込む</button>`
+      : `<button class="sync-primary" type="button" data-action="google-login">Googleでログイン</button>`;
+  const account = signedIn
+    ? `<div class="sync-account"><span>${escapeHtml(state.cloudEmail || "ログイン中")}</span><button type="button" data-action="google-logout">ログアウト</button></div>`
+    : "";
+  return `<section class="sync-card" aria-label="クラウド保存">
     <div class="sync-card-head">
-      <span>端末同期</span>
+      <span>クラウド保存</span>
       <small>${escapeHtml(status)}</small>
     </div>
-    <p>スマホで作ったコードをPCにも入れると、同じ句帳を表示できます。</p>
-    ${configured ? code : `<div class="sync-disabled">Supabase設定後に使えます。</div>`}
-    <div class="sync-input-row">
-      <input type="text" value="${escapeAttr(state.syncInput || "")}" maxlength="${SYNC_CODE_LENGTH}" inputmode="latin" autocomplete="off" placeholder="コードを入力" data-sync-input />
-      <button type="button" data-action="join-sync-code" ${configured ? "" : "disabled"}>同期</button>
-    </div>
+    <p>Googleでログインすると、スマホでもPCでも同じ句帳が自動で表示されます。</p>
+    ${mainAction}
+    ${account}
   </section>`;
 }
 
@@ -556,12 +553,16 @@ function handleAction(target) {
     deleteSelectedEntries();
     return;
   }
-  if (action === "create-sync-code") {
-    createSyncCode();
+  if (action === "google-login") {
+    signInWithGoogle();
     return;
   }
-  if (action === "join-sync-code") {
-    joinSyncCode();
+  if (action === "google-logout") {
+    signOutGoogle();
+    return;
+  }
+  if (action === "cloud-refresh") {
+    loadCloudEntries();
     return;
   }
   if (action === "open-entry") {
@@ -661,77 +662,114 @@ function requestCurrentLocation() {
   );
 }
 
-async function createSyncCode() {
+async function initCloudAuth() {
+  if (!isSupabaseConfigured()) {
+    render();
+    return;
+  }
+  try {
+    const client = getSupabaseClient();
+    const { data } = await client.auth.getSession();
+    await setCloudUser(data?.session?.user || null);
+    client.auth.onAuthStateChange((event, session) => {
+      setCloudUser(session?.user || null);
+    });
+  } catch (error) {
+    console.error(error);
+    state.cloudStatus = "error";
+    saveState();
+    render();
+  }
+}
+
+async function setCloudUser(user) {
+  bashoCloudUser = user;
+  state.cloudEmail = user?.email || "";
+  if (user) {
+    state.cloudStatus = "syncing";
+    saveState();
+    render();
+    await syncCloudEntries();
+  } else {
+    state.cloudStatus = isSupabaseConfigured() ? "signed-out" : "idle";
+    saveState();
+    render();
+  }
+}
+
+async function signInWithGoogle() {
   if (!isSupabaseConfigured()) {
     showToast("Supabase設定後に使えます。");
     return;
   }
-  state.syncStatus = "syncing";
-  if (!state.syncCode) state.syncCode = makeSyncCode();
-  saveState();
-  render();
-  await pushSyncEntries(state.syncCode);
+  const client = getSupabaseClient();
+  const { error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: location.href.split("#")[0],
+    },
+  });
+  if (error) {
+    console.error(error);
+    showToast("Googleログインを開始できませんでした。");
+  }
 }
 
-async function joinSyncCode() {
-  const code = cleanSyncCode(state.syncInput || state.syncCode || "");
-  if (!code) {
-    showToast("同期コードを入力してください。");
-    return;
-  }
-  if (!isSupabaseConfigured()) {
-    showToast("Supabase設定後に使えます。");
-    return;
-  }
-  state.syncCode = code;
-  state.syncStatus = "syncing";
-  saveState();
-  render();
-  await pullSyncEntries(code);
+async function signOutGoogle() {
+  if (!isSupabaseConfigured()) return;
+  const client = getSupabaseClient();
+  await client.auth.signOut();
+  await setCloudUser(null);
+  showToast("ログアウトしました。");
 }
 
-async function pushSyncEntries(code) {
+async function syncCloudEntries() {
+  if (!bashoCloudUser || !isSupabaseConfigured()) return;
   try {
     const client = getSupabaseClient();
     const payload = allEntries()
       .filter((entry) => entry.id?.startsWith("entry-"))
       .map(compactEntry);
-    const { data, error } = await client.rpc("sync_basho_entries", {
-      sync_code_input: code,
+    const { data, error } = await client.rpc("sync_basho_user_entries", {
       entries_input: payload,
     });
     if (error) throw error;
     mergeSyncedEntries(data);
-    state.syncStatus = "synced";
-    state.syncUpdatedAt = Date.now();
+    state.cloudStatus = "synced";
+    state.cloudUpdatedAt = Date.now();
     saveState();
-    showToast("句帳を同期しました。");
+    showToast("クラウドに保存しました。");
   } catch (error) {
     console.error(error);
-    state.syncStatus = "error";
+    state.cloudStatus = "error";
     saveState();
-    showToast("同期できませんでした。");
+    showToast("クラウド保存できませんでした。");
   }
   render();
 }
 
-async function pullSyncEntries(code) {
+async function loadCloudEntries() {
+  if (!bashoCloudUser || !isSupabaseConfigured()) {
+    showToast("Googleログインしてください。");
+    return;
+  }
   try {
     const client = getSupabaseClient();
-    const { data, error } = await client.rpc("get_basho_entries", {
-      sync_code_input: code,
-    });
+    state.cloudStatus = "syncing";
+    saveState();
+    render();
+    const { data, error } = await client.rpc("get_basho_user_entries");
     if (error) throw error;
     mergeSyncedEntries(data);
-    state.syncStatus = "synced";
-    state.syncUpdatedAt = Date.now();
+    state.cloudStatus = "synced";
+    state.cloudUpdatedAt = Date.now();
     saveState();
     showToast("句帳を読み込みました。");
   } catch (error) {
     console.error(error);
-    state.syncStatus = "error";
+    state.cloudStatus = "error";
     saveState();
-    showToast("同期コードを確認してください。");
+    showToast("クラウドから読み込めませんでした。");
   }
   render();
 }
@@ -784,8 +822,8 @@ function saveNote() {
   saveState();
   showToast("句帳に保存しました。");
   navigate("notebook");
-  if (state.syncCode && isSupabaseConfigured()) {
-    pushSyncEntries(state.syncCode);
+  if (bashoCloudUser && isSupabaseConfigured()) {
+    syncCloudEntries();
   }
 }
 
@@ -908,11 +946,10 @@ function loadState() {
     }
     if (!["idle", "loading", "ready", "error"].includes(state.locationStatus)) state.locationStatus = "idle";
     if (state.locationStatus === "loading") state.locationStatus = state.currentLocation ? "ready" : "idle";
-    state.syncCode = cleanSyncCode(state.syncCode || "");
-    state.syncInput = cleanSyncCode(state.syncInput || "");
-    if (!["idle", "syncing", "synced", "error"].includes(state.syncStatus)) state.syncStatus = "idle";
-    if (state.syncStatus === "syncing") state.syncStatus = "idle";
-    if (typeof state.syncUpdatedAt !== "number") state.syncUpdatedAt = 0;
+    if (!["idle", "signed-out", "syncing", "synced", "error"].includes(state.cloudStatus)) state.cloudStatus = "idle";
+    if (state.cloudStatus === "syncing") state.cloudStatus = "idle";
+    if (typeof state.cloudEmail !== "string") state.cloudEmail = "";
+    if (typeof state.cloudUpdatedAt !== "number") state.cloudUpdatedAt = 0;
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -1024,28 +1061,13 @@ function getSupabaseClient() {
   return bashoSupabaseClient;
 }
 
-function makeSyncCode() {
-  if (!globalThis.crypto?.getRandomValues) {
-    return Array.from({ length: SYNC_CODE_LENGTH }, () => SYNC_CODE_ALPHABET[Math.floor(Math.random() * SYNC_CODE_ALPHABET.length)]).join("");
-  }
-  const values = new Uint32Array(SYNC_CODE_LENGTH);
-  crypto.getRandomValues(values);
-  return Array.from(values, (value) => SYNC_CODE_ALPHABET[value % SYNC_CODE_ALPHABET.length]).join("");
-}
-
-function cleanSyncCode(value) {
-  return String(value || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, SYNC_CODE_LENGTH);
-}
-
-function syncStatusText() {
+function cloudStatusText() {
   if (!isSupabaseConfigured()) return "未設定";
-  if (state.syncStatus === "syncing") return "同期中";
-  if (state.syncStatus === "synced") return "同期済み";
-  if (state.syncStatus === "error") return "確認が必要";
-  return "未同期";
+  if (state.cloudStatus === "syncing") return "同期中";
+  if (state.cloudStatus === "synced") return "同期済み";
+  if (state.cloudStatus === "error") return "確認が必要";
+  if (bashoCloudUser) return "ログイン中";
+  return "未ログイン";
 }
 
 function lineBreak(value) {

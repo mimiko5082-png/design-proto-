@@ -1180,7 +1180,7 @@ button {
 }
 
 .sync-card-head,
-.sync-input-row {
+.sync-account {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
@@ -1206,21 +1206,7 @@ button {
   margin: 0;
 }
 
-.sync-code {
-  display: grid;
-  place-items: center;
-  min-height: 42px;
-  border: 1px solid rgba(37, 73, 111, 0.2);
-  border-radius: 13px;
-  color: #25496f;
-  background: rgba(255, 249, 238, 0.8);
-  font-size: 20px;
-  font-weight: 1000;
-  letter-spacing: 0.08em;
-}
-
-.sync-primary,
-.sync-input-row button {
+.sync-primary {
   min-height: 38px;
   padding: 0 14px;
   border-radius: 999px;
@@ -1230,20 +1216,28 @@ button {
   font-weight: 900;
 }
 
-.sync-input-row input {
-  min-width: 0;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid rgba(29, 33, 31, 0.16);
-  border-radius: 999px;
-  color: var(--ink);
-  background: rgba(255, 249, 238, 0.72);
-  font-size: 12px;
-  font-weight: 900;
+.sync-account {
+  padding: 9px 10px;
+  border: 1px solid rgba(37, 73, 111, 0.14);
+  border-radius: 13px;
+  background: rgba(255, 249, 238, 0.68);
 }
 
-.sync-input-row button:disabled {
-  opacity: 0.42;
+.sync-account span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--soft-ink);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-account button {
+  color: #25496f;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .journal-list {
