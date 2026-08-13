@@ -1,4 +1,5 @@
 const STORAGE_KEY = "basho_manazashi_v3";
+const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
@@ -566,6 +567,7 @@ function deleteSelectedEntries() {
     return;
   }
   state.entries = state.entries.filter((entry) => !selectedIds.has(entry.id));
+  saveEntriesOnly();
   state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...selectedIds]));
   state.selectedEntryIds = [];
   state.notebookEditing = false;
@@ -630,6 +632,7 @@ function saveNote() {
   const gaze = currentGaze();
   const now = Date.now();
   const text = state.note.trim() || gaze.noteExample;
+  const image = state.notePhoto || gaze.image;
   const entry = {
     id: `entry-${now}`,
     title: text,
@@ -637,17 +640,19 @@ function saveNote() {
     date: formatDate(new Date(now)),
     savedAt: now,
     category: state.noteCategory || gaze.category,
-    image: state.notePhoto || gaze.image,
+    image,
     x: 35 + ((now / 17) % 42),
     y: 28 + ((now / 29) % 48),
   };
   state.entries.unshift(entry);
+  state.entries = uniqueEntriesById(state.entries);
   state.activeEntryId = entry.id;
   state.note = "";
   state.notePhoto = "";
+  saveEntriesOnly();
   saveState();
-  showToast("気づきを残しました。");
-  navigate("encounter");
+  showToast("句帳に保存しました。");
+  navigate("notebook");
 }
 
 function handlePhotoInput(input) {
@@ -757,6 +762,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
+    state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
     const allowedViews = ["home", "classic", "pause", "note", "encounter", "seeds", "map", "notebook"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
@@ -774,7 +780,66 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  saveEntriesOnly();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    const leanState = {
+      ...state,
+      notePhoto: "",
+      entries: state.entries.map(compactEntry),
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(leanState));
+    } catch {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...leanState, entries: [] }));
+    }
+  }
+}
+
+function loadEntriesOnly() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ENTRIES_STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveEntriesOnly() {
+  try {
+    localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify((state.entries || []).map(compactEntry)));
+  } catch {
+    localStorage.setItem(ENTRIES_STORAGE_KEY, JSON.stringify((state.entries || []).map((entry) => compactEntry({ ...entry, image: "" }))));
+  }
+}
+
+function compactEntry(entry) {
+  return {
+    id: entry.id,
+    title: entry.title,
+    body: entry.body,
+    date: entry.date,
+    savedAt: entry.savedAt,
+    category: entry.category,
+    image: compactEntryImage(entry.image),
+    x: entry.x,
+    y: entry.y,
+  };
+}
+
+function compactEntryImage(image) {
+  if (typeof image !== "string") return "";
+  return image.startsWith("data:") ? "" : image;
+}
+
+function uniqueEntriesById(entries) {
+  const seen = new Set();
+  return (entries || []).filter((entry) => {
+    if (!entry?.id || seen.has(entry.id)) return false;
+    seen.add(entry.id);
+    return true;
+  });
 }
 
 function todayKey() {
