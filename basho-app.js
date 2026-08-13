@@ -216,7 +216,7 @@ function renderHome() {
   const gaze = currentGaze();
   return `<div class="view home-view">
     <header class="topbar">
-      <button class="round-button" type="button" aria-label="メニュー">☰</button>
+      <button class="round-button basho-mark-button" type="button" aria-label="芭蕉">芭</button>
       <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
     </header>
     <section class="manazashi-card source-home-card quiet-card">

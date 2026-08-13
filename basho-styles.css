@@ -168,6 +168,12 @@ button {
   line-height: 1.25;
 }
 
+.basho-mark-button {
+  font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 19px;
+  line-height: 1;
+}
+
 .screen-label {
   display: block;
   color: var(--ink);
