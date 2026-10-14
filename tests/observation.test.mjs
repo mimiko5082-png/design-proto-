@@ -6,7 +6,7 @@ import { preparedPerspective, requestPerspective } from "../perspective.js";
 import { normalizePlace, distanceMeters, mapGeometry } from "../place.js";
 import worker, { handleRequest } from "../ai-service/worker.mjs";
 
-function app(storage = new Map()) {
+function app(storage = new Map(), perspectiveRequester = requestPerspective) {
   const screen = { innerHTML: "", addEventListener() {} };
   const element = { addEventListener() {}, classList: { add() {}, remove() {} } };
   const tabbar = { ...element, hidden: false };
@@ -20,9 +20,9 @@ function app(storage = new Map()) {
     window: { BASHO_PERSPECTIVE: { endpoint: "" }, location: { search: "", href: "https://example.test/" } },
     localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
     navigator: {}, console: { warn() {}, error() {} }, Date: Clock, URL, URLSearchParams,
-    setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,
+    setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective: perspectiveRequester, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,
   });
-  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace};", context);
+  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace,studyCSV,saveEntryToFirebase};", context);
   return { ...context.api, storage, screen, tabbar, advance: ms => { now += ms; } };
 }
 
@@ -165,4 +165,60 @@ test("map places only located entries and groups by distance, not category", () 
   assert.equal(mapGeometry({lat:35,lng:139}, a.state.entries).pins.length, 2);
   assert.ok(distanceMeters({lat:35,lng:139}, {lat:35.001,lng:139}) < 200);
   assert.doesNotMatch(html, /iframe/);
+});
+
+
+
+test("condition A saves after the first observation without contacting AI or sharing study identity", async () => {
+  let calls = 0;
+  const a = app(new Map(), async () => { calls++; throw new Error("AI must not run in A"); });
+  a.state.studySettings = { condition: "A", participant: "P01", place: "場所1", order: "BA" };
+  a.navigate("pause");
+  a.state.studySettings.condition = "B";
+  a.advance(30000); a.navigate("note");
+  a.state.note = "ベンチの端だけ乾いている。";
+  await a.saveNote();
+  assert.equal(calls, 0);
+  assert.equal(a.state.view, "encounter");
+  assert.equal(a.state.studyRecords.length, 1);
+  const record = a.state.studyRecords[0];
+  assert.equal(record.condition, "A");
+  assert.equal(record.perspectiveKind, "none");
+  assert.equal(record.reobserved, false);
+  assert.equal(record.observationSeconds, 30);
+  assert.equal(record.participant, "P01");
+  const entry = a.state.entries[0];
+  assert.equal(entry.localOnly, true);
+  assert.equal(await a.saveEntryToFirebase(entry), false);
+  assert.equal("participant" in a.cloudEntry(entry).observationTrace, false);
+  assert.equal(app(a.storage).state.entries[0].localOnly, true);
+  assert.equal(app(a.storage).state.studyRecords[0].condition, "A");
+  assert.match(a.renderObservationTrace(entry), /問い返しは行っていません/);
+});
+
+test("condition B exports both observations with actual question provenance and stance", async () => {
+  const a = app();
+  a.state.studySettings = { condition: "B", participant: "P02", place: "場所2", order: "AB" };
+  a.navigate("pause"); a.advance(30000); a.navigate("note");
+  a.state.note = "人の足跡が残る。"; await a.saveNote();
+  a.state.stance = "own";
+  a.navigate("revisit"); a.advance(30000); a.navigate("update");
+  a.state.revisitNote = "風が落ち葉を動かしていた。"; a.finishObservation();
+  assert.equal(a.state.studyRecords[0].perspectiveKind, "prepared");
+  assert.equal(a.state.studyRecords[0].stance, "own");
+  assert.equal(a.state.studyRecords[0].revisitSeconds, 30);
+  assert.equal(a.state.studyRecords[0].finalNote, "風が落ち葉を動かしていた。");
+  const csv = a.studyCSV(a.state.studyRecords);
+  assert.ok(csv.startsWith("\uFEFF"));
+  assert.match(csv, /"P02","B","AB","場所2"/);
+  assert.match(csv, /風が落ち葉/);
+  assert.equal(a.state.entries[0].localOnly, true);
+});
+
+test("study CSV preserves quotes and multiline notes and neutralizes spreadsheet formulas", () => {
+  const a = app();
+  const csv = a.studyCSV([{ participant: "=SUM(1,2)", firstNote: '一行目\n"二行目"', finalNote: "  @command" }]);
+  assert.ok(csv.includes('"\'=SUM(1,2)"'));
+  assert.ok(csv.includes('"一行目\n""二行目"""'));
+  assert.ok(csv.includes('"\'  @command"'));
 });

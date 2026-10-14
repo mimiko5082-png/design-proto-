@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { requestPerspective, preparedPerspective } from "./perspective.js?v=34";
-import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=34";
+import { requestPerspective, preparedPerspective } from "./perspective.js?v=35";
+import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=35";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -189,6 +189,9 @@ const state = {
   stance: "",
   reobserved: false,
   observationSeconds: 0,
+  studySettings: { condition: "off", participant: "", place: "", order: "AB" },
+  activeStudy: null,
+  studyRecords: [],
 };
 let perspectiveRequestId = 0;
 
@@ -276,6 +279,17 @@ function renderHome() {
     </section>
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
+    </details>
+    <details class="place-attach"><summary>比較実験の設定・記録の書き出し</summary>
+      <p>Aは「お題 → 30秒観察 → 記録」、Bは問い返しと再観察を加えます。同じお題を選び、場所と条件の順序を入れ替えて使ってください。</p>
+      <label>体験の条件<select data-study-condition>${[["off", "通常の体験"], ["A", "A：問い返し・再観察なし"], ["B", "B：問い返し・再観察あり"]].map(([v,l]) => `<option value="${v}" ${state.studySettings.condition === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>参加者コード（本名を使わない）<input data-study-participant maxlength="40" value="${escapeAttr(state.studySettings.participant)}" placeholder="P01" /></label>
+      <label>場所の呼び名<input data-study-place maxlength="80" value="${escapeAttr(state.studySettings.place)}" placeholder="場所1" /></label>
+      <label>体験する順序<select data-study-order><option value="AB" ${state.studySettings.order === "AB" ? "selected" : ""}>A → B</option><option value="BA" ${state.studySettings.order === "BA" ? "selected" : ""}>B → A</option></select></label>
+      <button class="outline-button" type="button" data-action="set-study">次の観察に設定を適用</button>
+      <p>現在：${state.studySettings.condition === "off" ? "通常の体験" : `条件${escapeHtml(state.studySettings.condition)}`}。実験の記録はこのブラウザに保存し、共有句帳には送りません。設定は観察開始時に固定されます。</p>
+      <p>AI未接続時のBは「用意された問い」の体験です。AIの効果を比較する本実験には、AI接続と生成結果の確認が必要です。書き出しにも問いの種別を記録します。</p>
+      <button class="outline-button" type="button" data-action="export-study" ${state.studyRecords.length ? "" : "disabled"}>実験記録をCSVに書き出す（${state.studyRecords.length}件）</button>
     </details>
     <details class="place-attach"><summary>AIの接続設定</summary>
       <p>現在：${state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint ? "AIサーバーの接続先を設定済み（通信時に確認）" : "AI未接続・用意された問いを使用"}</p>
@@ -369,11 +383,11 @@ function renderNote() {
         ${["音", "流れ", "跡", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
       <p class="lens-footnote">俳句にしなくても大丈夫。見聞きしたことと、想像したことを自分の言葉で。</p>
-      <button class="main-button" type="button" data-action="save-note">別の見方に出会う</button>
-      <p class="lens-footnote">${(state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint) ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
+      <button class="main-button" type="button" data-action="save-note">${state.activeStudy?.condition === "A" ? "この気づきを残す" : "別の見方に出会う"}</button>
+      <p class="lens-footnote">${state.activeStudy?.condition === "A" ? "条件A：問い返しと再観察を行わず、記録をこの端末に残します。" : (state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint) ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
       <section class="place-attach">
         <strong>観察した場所（任意）</strong>
-        <p>現在地を約100m単位に丸めて添えます。保存すると、記録と場所が共有句帳に公開されます。AIには送りません。</p>
+        <p>現在地を約100m単位に丸めて添えます。${state.activeStudy ? "実験中はこの端末にだけ保存します。" : "保存すると、記録と場所が共有句帳に公開されます。"}AIには送りません。</p>
         <button class="outline-button" type="button" data-action="attach-place" ${state.placeLoading ? "disabled" : ""}>${state.placeLoading ? "場所を取得中…" : state.observationPlace ? "場所を取り直す" : "この場所を地図に添える"}</button>
         ${state.observationPlace ? `<p>添付済み · ${escapeHtml(String(state.observationPlace.lat))}, ${escapeHtml(String(state.observationPlace.lng))}</p><button type="button" data-action="remove-place">場所を外す</button>` : ""}
       </section>
@@ -433,8 +447,8 @@ function renderObservationTrace(entry) {
   const stance = { agree: "なるほどと思う", question: "違う気がする", own: "自分の見方で進む" }[trace.stance] || "回答なし";
   return `<details class="observation-trace"><summary>まなざしの変化を見る</summary>
     <small>最初の気づき</small><p>${escapeHtml(trace.firstNote)}</p>
-    <small>${trace.perspectiveKind === "ai" ? "AIからの問い" : "用意された問い"}</small><p>${escapeHtml(trace.question)}</p>
-    <small>問いの受け取り方</small><p>${stance}</p>
+    ${trace.perspectiveKind === "none" ? `<p>条件A：問い返しは行っていません。</p>` : `<small>${trace.perspectiveKind === "ai" ? "AIからの問い" : "用意された問い"}</small><p>${escapeHtml(trace.question)}</p>
+    <small>問いの受け取り方</small><p>${stance}</p>`}
     <small>再観察後の気づき</small><p>${escapeHtml(trace.reobserved ? trace.finalNote : "再観察は行っていません。")}</p>
   </details>`;
 }
@@ -730,6 +744,16 @@ function handleAction(target) {
     dismissSharedManazashi();
     return;
   }
+  if (action === "set-study") {
+    state.studySettings = normalizeStudy({
+      condition: document.querySelector("[data-study-condition]").value,
+      participant: document.querySelector("[data-study-participant]").value,
+      place: document.querySelector("[data-study-place]").value,
+      order: document.querySelector("[data-study-order]").value,
+    });
+    saveState(); render(); showToast("次の観察の条件を設定しました。"); return;
+  }
+  if (action === "export-study") { exportStudy(); return; }
   if (action === "set-ai-endpoint") {
     try {
       const url = new URL(document.querySelector("[data-endpoint-input]").value.trim());
@@ -912,7 +936,7 @@ async function initFirebaseSync() {
 
     // この端末にだけ残っている既存の句は初回同期します。ただし削除済みの句は再アップロードしません。
     const localEntries = (state.entries || []).filter(
-      (entry) => entry?.id?.startsWith("entry-") && !deletedSet.has(entry.id)
+      (entry) => entry?.id?.startsWith("entry-") && !entry.localOnly && !deletedSet.has(entry.id)
     );
     if (localEntries.length) {
       const updates = {};
@@ -934,7 +958,7 @@ async function initFirebaseSync() {
           .map(normalizeSyncedEntry);
 
         state.deletedEntryIds = deletedIds;
-        state.entries = uniqueEntriesById(remoteEntries);
+        state.entries = uniqueEntriesById([...state.entries.filter(entry => entry.localOnly), ...remoteEntries]);
         state.cloudStatus = "synced";
         state.cloudUpdatedAt = Date.now();
         saveEntriesOnly();
@@ -955,7 +979,7 @@ async function initFirebaseSync() {
 }
 
 async function saveEntryToFirebase(entry) {
-  if (!bashoFirebaseReady || !bashoRootRef || !entry?.id) return false;
+  if (entry?.localOnly || !bashoFirebaseReady || !bashoRootRef || !entry?.id) return false;
   try {
     await update(bashoRootRef, {
       [`entries/${entry.id}`]: cloudEntry(entry),
@@ -1028,6 +1052,14 @@ function navigate(view) {
     state.incomingManazashi = null;
     state.borrowedManazashi = null;
   }
+  if (view === "pause") {
+    state.activeStudy = state.studySettings.condition === "off" ? null : { ...normalizeStudy(state.studySettings), startedAt: Date.now() };
+    state.observationSeconds = 0;
+    state.perspective = null;
+    state.stance = "";
+    state.reobserved = false;
+    state.revisitNote = "";
+  }
   if (view === "pause" || view === "revisit") state.timerStartedAt = Date.now();
   saveState();
   render();
@@ -1039,6 +1071,7 @@ async function saveNote() {
     showToast("あなたが気づいたことを、一語でも残してください。");
     return;
   }
+  if (state.activeStudy?.condition === "A") { finishObservation(true); return; }
   const note = state.note.trim();
   const gaze = currentGaze();
   const requestId = ++perspectiveRequestId;
@@ -1061,7 +1094,7 @@ function normalizeObservationTrace(trace) {
     prompt: String(trace.prompt || ""), firstNote: String(trace.firstNote || ""),
     finalNote: String(trace.finalNote || ""), question: String(trace.question || ""),
     hypotheses: Array.isArray(trace.hypotheses) ? trace.hypotheses.map(String).slice(0, 3) : [],
-    perspectiveKind: trace.perspectiveKind === "ai" ? "ai" : "prepared",
+    perspectiveKind: ["ai", "none"].includes(trace.perspectiveKind) ? trace.perspectiveKind : "prepared",
     stance: ["agree", "question", "own"].includes(trace.stance) ? trace.stance : "",
     reobserved: trace.reobserved === true, observationSeconds: Number(trace.observationSeconds || 0),
     revisitSeconds: trace.reobserved === true ? Number(trace.revisitSeconds || 0) : 0,
@@ -1069,7 +1102,10 @@ function normalizeObservationTrace(trace) {
 }
 
 function finishObservation(skip = false) {
-  if (!["perspective", "update"].includes(state.view) || !state.perspective || state.perspectiveLoading) return;
+  const conditionA = state.activeStudy?.condition === "A" && state.view === "note";
+  if (!conditionA && (!["perspective", "update"].includes(state.view) || !state.perspective || state.perspectiveLoading)) return;
+  if (!state.note.trim()) return;
+  if (conditionA) skip = true;
   if (!skip && (!state.reobserved || !state.revisitNote.trim())) {
     showToast("もう一度見たあとの気づきを、一語でも残してください。");
     return;
@@ -1081,6 +1117,7 @@ function finishObservation(skip = false) {
   const image = state.notePhoto || gaze.image;
   const entry = {
     id: `entry-${now}`,
+    ...(state.activeStudy ? { localOnly: true } : {}),
     title: text,
     body: `${gaze.observation}から、街の${state.noteCategory}を見つける。`,
     date: formatDate(new Date(now)),
@@ -1092,12 +1129,16 @@ function finishObservation(skip = false) {
     ...(normalizePlace(state.observationPlace) ? { place: normalizePlace(state.observationPlace) } : {}),
     observationTrace: normalizeObservationTrace({
       prompt: gaze.modernTask, firstNote, finalNote: skip ? "" : text,
-      question: state.perspective.question, hypotheses: state.perspective.hypotheses,
-      perspectiveKind: state.perspective.kind, stance: state.stance,
+      question: state.perspective?.question || "", hypotheses: state.perspective?.hypotheses || [],
+      perspectiveKind: conditionA ? "none" : state.perspective.kind, stance: state.stance,
       reobserved: !skip, observationSeconds: state.observationSeconds,
       revisitSeconds: skip ? 0 : 30,
     }),
   };
+  if (state.activeStudy) {
+    state.studyRecords.push({ ...state.activeStudy, entryId: entry.id, savedAt: now, category: entry.category, ...entry.observationTrace });
+  }
+  state.activeStudy = null;
   state.entries.unshift(entry);
   state.entries = uniqueEntriesById(state.entries);
   state.activeEntryId = entry.id;
@@ -1387,6 +1428,9 @@ function loadState() {
     const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
+    state.studySettings = normalizeStudy(state.studySettings);
+    if (!Array.isArray(state.studyRecords)) state.studyRecords = [];
+    if (state.activeStudy) state.activeStudy = { ...normalizeStudy(state.activeStudy), startedAt: Number(state.activeStudy.startedAt || 0) };
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
     if (typeof state.notePhoto !== "string") state.notePhoto = "";
@@ -1457,6 +1501,7 @@ function saveEntriesOnly() {
 function compactEntry(entry) {
   return {
     id: entry.id,
+    ...(entry.localOnly ? { localOnly: true } : {}),
     title: entry.title,
     body: entry.body,
     date: entry.date,
@@ -1542,4 +1587,33 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
+}
+
+
+function normalizeStudy(value = {}) {
+  return { condition: ["A", "B"].includes(value?.condition) ? value.condition : "off",
+    participant: String(value?.participant || "").trim().slice(0, 40),
+    place: String(value?.place || "").trim().slice(0, 80), order: value?.order === "BA" ? "BA" : "AB" };
+}
+
+function studyCSV(records) {
+  const columns = ["entryId", "participant", "condition", "order", "place", "startedAt", "savedAt", "prompt", "category", "firstNote", "perspectiveKind", "question", "hypotheses", "stance", "reobserved", "observationSeconds", "revisitSeconds", "finalNote"];
+  const cell = value => {
+    let text = Array.isArray(value) ? value.join(" / ") : String(value ?? "");
+    // Keep user text from being executed as a spreadsheet formula.
+    if (/^[\s]*[=+@-]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  };
+  return "\uFEFF" + [columns, ...records.map(row => columns.map(key => row[key]))].map(row => row.map(cell).join(",")).join("\r\n");
+}
+
+function exportStudy() {
+  if (!state.studyRecords.length) return;
+  const blob = new Blob([studyCSV(state.studyRecords)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = "basho-study-" + todayKey() + ".csv";
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast("実験記録を書き出しました。");
 }

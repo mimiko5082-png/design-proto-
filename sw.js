@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v34-places";
+const CACHE_NAME = "basho-manazashi-v35-study";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -32,3 +32,4 @@ self.addEventListener("fetch", (event) => {
     return response;
   }).catch(() => caches.match(event.request).then((cached) => cached || caches.match("./index.html"))));
 });
+
