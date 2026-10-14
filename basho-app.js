@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { requestPerspective, preparedPerspective } from "./perspective.js";
+import { requestPerspective, preparedPerspective } from "./perspective.js?v=34";
+import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=34";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -179,6 +180,9 @@ const state = {
   cloudUpdatedAt: 0,
   incomingManazashi: null,
   borrowedManazashi: null,
+  perspectiveEndpoint: "",
+  observationPlace: null,
+  placeLoading: false,
   perspective: null,
   perspectiveLoading: false,
   revisitNote: "",
@@ -273,6 +277,13 @@ function renderHome() {
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
+    <details class="place-attach"><summary>AIの接続設定</summary>
+      <p>現在：${state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint ? "AIサーバーの接続先を設定済み（通信時に確認）" : "AI未接続・用意された問いを使用"}</p>
+      <p>管理者から受け取ったHTTPSのAIサーバーURLを設定してください。この接続先へ、お題と記録の文章だけを送ります。写真・位置情報は送信しません。APIキーは入力しないでください。</p>
+      <label>AIサーバーのURL<input type="url" data-endpoint-input value="${escapeAttr(state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint || "")}" placeholder="https://…" /></label>
+      <button class="outline-button" type="button" data-action="set-ai-endpoint">接続先を保存</button>
+      <button class="outline-button" type="button" data-action="clear-ai-endpoint">接続を解除</button>
+    </details>
     <p class="lens-footnote">${escapeHtml(gaze.source)}<br>観察のお題は現代の街歩き向けに再構成したものです。</p>
   </div>`;
 }
@@ -359,7 +370,13 @@ function renderNote() {
       </div>
       <p class="lens-footnote">俳句にしなくても大丈夫。見聞きしたことと、想像したことを自分の言葉で。</p>
       <button class="main-button" type="button" data-action="save-note">別の見方に出会う</button>
-      <p class="lens-footnote">${window.BASHO_PERSPECTIVE?.endpoint ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
+      <p class="lens-footnote">${(state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint) ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
+      <section class="place-attach">
+        <strong>観察した場所（任意）</strong>
+        <p>現在地を約100m単位に丸めて添えます。保存すると、記録と場所が共有句帳に公開されます。AIには送りません。</p>
+        <button class="outline-button" type="button" data-action="attach-place" ${state.placeLoading ? "disabled" : ""}>${state.placeLoading ? "場所を取得中…" : state.observationPlace ? "場所を取り直す" : "この場所を地図に添える"}</button>
+        ${state.observationPlace ? `<p>添付済み · ${escapeHtml(String(state.observationPlace.lat))}, ${escapeHtml(String(state.observationPlace.lng))}</p><button type="button" data-action="remove-place">場所を外す</button>` : ""}
+      </section>
       <div class="memo-row photo-attach-row">
         <div>
           <strong>写真を添える</strong>
@@ -498,56 +515,25 @@ function renderSeeds() {
 
 function renderMap() {
   const entry = activeEntry();
-  const location = state.currentLocation;
-  const hasLocation = typeof location?.lat === "number" && typeof location?.lng === "number";
-  const pins = hasLocation
-    ? ""
-    : mapEntries().map((item) => `<button class="map-dot ${item.id === entry.id ? "active" : ""}" style="left:${item.x}%;top:${item.y}%;" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"></button>`).join("");
-  const locationStatusText =
-    state.locationStatus === "loading"
-      ? "現在地を取得しています"
-      : hasLocation
-        ? `現在地 ${formatCoordinate(location.lat)}, ${formatCoordinate(location.lng)}`
-        : "現在地を取得すると、この地図が今いる場所に切り替わります。";
-  const realMap = hasLocation
-    ? `<iframe class="real-map-frame" title="現在地の地図" src="${escapeAttr(mapEmbedUrl(location))}" loading="lazy"></iframe><span class="current-location-pin">現在地</span>`
-    : `<img src="./assets/kotoba-map.png" alt="まなざしの地図" />`;
-  const mapLink = hasLocation
-    ? `<a class="external-map-link" href="${escapeAttr(mapExternalUrl(location))}" target="_blank" rel="noopener">外部地図で開く</a>`
-    : "";
+  const located = allEntries().filter(item => normalizePlace(item.place));
+  const center = normalizePlace(entry.place) || normalizePlace(state.currentLocation) || normalizePlace(located[0]?.place);
+  const nearby = center ? located.filter(item => distanceMeters(center, item.place) <= 200) : [];
+  const geometry = center ? mapGeometry(center, located) : null;
+  const map = geometry ? `<div class="place-map" aria-label="記録の観察場所の地図">
+    <svg viewBox="0 0 768 768" aria-hidden="true">${geometry.tiles.map(tile => `<image x="${tile.left}" y="${tile.top}" width="256" height="256" href="https://tile.openstreetmap.org/15/${tile.x}/${tile.y}.png"/>`).join("")}</svg>
+    ${geometry.pins.map(pin => `<button class="place-pin ${pin.id === entry.id ? "active" : ""}" style="left:${pin.x}%;top:${pin.y}%" type="button" data-action="open-entry" data-entry-id="${escapeAttr(pin.id)}" aria-label="${escapeAttr(pin.title)}">◎</button>`).join("")}
+    <a class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
+  </div>` : `<div class="place-map-empty"><p>場所を添えた記録はまだありません。</p><p>観察後の記録画面で「この場所を地図に添える」を選んでください。</p></div>`;
   return `<div class="view map-view">
-    <header class="map-head">
-      <span>07　まなざしの地図</span>
-      <button class="round-button" type="button" data-action="request-location" aria-label="現在地を表示">⌖</button>
-    </header>
-    <section class="location-status-card">
-      <div>
-        <strong>${hasLocation ? "現在地を表示中" : "現在地で見る"}</strong>
-        <p>${escapeHtml(locationStatusText)}</p>
-      </div>
-      <button type="button" data-action="request-location">${hasLocation ? "更新" : "現在地を表示"}</button>
+    <header class="map-head"><span>07　まなざしの地図</span><button class="round-button" type="button" data-action="request-location" aria-label="現在地を表示">⌖</button></header>
+    <section class="location-status-card"><div><strong>同じ場所に、いくつもの見方</strong><p>場所は約100m単位。ピンを選ぶと、その周辺の記録が重なります。</p></div><button type="button" data-action="request-location">現在地で見る</button></section>
+    ${map}
+    <p class="lens-footnote">地図画像はOpenStreetMapから取得します。通信できない場合も、下の記録は読めます。場所がない記録や体験例は地図に配置しません。</p>
+    <section class="layered-gazes"><h2>この場所のまなざし · ${nearby.length}件</h2><p>表示中心から約200m以内の記録。丸めた位置のため、同じベンチや建物とは限りません。</p>
+      ${nearby.length ? nearby.map(item => `<article class="layered-gaze ${item.id === entry.id ? "active" : ""}"><button type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"><small>${escapeHtml(item.category)} · ${escapeHtml(item.date)}</small><p>${escapeHtml(item.title)}</p></button>${renderObservationTrace(item)}</article>`).join("") : "<p>この周辺には、まだ記録がありません。</p>"}
     </section>
-    <section class="map-panel ${hasLocation ? "real-location-map" : ""}">
-      ${realMap}
-      <div class="map-layer"></div>
-      ${pins}
-      <article class="map-card">
-        <img src="${escapeAttr(entry.image || "./assets/kotoba-sunset.png")}" alt="" />
-        <div>
-          <strong>${lineBreak(entry.title)}</strong>
-          <p>${escapeHtml(entry.body)}</p>
-          <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
-        </div>
-      </article>
-      <div class="map-actions ${hasLocation ? "has-location" : "no-location"}">
-        ${mapLink}
-        <button class="map-borrow-button" type="button" data-action="borrow-gaze">このまなざしを借りる</button>
-      </div>
-    </section>
-    <p class="lens-footnote">${hasLocation ? "地図は現在地を表示しています。下の記録は、この場所で書かれたものとは限りません。" : "地図上の点は配置イメージです。記録の実際の位置を示すものではありません。"}</p>
-    <section class="layered-gazes"><h2>重なるまなざし</h2><p>似た手がかりでも、気になるものは人それぞれ。</p>
-      ${allEntries().filter(item => item.category === entry.category).slice(0, 6).map(item => `<article class="layered-gaze ${item.id === entry.id ? "active" : ""}"><button type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"><small>${escapeHtml(item.category)} · ${item.id.startsWith("sample-") ? "体験例" : "共有された記録"}</small><p>${escapeHtml(item.title)}</p></button>${renderObservationTrace(item)}</article>`).join("")}
-    </section>
+    <section class="layered-gazes"><h2>すべての観察場所</h2>${located.map(item => `<button class="outline-button" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}">${escapeHtml(item.title)}</button>`).join("")}</section>
+    ${!normalizePlace(entry.place) ? `<p class="lens-footnote">選択中の「${escapeHtml(entry.title)}」には場所が付いていません。</p>` : ""}
   </div>`;
 }
 
@@ -744,6 +730,21 @@ function handleAction(target) {
     dismissSharedManazashi();
     return;
   }
+  if (action === "set-ai-endpoint") {
+    try {
+      const url = new URL(document.querySelector("[data-endpoint-input]").value.trim());
+      if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw new Error();
+      state.perspectiveEndpoint = url.href; saveState(); render(); showToast("AIの接続先を保存しました。");
+    } catch { showToast("認証情報やクエリを含まないHTTPSのURLを入力してください。"); }
+    return;
+  }
+  if (action === "clear-ai-endpoint") {
+    state.perspectiveEndpoint = "";
+    window.BASHO_PERSPECTIVE = { endpoint: "" };
+    saveState(); render(); showToast("この端末のAI接続を解除しました。"); return;
+  }
+  if (action === "attach-place") { attachObservationPlace(); return; }
+  if (action === "remove-place") { state.observationPlace = null; saveState(); render(); return; }
   if (action === "request-location") {
     requestCurrentLocation();
     return;
@@ -827,6 +828,22 @@ async function deleteSelectedEntries() {
 
   const deletedOnline = await deleteEntriesFromFirebase(idsToDelete);
   showToast(deletedOnline ? "削除をほかの端末にも反映しました。" : "句帳から削除しました。");
+}
+
+function attachObservationPlace() {
+  if (state.placeLoading) return;
+  if (!navigator.geolocation) { showToast("この端末では位置情報を使えません。"); return; }
+  state.placeLoading = true;
+  render();
+  navigator.geolocation.getCurrentPosition(position => {
+    state.placeLoading = false;
+    if (state.view !== "note") return;
+    state.observationPlace = normalizePlace({ lat: position.coords.latitude, lng: position.coords.longitude });
+    saveState(); render();
+    showToast("観察場所を添えました。保存すると共有されます。");
+  }, () => {
+    state.placeLoading = false; render(); showToast("場所を取得できませんでした。場所なしでも記録できます。");
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
 }
 
 function requestCurrentLocation() {
@@ -988,6 +1005,7 @@ function cloudEntry(entry) {
     image: typeof entry.image === "string" ? entry.image : "",
     x: Number.isFinite(Number(entry.x)) ? Number(entry.x) : 50,
     y: Number.isFinite(Number(entry.y)) ? Number(entry.y) : 48,
+    ...(normalizePlace(entry.place) ? { place: normalizePlace(entry.place) } : {}),
     ...(entry.observationTrace ? { observationTrace: normalizeObservationTrace(entry.observationTrace) } : {}),
   };
 }
@@ -1030,7 +1048,7 @@ async function saveNote() {
   state.reobserved = false;
   state.perspectiveLoading = true;
   navigate("perspective");
-  const perspective = await requestPerspective(note, gaze, window.BASHO_PERSPECTIVE?.endpoint || "");
+  const perspective = await requestPerspective(note, gaze, state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint || "");
   if (requestId !== perspectiveRequestId) return;
   state.perspectiveLoading = false;
   if (state.note.trim() === note && currentGaze().id === gaze.id) state.perspective = perspective;
@@ -1071,6 +1089,7 @@ function finishObservation(skip = false) {
     image,
     x: 35 + ((now / 17) % 42),
     y: 28 + ((now / 29) % 48),
+    ...(normalizePlace(state.observationPlace) ? { place: normalizePlace(state.observationPlace) } : {}),
     observationTrace: normalizeObservationTrace({
       prompt: gaze.modernTask, firstNote, finalNote: skip ? "" : text,
       question: state.perspective.question, hypotheses: state.perspective.hypotheses,
@@ -1084,6 +1103,7 @@ function finishObservation(skip = false) {
   state.activeEntryId = entry.id;
   state.note = "";
   state.notePhoto = "";
+  state.observationPlace = null;
   state.perspective = null;
   state.revisitNote = "";
   state.stance = "";
@@ -1331,6 +1351,7 @@ function acceptSharedManazashi() {
   state.borrowedManazashi = item;
   state.incomingManazashi = null;
   state.noteCategory = item.category;
+  state.observationPlace = null;
   state.note = "";
   state.notePhoto = "";
   showToast("まなざしを受け取りました。");
@@ -1371,6 +1392,8 @@ function loadState() {
     if (typeof state.notePhoto !== "string") state.notePhoto = "";
     if (typeof state.note !== "string") state.note = "";
     if (typeof state.revisitNote !== "string") state.revisitNote = "";
+    state.placeLoading = false;
+    state.observationPlace = normalizePlace(state.observationPlace);
     state.perspectiveLoading = false;
     if (state.view === "perspective" && !state.perspective && state.note.trim()) {
       state.perspective = preparedPerspective(state.note.trim(), state.gazeId);
@@ -1442,6 +1465,7 @@ function compactEntry(entry) {
     image: compactEntryImage(entry.image),
     x: entry.x,
     y: entry.y,
+    ...(normalizePlace(entry.place) ? { place: normalizePlace(entry.place) } : {}),
     ...(entry.observationTrace ? { observationTrace: normalizeObservationTrace(entry.observationTrace) } : {}),
   };
 }

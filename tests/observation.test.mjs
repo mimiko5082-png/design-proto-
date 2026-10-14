@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import { readFileSync } from "node:fs";
 import { preparedPerspective, requestPerspective } from "../perspective.js";
+import { normalizePlace, distanceMeters, mapGeometry } from "../place.js";
 import worker, { handleRequest } from "../ai-service/worker.mjs";
 
 function app(storage = new Map()) {
@@ -19,7 +20,7 @@ function app(storage = new Map()) {
     window: { BASHO_PERSPECTIVE: { endpoint: "" }, location: { search: "", href: "https://example.test/" } },
     localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
     navigator: {}, console: { warn() {}, error() {} }, Date: Clock, URL, URLSearchParams,
-    setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective, preparedPerspective,
+    setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,
   });
   vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace};", context);
   return { ...context.api, storage, screen, tabbar, advance: ms => { now += ms; } };
@@ -108,9 +109,9 @@ test("malformed AI responses fall back instead of being marked as AI", async () 
 test("old entries still load and maps distinguish examples from location data", () => {
   const a = app(); a.state.entries = [{ id: "entry-old", title: "昔の記録", category: "音" }];
   a.state.activeEntryId = "entry-old";
-  assert.match(a.renderMap(), /昔の記録/); assert.match(a.renderMap(), /実際の位置を示すものではありません/);
+  assert.match(a.renderMap(), /昔の記録/); assert.match(a.renderMap(), /地図に配置しません/);
   a.state.currentLocation = { lat: 35, lng: 139 };
-  assert.match(a.renderMap(), /この場所で書かれたものとは限りません/);
+  assert.match(a.renderMap(), /場所が付いていません/);
 });
 
 const origin = "https://mimiko5082-png.github.io";
@@ -138,4 +139,30 @@ test("AI service validates input, keeps provider secrets server side and formats
 test("upstream failures produce a recoverable service error", async () => {
   const result = await handleRequest(request({ note: "壁", prompt: "跡" }), { OPENAI_API_KEY: "test", OPENAI_MODEL: "test" }, async () => new Response("unavailable", { status: 503 }));
   assert.equal(result.status, 502);
+});
+
+
+test("public place is rounded and survives cloud serialization; old entries never gain a place", () => {
+  const a = app();
+  const record = a.cloudEntry({ id: "entry-geo", place: {lat: 35.681234, lng: 139.767891} });
+  assert.equal(record.place.lat, 35.681);
+  assert.equal(record.place.lng, 139.768);
+  assert.equal(a.compactEntry(record).place.lat, 35.681);
+  assert.equal(a.cloudEntry({id: "old"}).place, undefined);
+  for (const value of [{lat: NaN, lng: 139}, {lat: 90, lng: 139}, {lat: "35", lng: 139}]) assert.equal(normalizePlace(value), null);
+});
+test("map places only located entries and groups by distance, not category", () => {
+  const a = app();
+  a.state.entries = [
+    {id:"entry-a", title:"光", category:"光", place:{lat:35, lng:139}},
+    {id:"entry-b", title:"音", category:"音", place:{lat:35.001, lng:139}},
+    {id:"entry-c", title:"遠い記録", category:"光", place:{lat:36, lng:139}},
+    {id:"entry-d", title:"場所なし", category:"光"}
+  ];
+  a.state.activeEntryId = "entry-a";
+  const html = a.renderMap();
+  assert.match(html, /この場所のまなざし · 2件/);
+  assert.equal(mapGeometry({lat:35,lng:139}, a.state.entries).pins.length, 2);
+  assert.ok(distanceMeters({lat:35,lng:139}, {lat:35.001,lng:139}) < 200);
+  assert.doesNotMatch(html, /iframe/);
 });
