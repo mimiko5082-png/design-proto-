@@ -11,6 +11,45 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Observation loop: keep the paper palette and prioritize the user's words. */
+[hidden] { display: none !important; }
+button:disabled { cursor: default; opacity: 0.45; box-shadow: none; }
+button:focus-visible, summary:focus-visible, textarea:focus-visible {
+  outline: 3px solid #25496f;
+  outline-offset: 3px;
+}
+.prompt-options { margin: 18px 0 12px; }
+.prompt-options summary, .observation-trace summary { cursor: pointer; padding: 12px 0; font-weight: 700; }
+.prompt-options button { display: block; width: 100%; margin-top: 8px; padding: 13px; border-radius: 12px; text-align: left; color: var(--ink); background: var(--paper-light); }
+.prompt-options button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px #5b6251; }
+.lens-footnote { color: var(--soft-ink); font-size: 12px; line-height: 1.8; margin: 12px 0; }
+.reflection-card { padding: 24px 18px; border: 1px solid var(--line); border-radius: 24px; }
+.reflection-card > * + * { margin-top: 18px; }
+.reflection-card .screen-label { text-align: left; font-size: 22px; }
+.reflection-card > button { width: 100%; }
+.evidence-card, .hypothesis-card { padding: 16px; border-radius: 14px; background: rgba(255, 252, 244, 0.75); border: 1px solid var(--line); }
+.evidence-card small, .hypothesis-card small, .observation-trace small { display: block; color: var(--soft-ink); font-size: 11px; }
+.evidence-card p, .hypothesis-card p, .observation-trace p { margin: 10px 0 0; font-size: 15px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.perspective-label { display: inline-block; color: #5b6251; font-size: 12px; font-weight: 700; }
+.reflection-question { margin-inline: 0; padding: 18px 0 18px 16px; border-left: 3px solid #5b6251; font-family: Georgia, "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 20px; line-height: 1.8; overflow-wrap: anywhere; }
+.stance-options { border: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.stance-options legend { margin-bottom: 12px; font-size: 12px; }
+.stance-options button { min-height: 44px; padding: 10px 12px; border-radius: 12px; color: var(--ink); background: var(--paper-light); border: 1px solid var(--line); font-size: 12px; }
+.stance-options button[aria-pressed="true"] { background: #5b6251; color: #fff; }
+.observation-trace { width: 100%; padding: 0 14px 10px; text-align: left; background: rgba(255,252,244,0.6); border-radius: 14px; }
+.observation-trace p { margin-bottom: 16px; }
+.observation-view .feel-paper { min-height: 580px; }
+.timer-status { font-size: 12px !important; }
+.note-board > .main-button { width: 100%; position: relative; z-index: 1; }
+.layered-gazes { margin-top: 20px; }
+.layered-gazes h2 { font-size: 20px; }
+.layered-gazes > p { font-size: 12px; color: var(--soft-ink); }
+.layered-gaze { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,252,244,0.6); overflow: hidden; }
+.layered-gaze.active { border-color: #5b6251; }
+.layered-gaze > button { width: 100%; text-align: left; padding: 16px; color: var(--ink); background: transparent; }
+.layered-gaze small { color: var(--soft-ink); }
+.layered-gaze p { margin-bottom: 0; line-height: 1.8; overflow-wrap: anywhere; }
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

@@ -1,9 +1,11 @@
-const CACHE_NAME = "basho-manazashi-v32-basho-mark";
+const CACHE_NAME = "basho-manazashi-v33-reflection";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./basho-styles.css",
   "./basho-app.js",
+  "./perspective.js",
+  "./perspective-config.js",
   "./firebase-config.js",
   "./manifest.webmanifest",
   "./assets/kotoba-mist.png",

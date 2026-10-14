@@ -1,0 +1,78 @@
+芭蕉のまなざし：観察と問い返しの改善版
+2026年10月14日
+
+このZIPは、既存の design-proto- リポジトリ用の差し替えファイルです。
+公開状況はリポジトリのGitHub Pagesデプロイ履歴で確認できます。
+
+■ GitHub Pagesへ反映する
+1. ZIPを展開します。
+2. ブラウザで https://github.com/mimiko5082-png/design-proto- を開きます。
+3. GitHub Pagesが公開に使用しているブランチとフォルダで、以下6ファイルを
+   同じ階層へアップロードし、変更をコミットします。
+   - index.html                 置き換え
+   - basho-app.js               置き換え
+   - basho-styles.css           置き換え
+   - sw.js                     置き換え
+   - perspective.js            新規
+   - perspective-config.js     新規
+4. assets/、firebase-config.js、manifest.webmanifest は既存のものを残します。
+5. GitHubのActionsまたはPages設定でデプロイ完了を確認します。
+6. 公開URLを再読み込みします。インストール済みのアプリも一度閉じて開き直します。
+   共有句帳を使う各端末も更新してください。
+
+■ 改修した体験
+お題 → 30秒観察 → 自分の記録 → 別の視点の問い → 再度30秒観察
+→ 気づきの更新 → 句帳・地図で共有
+
+・既存の和紙調の画面、句帳、写真、Firebase共有、友達への共有リンクを維持。
+・「誰かがここにいた痕跡」「昨日との違い」「光と影の境目」を追加。
+・観察中は下部メニューを隠し、30秒後に記録へ進める設計。
+・最初と最後の記録、問い、仮説、問いへの受け取り方を同じ記録に保存。
+・AIに同意しなくてもよく、再観察を行わず最初の記録を残すことも可能。
+・空欄をサンプル文章で埋めて保存する動作を廃止。
+・地図では同じカテゴリの複数の記録を読めます。
+  実際の投稿位置の重ね合わせは未実装で、既存の配置イメージと現在地表示を区別。
+・新しいお題は現代向けの独自設計と明示。芭蕉の実際の発言とは扱いません。
+
+■ AIの接続（公開ファイルへAPIキーを入れない）
+初期設定ではAI未接続です。「用意された問い・AI生成ではありません」と表示します。
+この状態でも再観察と記録の比較を体験できます。
+AI接続後の応答と、未接続時／通信失敗時の用意された問いは明確に区別します。
+AIを使った比較実験を行う場合は接続し、observationTrace.perspectiveKind が
+ai の記録と prepared の記録を分けてください。
+
+実際のAI用サーバーとして ai-service/worker.mjs を同梱しています。
+このファイルはGitHub Pages内で実行されません。別のサーバーが必要です。
+Cloudflare Workersのモジュールとして、perspective.jsと一緒にバンドルします。
+ホスト側に設定する環境変数:
+  OPENAI_API_KEY    APIキー（Secretとして保存）
+  OPENAI_MODEL      使用するResponses API対応のモデルID
+  ALLOWED_ORIGIN    https://mimiko5082-png.github.io
+公開サービスにはホスト側の利用量制限を設定してください。
+Origin制限はブラウザ向けの制限であり、利用者認証ではありません。
+
+サーバーをHTTPSで公開できたら、perspective-config.jsのendpointを
+そのURLへ変更してGitHubへアップロードします。
+  window.BASHO_PERSPECTIVE = { endpoint: "https://YOUR-SERVICE-URL" };
+公開用フロントエンドにOPENAI_API_KEYを置いてはいけません。
+
+送信するのは、お題と本人の記録文だけです。写真・位置情報はAIへ送りません。
+AIの応答は、未確認の仮説1〜2個と問い1つ。完成した俳句や正解を出さない指示です。
+モデルの指示遵守を完全に保証するものではないため、問いの質は実地確認してください。
+実際のAPI接続は、認証情報とサーバーがないため未検証です。
+
+■ 確認したこと
+node --test tests/observation.test.mjs : 12件成功
+・最初／再観察の30秒制御
+・空欄保存の防止、再観察省略、重複保存の防止
+・最初と最後の記録の保持、再読み込み復元、旧記録との互換性
+・AI未接続／通信失敗／不正な応答の区別
+・AIへ送信する項目と文字列のエスケープ
+・AIサーバーの入力検証、レスポンス形式、上流エラー
+JavaScript構文チェック、git diff --check も成功。
+実機ブラウザでのレイアウト、Firebaseへの実際の書き込み、公開後の動作は未確認。
+
+■ AIサービス実装の参照
+OpenAI Responses API / Structured Outputs:
+https://platform.openai.com/docs/api-reference/responses
+https://platform.openai.com/docs/guides/structured-outputs

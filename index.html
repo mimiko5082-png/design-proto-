@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="芭蕉のまなざし" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="description" content="芭蕉のまなざしは、目的地ではなく街の見方を受け取り、原典から抽出した観察を今の街歩きへ変えるスマホWebアプリです。" />
+    <meta name="description" content="30秒、スマホを下ろして街を見る。自分の気づきと別の視点を見比べ、もう一度観察する、芭蕉のまなざし。" />
     <title>芭蕉のまなざし</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
@@ -17,7 +17,7 @@
   </head>
   <body>
     <main class="app-shell" aria-label="芭蕉のまなざし Webアプリ">
-      <section class="phone" aria-live="polite">
+      <section class="phone">
         <section class="screen" id="screen"></section>
         <nav class="tabbar" aria-label="メインメニュー">
           <button class="tab active" type="button" data-nav="home"><span class="tab-icon">◎</span>まなざし</button>
@@ -27,8 +27,9 @@
       </section>
       <div class="toast" id="toast" role="status"></div>
     </main>
-    <script src="./firebase-config.js?v=20260814-basho-mark-v32"></script>
-    <script type="module" src="./basho-app.js?v=20260814-basho-mark-v32"></script>
+    <script src="./firebase-config.js?v=20261014-reflection-v33"></script>
+    <script src="./perspective-config.js?v=20261014-reflection-v33"></script>
+    <script type="module" src="./basho-app.js?v=20261014-reflection-v33"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

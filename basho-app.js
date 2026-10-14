@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { requestPerspective, preparedPerspective } from "./perspective.js";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -12,6 +13,30 @@ const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
 
 const gazes = [
+  {
+    id: "presence", prompt: "誰かがここにいた\n痕跡を探す",
+    modernTask: "この場所に、誰かがいた痕跡を見つけてください。",
+    observation: "人の気配と、環境が残した跡を見る",
+    pauseTask: "理由を決めず、まず手がかりをひとつ。",
+    noteExample: "ベンチの端だけが濡れていない。誰かが座っていたのかな。",
+    source: "現代の観察のお題（本アプリ独自）", category: "跡", color: "#5b6251", image: "./assets/kotoba-mist.png",
+  },
+  {
+    id: "yesterday", prompt: "昨日との違いを\nひとつ見つける",
+    modernTask: "よく知っている場所で、昨日の記憶と違うところを探してください。",
+    observation: "変化と、自分の記憶を見比べる",
+    pauseTask: "初めての場所なら、変わりそうな細部をひとつ。",
+    noteExample: "いつもの入口に、今日は小さな鉢が置かれている。",
+    source: "現代の観察のお題（本アプリ独自）", category: "跡", color: "#8d4234", image: "./assets/kotoba-lake.png",
+  },
+  {
+    id: "edge", prompt: "光と影の境目を\n見つめる",
+    modernTask: "光と影の境目で、見え方が変わるものを探してください。",
+    observation: "境目から、見慣れたものを見直す",
+    pauseTask: "色、輪郭、温度の違いを、自分の感覚で。",
+    noteExample: "壁のひびが、影の中でだけ濃く見える。",
+    source: "現代の観察のお題（本アプリ独自）", category: "光", color: "#25496f", image: "./assets/kotoba-sunset.png",
+  },
   {
     id: "sound",
     prompt: "一番遠くの音を\n探す",
@@ -154,7 +179,14 @@ const state = {
   cloudUpdatedAt: 0,
   incomingManazashi: null,
   borrowedManazashi: null,
+  perspective: null,
+  perspectiveLoading: false,
+  revisitNote: "",
+  stance: "",
+  reobserved: false,
+  observationSeconds: 0,
 };
+let perspectiveRequestId = 0;
 
 loadState();
 ensureDaily();
@@ -162,6 +194,7 @@ processIncomingManazashi();
 render();
 initFirebaseSync();
 setInterval(updateTimer, 1000);
+document.addEventListener("visibilitychange", updateTimer);
 
 screen.addEventListener("click", (event) => {
   const actionTarget = event.target.closest("[data-action]");
@@ -176,7 +209,12 @@ screen.addEventListener("click", (event) => {
 
 screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-note-input]")) {
-    state.note = event.target.value.slice(0, 68);
+    state.note = event.target.value.slice(0, 280);
+    state.perspective = null;
+    saveState();
+  }
+  if (event.target.matches("[data-revisit-input]")) {
+    state.revisitNote = event.target.value.slice(0, 280);
     saveState();
   }
 });
@@ -200,6 +238,9 @@ function render() {
     pause: renderPause,
     note: renderNote,
     encounter: renderEncounter,
+    perspective: renderPerspective,
+    revisit: renderPause,
+    update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
     map: renderMap,
@@ -225,10 +266,14 @@ function renderHome() {
       <p class="today-copy">今日は、</p>
       <h1>${lineBreak(gaze.prompt)}</h1>
       <i style="background:${escapeAttr(gaze.color)}"></i>
-      <p>芭蕉の句から受け取った、いつもの街を見るための小さな視点です。</p>
-      <span class="source-badge">1分以内で完了</span>
+      <p>いつもの街を、自分の感覚で。<br>先に観察し、あとから別の見方に出会います。</p>
+      <span class="source-badge">観察 → 記録 → 問い返し → 再観察</span>
       <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
+    <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
+      ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
+    </details>
+    <p class="lens-footnote">${escapeHtml(gaze.source)}<br>観察のお題は現代の街歩き向けに再構成したものです。</p>
   </div>`;
 }
 
@@ -269,23 +314,25 @@ function renderClassic() {
 
 function renderPause() {
   const gaze = currentGaze();
+  const revisiting = state.view === "revisit";
   const remaining = timerRemaining();
   const progress = 1 - remaining / 30;
   const dash = Math.round(276 * progress);
-  return `<div class="view feel-view">
+  return `<div class="view feel-view observation-view">
     <header class="minimal-head">
-      <button class="x-button" type="button" data-nav="home" aria-label="閉じる">×</button>
+      <button class="x-button" type="button" data-nav="${revisiting ? "perspective" : "home"}" aria-label="閉じる">×</button>
     </header>
     <section class="feel-paper quiet-card">
-      <span class="screen-label">30秒、まわりを見る</span>
-      <p>スマホを下ろして、<br>いつもの景色を見つめてみよう。</p>
-      <div class="timer-ring" data-el="timer" style="--dash:${dash}">
+      <span class="screen-label">${revisiting ? "同じ場所を、もう一度" : "30秒、まわりを見る"}</span>
+      <p>安全な場所で立ち止まり、スマホを下ろす。<br>画面を見続ける必要はありません。</p>
+      <div class="timer-ring" data-el="timer" aria-hidden="true" style="--dash:${dash}">
         <strong>${remaining}</strong>
         <span>秒</span>
       </div>
-      <p class="pause-task">${escapeHtml(gaze.modernTask)}</p>
-      <small>${escapeHtml(gaze.pauseTask)}</small>
-      <button class="outline-button" type="button" data-nav="note">気づきを残す</button>
+      <p class="pause-task">${escapeHtml(revisiting ? state.perspective?.question || gaze.modernTask : gaze.modernTask)}</p>
+      <small>${revisiting ? "問いに同意しなくても大丈夫。自分の感覚で確かめてください。" : escapeHtml(gaze.pauseTask)}</small>
+      <p class="timer-status" data-el="timer-status">${remaining ? "30秒後、戻ったら気づきを残せます。" : "観察の時間が終わりました。戻ったら記録へ。"}</p>
+      <button class="outline-button" type="button" data-el="timer-next" data-nav="${revisiting ? "update" : "note"}" ${remaining ? "disabled" : ""}>${revisiting ? "気づきの変化を残す" : "気づきを残す"}</button>
     </section>
   </div>`;
 }
@@ -297,19 +344,22 @@ function renderNote() {
     : "";
   return `<div class="view note-view">
     <header class="simple-head">
-      <button class="back-button" type="button" data-nav="pause" aria-label="戻る">←</button>
-      <button class="save-link" type="button" data-action="save-note">保存</button>
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
+      <button class="save-link" type="button" data-action="save-note">次へ</button>
     </header>
     <section class="note-paper note-board quiet-card">
       <span class="screen-label">何が気になりましたか？</span>
       <p class="note-lead">一語でも、一文でも。<br>今の気づきを残してください。</p>
       <label class="note-memory">
-        <textarea data-note-input maxlength="68" placeholder="電車が通ったあと、&#10;一瞬だけ町が&#10;静かになる。">${escapeHtml(state.note)}</textarea>
+        <textarea data-note-input aria-label="最初の気づき" maxlength="280" placeholder="${escapeAttr(gaze.noteExample)}">${escapeHtml(state.note)}</textarea>
       </label>
       <div class="category-line">
-        <span>見つめたカテゴリ（複数可）</span>
+        <span>いちばん気になった感覚</span>
         ${["音", "流れ", "跡", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
+      <p class="lens-footnote">俳句にしなくても大丈夫。見聞きしたことと、想像したことを自分の言葉で。</p>
+      <button class="main-button" type="button" data-action="save-note">別の見方に出会う</button>
+      <p class="lens-footnote">${window.BASHO_PERSPECTIVE?.endpoint ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
       <div class="memo-row photo-attach-row">
         <div>
           <strong>写真を添える</strong>
@@ -324,12 +374,60 @@ function renderNote() {
   </div>`;
 }
 
+function renderPerspective() {
+  const perspective = state.perspective;
+  return `<div class="view reflection-view">
+    <header class="simple-head"><button class="back-button" type="button" data-nav="note" aria-label="記録に戻る">←</button><span>もうひとつの視点</span></header>
+    <section class="reflection-card quiet-card">
+      <span class="screen-label">自分の気づきから、問いへ</span>
+      <article class="evidence-card"><small>最初の記録 · あなたの言葉</small><p>${escapeHtml(state.note)}</p></article>
+      ${state.perspectiveLoading ? `<p role="status">記録をもとに、問いを考えています…</p>` : perspective ? `
+        <span class="perspective-label">${perspective.kind === "ai" ? "AIからの問い返し" : "用意された問い · AI生成ではありません"}</span>
+        ${perspective.reason === "unavailable" ? `<p class="lens-footnote" role="status">AIに接続できなかったため、用意された問いを表示しています。</p>` : ""}
+        <article class="hypothesis-card"><small>別の見方の仮説 · 未確認</small>${perspective.hypotheses.map(item => `<p>${escapeHtml(item)}</p>`).join("")}</article>
+        <blockquote class="reflection-question">${escapeHtml(perspective.question)}</blockquote>
+        <p class="lens-footnote">場所や写真を確認した解釈ではありません。あなたの記録から考えた可能性です。正解として受け取る必要はありません。</p>
+        <fieldset class="stance-options"><legend>この問いを、どう受け取りましたか？（任意）</legend>
+          ${[["agree", "なるほどと思う"], ["question", "違う気がする"], ["own", "自分の見方で進む"]].map(([value, label]) => `<button type="button" data-action="stance" data-stance="${value}" aria-pressed="${state.stance === value}">${label}</button>`).join("")}
+        </fieldset>
+        <button class="main-button" type="button" data-nav="revisit">同じ場所を、もう一度見る</button>
+        <button class="outline-button" type="button" data-action="finish-observation" data-skip="true">再観察せず、最初の記録を残す</button>` : `<button class="main-button" type="button" data-action="save-note">問いを読み込む</button>`}
+    </section>
+  </div>`;
+}
+
+function renderUpdate() {
+  return `<div class="view reflection-view">
+    <header class="simple-head"><button class="back-button" type="button" data-nav="perspective" aria-label="問いに戻る">←</button><span>気づきを更新する</span></header>
+    <section class="reflection-card quiet-card">
+      <span class="screen-label">何が変わりましたか？</span>
+      <article class="evidence-card"><small>最初の気づき</small><p>${escapeHtml(state.note)}</p></article>
+      <blockquote class="reflection-question">${escapeHtml(state.perspective?.question || "もう一度見て、何が気になりましたか？")}</blockquote>
+      <label class="note-memory"><span>もう一度見たあとの気づき</span><textarea data-revisit-input maxlength="280" placeholder="新しく見えたこと、問いと違ったこと、変わらなかったこと。">${escapeHtml(state.revisitNote)}</textarea></label>
+      <p class="lens-footnote">変わらなかった、手がかりが見つからなかった、でも大丈夫です。</p>
+      <button class="main-button" type="button" data-action="finish-observation">ふたつの気づきを残す</button>
+    </section>
+  </div>`;
+}
+
+function renderObservationTrace(entry) {
+  const trace = entry.observationTrace;
+  if (!trace) return "";
+  const stance = { agree: "なるほどと思う", question: "違う気がする", own: "自分の見方で進む" }[trace.stance] || "回答なし";
+  return `<details class="observation-trace"><summary>まなざしの変化を見る</summary>
+    <small>最初の気づき</small><p>${escapeHtml(trace.firstNote)}</p>
+    <small>${trace.perspectiveKind === "ai" ? "AIからの問い" : "用意された問い"}</small><p>${escapeHtml(trace.question)}</p>
+    <small>問いの受け取り方</small><p>${stance}</p>
+    <small>再観察後の気づき</small><p>${escapeHtml(trace.reobserved ? trace.finalNote : "再観察は行っていません。")}</p>
+  </details>`;
+}
+
 function renderEncounter() {
   const gaze = currentGaze();
   const entry = activeEntry();
   return `<div class="view encounter-view">
     <header class="simple-head">
-      <button class="back-button" type="button" data-nav="note" aria-label="戻る">←</button>
+      <button class="back-button" type="button" data-nav="home" aria-label="まなざしへ戻る">←</button>
       <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
     <section class="encounter-card saved-card quiet-card">
@@ -340,6 +438,8 @@ function renderEncounter() {
         <strong>${lineBreak(entry.title)}</strong>
         <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
       </article>
+      ${renderObservationTrace(entry)}
+      <button class="outline-button" type="button" data-nav="map">地図でまなざしを見る</button>
       <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
     </section>
   </div>`;
@@ -443,6 +543,10 @@ function renderMap() {
         ${mapLink}
         <button class="map-borrow-button" type="button" data-action="borrow-gaze">このまなざしを借りる</button>
       </div>
+    </section>
+    <p class="lens-footnote">${hasLocation ? "地図は現在地を表示しています。下の記録は、この場所で書かれたものとは限りません。" : "地図上の点は配置イメージです。記録の実際の位置を示すものではありません。"}</p>
+    <section class="layered-gazes"><h2>重なるまなざし</h2><p>似た手がかりでも、気になるものは人それぞれ。</p>
+      ${allEntries().filter(item => item.category === entry.category).slice(0, 6).map(item => `<article class="layered-gaze ${item.id === entry.id ? "active" : ""}"><button type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"><small>${escapeHtml(item.category)} · ${item.id.startsWith("sample-") ? "体験例" : "共有された記録"}</small><p>${escapeHtml(item.title)}</p></button>${renderObservationTrace(item)}</article>`).join("")}
     </section>
   </div>`;
 }
@@ -583,6 +687,28 @@ function renderBook() {
 
 function handleAction(target) {
   const action = target.dataset.action;
+  if (action === "choose-gaze") {
+    if (gazes.some(item => item.id === target.dataset.gazeId)) {
+      state.gazeId = target.dataset.gazeId;
+      state.noteCategory = currentGaze().category;
+      state.borrowedManazashi = null;
+      state.perspective = null;
+      state.date = todayKey();
+      saveState();
+      render();
+    }
+    return;
+  }
+  if (action === "stance") {
+    state.stance = state.stance === target.dataset.stance ? "" : target.dataset.stance;
+    saveState();
+    render();
+    return;
+  }
+  if (action === "finish-observation") {
+    finishObservation(target.dataset.skip === "true");
+    return;
+  }
   if (action === "today") {
     rotateGaze();
     return;
@@ -862,6 +988,7 @@ function cloudEntry(entry) {
     image: typeof entry.image === "string" ? entry.image : "",
     x: Number.isFinite(Number(entry.x)) ? Number(entry.x) : 50,
     y: Number.isFinite(Number(entry.y)) ? Number(entry.y) : 48,
+    ...(entry.observationTrace ? { observationTrace: normalizeObservationTrace(entry.observationTrace) } : {}),
   };
 }
 
@@ -870,6 +997,12 @@ function normalizeSyncedEntry(entry) {
 }
 
 function navigate(view) {
+  if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
+    if (timerRemaining() > 0) return;
+    if (view === "note") state.observationSeconds = 30;
+    else state.reobserved = true;
+  }
+  if ((view === "revisit" || view === "update") && !state.perspective) return;
   state.view = view;
   state.notebookEditing = false;
   state.selectedEntryIds = [];
@@ -877,15 +1010,56 @@ function navigate(view) {
     state.incomingManazashi = null;
     state.borrowedManazashi = null;
   }
-  if (view === "pause") state.timerStartedAt = Date.now();
+  if (view === "pause" || view === "revisit") state.timerStartedAt = Date.now();
   saveState();
   render();
 }
 
-function saveNote() {
+async function saveNote() {
+  if (state.perspectiveLoading) return;
+  if (!state.note.trim()) {
+    showToast("あなたが気づいたことを、一語でも残してください。");
+    return;
+  }
+  const note = state.note.trim();
+  const gaze = currentGaze();
+  const requestId = ++perspectiveRequestId;
+  state.perspective = null;
+  state.stance = "";
+  state.revisitNote = "";
+  state.reobserved = false;
+  state.perspectiveLoading = true;
+  navigate("perspective");
+  const perspective = await requestPerspective(note, gaze, window.BASHO_PERSPECTIVE?.endpoint || "");
+  if (requestId !== perspectiveRequestId) return;
+  state.perspectiveLoading = false;
+  if (state.note.trim() === note && currentGaze().id === gaze.id) state.perspective = perspective;
+  saveState();
+  if (state.view === "perspective") render();
+}
+
+function normalizeObservationTrace(trace) {
+  return {
+    prompt: String(trace.prompt || ""), firstNote: String(trace.firstNote || ""),
+    finalNote: String(trace.finalNote || ""), question: String(trace.question || ""),
+    hypotheses: Array.isArray(trace.hypotheses) ? trace.hypotheses.map(String).slice(0, 3) : [],
+    perspectiveKind: trace.perspectiveKind === "ai" ? "ai" : "prepared",
+    stance: ["agree", "question", "own"].includes(trace.stance) ? trace.stance : "",
+    reobserved: trace.reobserved === true, observationSeconds: Number(trace.observationSeconds || 0),
+    revisitSeconds: trace.reobserved === true ? Number(trace.revisitSeconds || 0) : 0,
+  };
+}
+
+function finishObservation(skip = false) {
+  if (!["perspective", "update"].includes(state.view) || !state.perspective || state.perspectiveLoading) return;
+  if (!skip && (!state.reobserved || !state.revisitNote.trim())) {
+    showToast("もう一度見たあとの気づきを、一語でも残してください。");
+    return;
+  }
   const gaze = currentGaze();
   const now = Date.now();
-  const text = state.note.trim() || gaze.noteExample;
+  const firstNote = state.note.trim();
+  const text = skip ? firstNote : state.revisitNote.trim();
   const image = state.notePhoto || gaze.image;
   const entry = {
     id: `entry-${now}`,
@@ -897,12 +1071,24 @@ function saveNote() {
     image,
     x: 35 + ((now / 17) % 42),
     y: 28 + ((now / 29) % 48),
+    observationTrace: normalizeObservationTrace({
+      prompt: gaze.modernTask, firstNote, finalNote: skip ? "" : text,
+      question: state.perspective.question, hypotheses: state.perspective.hypotheses,
+      perspectiveKind: state.perspective.kind, stance: state.stance,
+      reobserved: !skip, observationSeconds: state.observationSeconds,
+      revisitSeconds: skip ? 0 : 30,
+    }),
   };
   state.entries.unshift(entry);
   state.entries = uniqueEntriesById(state.entries);
   state.activeEntryId = entry.id;
   state.note = "";
   state.notePhoto = "";
+  state.perspective = null;
+  state.revisitNote = "";
+  state.stance = "";
+  state.reobserved = false;
+  state.observationSeconds = 0;
   state.incomingManazashi = null;
   state.borrowedManazashi = null;
   saveEntriesOnly();
@@ -946,6 +1132,10 @@ function updateTimer() {
   const progress = 1 - remaining / 30;
   target.style.setProperty("--dash", Math.round(276 * progress));
   target.querySelector("strong").textContent = remaining;
+  const next = document.querySelector("[data-el='timer-next']");
+  if (next) next.disabled = remaining > 0;
+  const status = document.querySelector("[data-el='timer-status']");
+  if (status && !remaining) status.textContent = "観察の時間が終わりました。戻ったら記録へ。";
 }
 
 function timerRemaining() {
@@ -957,6 +1147,8 @@ function timerRemaining() {
 function ensureDaily() {
   const today = todayKey();
   const hasValidGaze = gazes.some((gaze) => gaze.id === state.gazeId);
+  // Keep an unfinished observation attached to its original task across midnight.
+  if (hasValidGaze && state.note.trim() && ["note", "perspective", "revisit", "update"].includes(state.view)) return;
   if (state.date === today && hasValidGaze) return;
   state.date = today;
   state.gazeId = gazes[dailyIndex(today)].id;
@@ -1056,11 +1248,12 @@ function entrySortTime(entry) {
 }
 
 function updateTabs() {
+  tabbar.hidden = ["pause", "revisit"].includes(state.view);
   document.querySelectorAll(".tab").forEach((tab) => {
     const nav = tab.dataset.nav;
     const active =
       state.view === nav ||
-      (["classic", "pause", "note", "encounter", "seeds"].includes(state.view) && nav === "home") ||
+      (["classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
       (["share", "book"].includes(state.view) && nav === "notebook");
     tab.classList.toggle("active", active);
   });
@@ -1170,12 +1363,19 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    const allowedViews = ["home", "classic", "pause", "note", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
     if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
     if (typeof state.notePhoto !== "string") state.notePhoto = "";
+    if (typeof state.note !== "string") state.note = "";
+    if (typeof state.revisitNote !== "string") state.revisitNote = "";
+    state.perspectiveLoading = false;
+    if (state.view === "perspective" && !state.perspective && state.note.trim()) {
+      state.perspective = preparedPerspective(state.note.trim(), state.gazeId);
+    }
+    if (["revisit", "update"].includes(state.view) && !state.perspective) state.view = "note";
     if (!state.currentLocation || typeof state.currentLocation.lat !== "number" || typeof state.currentLocation.lng !== "number") {
       state.currentLocation = null;
     }
@@ -1242,6 +1442,7 @@ function compactEntry(entry) {
     image: compactEntryImage(entry.image),
     x: entry.x,
     y: entry.y,
+    ...(entry.observationTrace ? { observationTrace: normalizeObservationTrace(entry.observationTrace) } : {}),
   };
 }
 
