@@ -222,3 +222,61 @@ test("study CSV preserves quotes and multiline notes and neutralizes spreadsheet
   assert.ok(csv.includes('"一行目\n""二行目"""'));
   assert.ok(csv.includes('"\'  @command"'));
 });
+
+test("study reflections and event times survive reload and export without entering shared entries", async () => {
+  const a = app();
+  a.state.studySettings = { condition: "B", participant: "P03", place: "場所1", order: "BA" };
+  a.navigate("pause"); a.advance(30000); a.navigate("note");
+  a.state.note = "壁の跡。"; await a.saveNote();
+  a.navigate("revisit"); a.advance(30000); a.navigate("update");
+  a.state.revisitNote = "雨の流れが見える。";
+  a.state.studyReflection = { stanceReason: "雨の跡という見方を確かめたかった。", placeMeaning: "壁が天気を覚えているように見えた。" };
+  // Navigating persists the draft, including the optional reflection.
+  a.navigate("update");
+  const b = app(a.storage);
+  assert.equal(b.state.studyReflection.placeMeaning, a.state.studyReflection.placeMeaning);
+  assert.equal(b.state.activeStudy.events.length, a.state.activeStudy.events.length);
+  b.finishObservation();
+  const record = b.state.studyRecords[0];
+  assert.equal(record.stanceReason, "雨の跡という見方を確かめたかった。");
+  assert.ok(record.events.some(event => event.action === "prepared-question-ready"));
+  assert.equal(record.events.at(-1).action, "saved-after-reobservation");
+  assert.equal(record.events[1].at - record.events[0].at, 30000);
+  assert.ok(record.events.every(event => Object.keys(event).sort().join() === "action,at,view"));
+  assert.equal("placeMeaning" in b.cloudEntry(b.state.entries[0]).observationTrace, false);
+  assert.match(b.studyCSV([record]), /壁が天気を覚えている/);
+  assert.match(b.studyCSV([record]), /saved-after-reobservation/);
+  assert.equal(app(b.storage).state.studyRecords[0].events.at(-1).action, "saved-after-reobservation");
+});
+
+test("a previous pending question cannot enter a new observation or block its request", async () => {
+  const pending = [];
+  const a = app(new Map(), () => new Promise(resolve => pending.push(resolve)));
+  a.navigate("pause"); a.advance(30000); a.navigate("note");
+  a.state.note = "同じ記録。"; const oldRequest = a.saveNote();
+  assert.equal(a.state.perspectiveLoading, true);
+  a.navigate("home"); a.navigate("pause");
+  assert.equal(a.state.perspectiveLoading, false);
+  a.advance(30000); a.navigate("note");
+  const newRequest = a.saveNote();
+  assert.equal(pending.length, 2);
+  pending[0]({ kind: "ai", hypotheses: ["古い仮説"], question: "古い問い？" });
+  await oldRequest;
+  assert.equal(a.state.perspective, null);
+  assert.equal(a.state.perspectiveLoading, true);
+  pending[1]({ kind: "ai", hypotheses: ["新しい仮説"], question: "新しい問い？" });
+  await newRequest;
+  assert.equal(a.state.perspective.question, "新しい問い？");
+  assert.equal(a.state.perspectiveLoading, false);
+});
+
+test("normal observation stays free of study questions and optional reflection text is escaped", async () => {
+  const a = app(); a.state.note = "壁"; await a.saveNote();
+  a.navigate("revisit"); a.advance(30000); a.navigate("update");
+  assert.doesNotMatch(a.screen.innerHTML, /data-study-reflection/);
+  a.state.activeStudy = { condition: "B", events: [] };
+  a.state.studyReflection.stanceReason = '</textarea><script>alert(1)</script>';
+  a.render();
+  assert.doesNotMatch(a.screen.innerHTML, /<script>/);
+  assert.match(a.screen.innerHTML, /&lt;script&gt;/);
+});

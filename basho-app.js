@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { requestPerspective, preparedPerspective } from "./perspective.js?v=35";
-import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=35";
+import { requestPerspective, preparedPerspective } from "./perspective.js?v=36";
+import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=36";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -192,6 +192,7 @@ const state = {
   studySettings: { condition: "off", participant: "", place: "", order: "AB" },
   activeStudy: null,
   studyRecords: [],
+  studyReflection: { stanceReason: "", placeMeaning: "" },
 };
 let perspectiveRequestId = 0;
 
@@ -215,6 +216,13 @@ screen.addEventListener("click", (event) => {
 });
 
 screen.addEventListener("input", (event) => {
+  if (event.target.matches("[data-study-reflection]")) {
+    const key = event.target.dataset.studyReflection;
+    if (["stanceReason", "placeMeaning"].includes(key)) {
+      state.studyReflection[key] = event.target.value.slice(0, 280);
+      saveState();
+    }
+  }
   if (event.target.matches("[data-note-input]")) {
     state.note = event.target.value.slice(0, 280);
     state.perspective = null;
@@ -277,6 +285,17 @@ function renderHome() {
       <span class="source-badge">観察 → 記録 → 問い返し → 再観察</span>
       <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
+    <section class="experience-guide" aria-label="観察の流れ">
+      <h2>自分のまなざしから、もう一度。</h2>
+      <ol>
+        <li><strong>お題を受け取る</strong><span>気になるお題をひとつ選ぶ。</span></li>
+        <li><strong>30秒、観察する</strong><span>スマホを下ろし、自分の感覚で。</span></li>
+        <li><strong>自分の言葉で記録する</strong><span>俳句にせず、一語や一文でも。</span></li>
+        <li><strong>別の見方に出会う</strong><span>問いに同意しても、疑っても大丈夫。</span></li>
+        <li><strong>同じ場所を、もう一度見る</strong><span>気づきの変化を残し、地図で見比べる。</span></li>
+      </ol>
+      <p>比較実験の条件Aでは、最初の記録で終了します。</p>
+    </section>
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
@@ -288,6 +307,7 @@ function renderHome() {
       <label>体験する順序<select data-study-order><option value="AB" ${state.studySettings.order === "AB" ? "selected" : ""}>A → B</option><option value="BA" ${state.studySettings.order === "BA" ? "selected" : ""}>B → A</option></select></label>
       <button class="outline-button" type="button" data-action="set-study">次の観察に設定を適用</button>
       <p>現在：${state.studySettings.condition === "off" ? "通常の体験" : `条件${escapeHtml(state.studySettings.condition)}`}。実験の記録はこのブラウザに保存し、共有句帳には送りません。設定は観察開始時に固定されます。</p>
+      <p>実験中は、画面の移動・問いの表示・保存などの時刻も端末内に記録します。再観察後には、問いをどう受け取ったかと、場所の意味の変化を任意で残せます。入力途中の文章は操作ログに含めません。</p>
       <p>AI未接続時のBは「用意された問い」の体験です。AIの効果を比較する本実験には、AI接続と生成結果の確認が必要です。書き出しにも問いの種別を記録します。</p>
       <button class="outline-button" type="button" data-action="export-study" ${state.studyRecords.length ? "" : "disabled"}>実験記録をCSVに書き出す（${state.studyRecords.length}件）</button>
     </details>
@@ -436,6 +456,10 @@ function renderUpdate() {
       <blockquote class="reflection-question">${escapeHtml(state.perspective?.question || "もう一度見て、何が気になりましたか？")}</blockquote>
       <label class="note-memory"><span>もう一度見たあとの気づき</span><textarea data-revisit-input maxlength="280" placeholder="新しく見えたこと、問いと違ったこと、変わらなかったこと。">${escapeHtml(state.revisitNote)}</textarea></label>
       <p class="lens-footnote">変わらなかった、手がかりが見つからなかった、でも大丈夫です。</p>
+      ${state.activeStudy ? `<details class="study-reflection"><summary>体験を振り返る（任意・この端末にだけ保存）</summary>
+        <label>問いを受け入れた・疑った・使わなかった理由<textarea data-study-reflection="stanceReason" maxlength="280" placeholder="自分の手がかりと合っていた？ 違っていた？">${escapeHtml(state.studyReflection.stanceReason)}</textarea></label>
+        <label>この場所は、体験する前と比べてどう見えますか？<textarea data-study-reflection="placeMeaning" maxlength="280" placeholder="変わったこと、変わらなかったことを自分の言葉で。">${escapeHtml(state.studyReflection.placeMeaning)}</textarea></label>
+      </details>` : ""}
       <button class="main-button" type="button" data-action="finish-observation">ふたつの気づきを残す</button>
     </section>
   </div>`;
@@ -1038,6 +1062,12 @@ function normalizeSyncedEntry(entry) {
   return cloudEntry(entry);
 }
 
+function logStudyEvent(action, view = state.view) {
+  if (!state.activeStudy) return;
+  const events = state.activeStudy.events || (state.activeStudy.events = []);
+  events.push({ action, view, at: Date.now() });
+}
+
 function navigate(view) {
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
@@ -1053,7 +1083,11 @@ function navigate(view) {
     state.borrowedManazashi = null;
   }
   if (view === "pause") {
-    state.activeStudy = state.studySettings.condition === "off" ? null : { ...normalizeStudy(state.studySettings), startedAt: Date.now() };
+    // Invalidate an older response before starting a fresh observation.
+    perspectiveRequestId++;
+    state.perspectiveLoading = false;
+    state.studyReflection = { stanceReason: "", placeMeaning: "" };
+    state.activeStudy = state.studySettings.condition === "off" ? null : { ...normalizeStudy(state.studySettings), startedAt: Date.now(), events: [] };
     state.observationSeconds = 0;
     state.perspective = null;
     state.stance = "";
@@ -1061,6 +1095,7 @@ function navigate(view) {
     state.revisitNote = "";
   }
   if (view === "pause" || view === "revisit") state.timerStartedAt = Date.now();
+  logStudyEvent("view", view);
   saveState();
   render();
 }
@@ -1081,10 +1116,15 @@ async function saveNote() {
   state.reobserved = false;
   state.perspectiveLoading = true;
   navigate("perspective");
+  logStudyEvent("question-requested");
+  saveState();
   const perspective = await requestPerspective(note, gaze, state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint || "");
   if (requestId !== perspectiveRequestId) return;
   state.perspectiveLoading = false;
-  if (state.note.trim() === note && currentGaze().id === gaze.id) state.perspective = perspective;
+  if (state.note.trim() === note && currentGaze().id === gaze.id) {
+    state.perspective = perspective;
+    logStudyEvent(perspective.kind === "ai" ? "ai-question-ready" : "prepared-question-ready");
+  }
   saveState();
   if (state.view === "perspective") render();
 }
@@ -1136,9 +1176,12 @@ function finishObservation(skip = false) {
     }),
   };
   if (state.activeStudy) {
-    state.studyRecords.push({ ...state.activeStudy, entryId: entry.id, savedAt: now, category: entry.category, ...entry.observationTrace });
+    logStudyEvent(skip ? "saved-without-reobservation" : "saved-after-reobservation");
+    state.studyRecords.push({ ...state.activeStudy, entryId: entry.id, savedAt: now, category: entry.category,
+      ...entry.observationTrace, ...state.studyReflection });
   }
   state.activeStudy = null;
+  state.studyReflection = { stanceReason: "", placeMeaning: "" };
   state.entries.unshift(entry);
   state.entries = uniqueEntriesById(state.entries);
   state.activeEntryId = entry.id;
@@ -1430,7 +1473,10 @@ function loadState() {
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);
     if (!Array.isArray(state.studyRecords)) state.studyRecords = [];
-    if (state.activeStudy) state.activeStudy = { ...normalizeStudy(state.activeStudy), startedAt: Number(state.activeStudy.startedAt || 0) };
+    if (state.activeStudy) state.activeStudy = { ...normalizeStudy(state.activeStudy), startedAt: Number(state.activeStudy.startedAt || 0),
+      events: Array.isArray(state.activeStudy.events) ? state.activeStudy.events : [] };
+    state.studyReflection = { stanceReason: String(state.studyReflection?.stanceReason || "").slice(0, 280),
+      placeMeaning: String(state.studyReflection?.placeMeaning || "").slice(0, 280) };
     if (!Array.isArray(state.selectedEntryIds)) state.selectedEntryIds = [];
     if (!Array.isArray(state.deletedEntryIds)) state.deletedEntryIds = [];
     if (typeof state.notePhoto !== "string") state.notePhoto = "";
@@ -1597,9 +1643,9 @@ function normalizeStudy(value = {}) {
 }
 
 function studyCSV(records) {
-  const columns = ["entryId", "participant", "condition", "order", "place", "startedAt", "savedAt", "prompt", "category", "firstNote", "perspectiveKind", "question", "hypotheses", "stance", "reobserved", "observationSeconds", "revisitSeconds", "finalNote"];
+  const columns = ["entryId", "participant", "condition", "order", "place", "startedAt", "savedAt", "prompt", "category", "firstNote", "perspectiveKind", "question", "hypotheses", "stance", "reobserved", "observationSeconds", "revisitSeconds", "finalNote", "stanceReason", "placeMeaning", "events"];
   const cell = value => {
-    let text = Array.isArray(value) ? value.join(" / ") : String(value ?? "");
+    let text = Array.isArray(value) ? (value.some(item => typeof item === "object") ? JSON.stringify(value) : value.join(" / ")) : String(value ?? "");
     // Keep user text from being executed as a spreadsheet formula.
     if (/^[\s]*[=+@-]/.test(text)) text = "'" + text;
     return '"' + text.replace(/"/g, '""') + '"';

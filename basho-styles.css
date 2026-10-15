@@ -3356,3 +3356,16 @@ button {
 .place-pin.active { background: #243c35; color: white; z-index: 2; }
 .map-credit { position: absolute; bottom: 0; right: 0; background: #fffffff0; padding: 4px 6px; color: #243c35; font: 10px sans-serif; z-index: 3; }
 .place-map-empty { padding: 30px 20px; border: 1px dashed #beb8a8; border-radius: 18px; line-height: 1.8; }
+
+
+/* The overview is read before observing; no new controls during the pause. */
+.experience-guide { margin: 20px 0; padding: 20px; border: 1px solid #d6cebc; border-radius: 14px; }
+.experience-guide h2 { margin: 0 0 16px; font-size: 17px; line-height: 1.7; }
+.experience-guide ol { margin: 0; padding-left: 24px; }
+.experience-guide li { margin: 12px 0; padding-left: 4px; }
+.experience-guide strong, .experience-guide span { display: block; line-height: 1.7; font-size: 13px; }
+.experience-guide span, .experience-guide p { font-size: 12px; line-height: 1.8; }
+.study-reflection { margin: 18px 0; padding: 16px; border: 1px solid #d6cebc; border-radius: 14px; font-size: 13px; line-height: 1.8; }
+.study-reflection label { display: block; margin-top: 16px; }
+.study-reflection textarea { display: block; width: 100%; box-sizing: border-box; min-height: 100px; margin-top: 8px; padding: 12px; border: 1px solid #b8b2a2; border-radius: 8px; background: #fffdf7; color: #282b25; font: inherit; resize: vertical; }
+.study-reflection summary { cursor: pointer; }
