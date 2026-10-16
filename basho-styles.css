@@ -3369,3 +3369,9 @@ button {
 .study-reflection label { display: block; margin-top: 16px; }
 .study-reflection textarea { display: block; width: 100%; box-sizing: border-box; min-height: 100px; margin-top: 8px; padding: 12px; border: 1px solid #b8b2a2; border-radius: 8px; background: #fffdf7; color: #282b25; font: inherit; resize: vertical; }
 .study-reflection summary { cursor: pointer; }
+
+.basic-experience ol { list-style: none; padding: 0; counter-reset: experience; }
+.basic-experience li { counter-increment: experience; position: relative; padding-left: 36px; }
+.basic-experience li::before { content: "0" counter(experience); position: absolute; left: 0; top: 2px; color: #6a735b; font-size: 13px; }
+.experience-guide summary { cursor: pointer; font-size: 14px; line-height: 1.8; }
+.study-reflection h2 { font-size: 17px; line-height: 1.7; }

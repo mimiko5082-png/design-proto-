@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { requestPerspective, preparedPerspective } from "./perspective.js?v=36";
-import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=36";
+import { requestPerspective, preparedPerspective } from "./perspective.js?v=37";
+import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=37";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -216,6 +216,9 @@ screen.addEventListener("click", (event) => {
 });
 
 screen.addEventListener("input", (event) => {
+  if (event.target.matches("[data-completed-reflection]")) {
+    updateStudyReflection(event.target.dataset.entryId, event.target.dataset.completedReflection, event.target.value);
+  }
   if (event.target.matches("[data-study-reflection]")) {
     const key = event.target.dataset.studyReflection;
     if (["stanceReason", "placeMeaning"].includes(key)) {
@@ -285,7 +288,16 @@ function renderHome() {
       <span class="source-badge">観察 → 記録 → 問い返し → 再観察</span>
       <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
-    <section class="experience-guide" aria-label="観察の流れ">
+    <section class="experience-guide basic-experience" aria-label="基本の4段階">
+      <h2>いつもの街を見る、4つのステップ</h2>
+      <ol>
+        <li><strong>お題を受け取る</strong><span>見過ごしていたものに目を向ける。</span></li>
+        <li><strong>30秒観察する</strong><span>スマホを下ろして、目や耳や肌で。</span></li>
+        <li><strong>気づきを記録する</strong><span>自分の言葉を先に残す。問い返しと比べ、もう一度見る。</span></li>
+        <li><strong>地図で共有する</strong><span>場所を任意で添え、同じ場所の異なるまなざしに出会う。</span></li>
+      </ol>
+    </section>
+    <details class="experience-guide"><summary>記録と問い返しの進め方</summary>
       <h2>自分のまなざしから、もう一度。</h2>
       <ol>
         <li><strong>お題を受け取る</strong><span>気になるお題をひとつ選ぶ。</span></li>
@@ -294,8 +306,8 @@ function renderHome() {
         <li><strong>別の見方に出会う</strong><span>問いに同意しても、疑っても大丈夫。</span></li>
         <li><strong>同じ場所を、もう一度見る</strong><span>気づきの変化を残し、地図で見比べる。</span></li>
       </ol>
-      <p>比較実験の条件Aでは、最初の記録で終了します。</p>
-    </section>
+      <p>比較実験の条件Aでは、最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
+    </details>
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
@@ -305,6 +317,7 @@ function renderHome() {
       <label>参加者コード（本名を使わない）<input data-study-participant maxlength="40" value="${escapeAttr(state.studySettings.participant)}" placeholder="P01" /></label>
       <label>場所の呼び名<input data-study-place maxlength="80" value="${escapeAttr(state.studySettings.place)}" placeholder="場所1" /></label>
       <label>体験する順序<select data-study-order><option value="AB" ${state.studySettings.order === "AB" ? "selected" : ""}>A → B</option><option value="BA" ${state.studySettings.order === "BA" ? "selected" : ""}>B → A</option></select></label>
+      <label class="study-reflection">観察前、この場所はどんな場所に感じますか？（任意）<textarea data-study-before maxlength="280" placeholder="いつも通り過ぎる道、落ち着く場所など。次の観察にだけ保存します。">${escapeHtml(state.studySettings.beforePlaceMeaning || "")}</textarea></label>
       <button class="outline-button" type="button" data-action="set-study">次の観察に設定を適用</button>
       <p>現在：${state.studySettings.condition === "off" ? "通常の体験" : `条件${escapeHtml(state.studySettings.condition)}`}。実験の記録はこのブラウザに保存し、共有句帳には送りません。設定は観察開始時に固定されます。</p>
       <p>実験中は、画面の移動・問いの表示・保存などの時刻も端末内に記録します。再観察後には、問いをどう受け取ったかと、場所の意味の変化を任意で残せます。入力途中の文章は操作ログに含めません。</p>
@@ -477,6 +490,31 @@ function renderObservationTrace(entry) {
   </details>`;
 }
 
+function renderCompletedStudyReflection(entry) {
+  const record = state.studyRecords.find(item => item.entryId === entry.id);
+  if (!record) return "";
+  return `<section class="study-reflection" aria-label="体験後の振り返り">
+    <h2>この場所は、どう見えましたか？</h2>
+    <p>条件${escapeHtml(record.condition)}の振り返りです。入力は自動保存され、この端末の実験CSVにだけ含まれます。</p>
+    ${record.beforePlaceMeaning ? `<article class="evidence-card"><small>観察前の場所の印象</small><p>${escapeHtml(record.beforePlaceMeaning)}</p></article>` : ""}
+    <label>体験する前と比べて、この場所の見え方は変わりましたか？（任意）
+      <textarea data-completed-reflection="placeMeaning" data-entry-id="${escapeAttr(entry.id)}" maxlength="280" placeholder="新しく気づいたこと、変わらなかったこと。">${escapeHtml(record.placeMeaning || "")}</textarea>
+    </label>
+    ${record.perspectiveKind !== "none" ? `<label>問いを受け入れた・疑った・使わなかった理由（任意）
+      <textarea data-completed-reflection="stanceReason" data-entry-id="${escapeAttr(entry.id)}" maxlength="280" placeholder="自分が見た手がかりと、問いの見方を比べて。">${escapeHtml(record.stanceReason || "")}</textarea>
+    </label>` : ""}
+  </section>`;
+}
+
+function updateStudyReflection(entryId, key, value) {
+  if (!["placeMeaning", "stanceReason"].includes(key)) return;
+  const record = state.studyRecords.find(item => item.entryId === entryId);
+  if (!record || (key === "stanceReason" && record.perspectiveKind === "none")) return;
+  record[key] = String(value).slice(0, 280);
+  record.reflectionUpdatedAt = Date.now();
+  saveState();
+}
+
 function renderEncounter() {
   const gaze = currentGaze();
   const entry = activeEntry();
@@ -494,6 +532,7 @@ function renderEncounter() {
         <small>${escapeHtml(entry.date)}　${escapeHtml(entry.category)}</small>
       </article>
       ${renderObservationTrace(entry)}
+      ${renderCompletedStudyReflection(entry)}
       <button class="outline-button" type="button" data-nav="map">地図でまなざしを見る</button>
       <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
     </section>
@@ -774,6 +813,7 @@ function handleAction(target) {
       participant: document.querySelector("[data-study-participant]").value,
       place: document.querySelector("[data-study-place]").value,
       order: document.querySelector("[data-study-order]").value,
+      beforePlaceMeaning: document.querySelector("[data-study-before]").value,
     });
     saveState(); render(); showToast("次の観察の条件を設定しました。"); return;
   }
@@ -1088,6 +1128,7 @@ function navigate(view) {
     state.perspectiveLoading = false;
     state.studyReflection = { stanceReason: "", placeMeaning: "" };
     state.activeStudy = state.studySettings.condition === "off" ? null : { ...normalizeStudy(state.studySettings), startedAt: Date.now(), events: [] };
+    state.studySettings.beforePlaceMeaning = "";
     state.observationSeconds = 0;
     state.perspective = null;
     state.stance = "";
@@ -1639,11 +1680,12 @@ function escapeAttr(value) {
 function normalizeStudy(value = {}) {
   return { condition: ["A", "B"].includes(value?.condition) ? value.condition : "off",
     participant: String(value?.participant || "").trim().slice(0, 40),
+    beforePlaceMeaning: String(value?.beforePlaceMeaning || "").trim().slice(0, 280),
     place: String(value?.place || "").trim().slice(0, 80), order: value?.order === "BA" ? "BA" : "AB" };
 }
 
 function studyCSV(records) {
-  const columns = ["entryId", "participant", "condition", "order", "place", "startedAt", "savedAt", "prompt", "category", "firstNote", "perspectiveKind", "question", "hypotheses", "stance", "reobserved", "observationSeconds", "revisitSeconds", "finalNote", "stanceReason", "placeMeaning", "events"];
+  const columns = ["entryId", "participant", "condition", "order", "place", "startedAt", "savedAt", "prompt", "category", "firstNote", "perspectiveKind", "question", "hypotheses", "stance", "reobserved", "observationSeconds", "revisitSeconds", "finalNote", "stanceReason", "placeMeaning", "events", "beforePlaceMeaning", "reflectionUpdatedAt"];
   const cell = value => {
     let text = Array.isArray(value) ? (value.some(item => typeof item === "object") ? JSON.stringify(value) : value.join(" / ")) : String(value ?? "");
     // Keep user text from being executed as a spreadsheet formula.

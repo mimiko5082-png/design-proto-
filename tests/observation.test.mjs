@@ -22,7 +22,7 @@ function app(storage = new Map(), perspectiveRequester = requestPerspective) {
     navigator: {}, console: { warn() {}, error() {} }, Date: Clock, URL, URLSearchParams,
     setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective: perspectiveRequester, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,
   });
-  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace,studyCSV,saveEntryToFirebase};", context);
+  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace,studyCSV,saveEntryToFirebase,updateStudyReflection};", context);
   return { ...context.api, storage, screen, tabbar, advance: ms => { now += ms; } };
 }
 
@@ -276,6 +276,56 @@ test("normal observation stays free of study questions and optional reflection t
   assert.doesNotMatch(a.screen.innerHTML, /data-study-reflection/);
   a.state.activeStudy = { condition: "B", events: [] };
   a.state.studyReflection.stanceReason = '</textarea><script>alert(1)</script>';
+  a.render();
+  assert.doesNotMatch(a.screen.innerHTML, /<script>/);
+  assert.match(a.screen.innerHTML, /&lt;script&gt;/);
+});
+
+
+test("both study conditions retain before/after place meaning locally and export it", async () => {
+  for (const condition of ["A", "B"]) {
+    const a = app();
+    a.state.studySettings = { condition, participant: "P04", place: "道", order: "AB", beforePlaceMeaning: "通り過ぎるだけの道" };
+    a.navigate("pause");
+    assert.equal(a.state.studySettings.beforePlaceMeaning, "");
+    a.advance(30000); a.navigate("note");
+    a.state.note = "壁の跡"; await a.saveNote();
+    if (condition === "B") a.finishObservation(true);
+    const entry = a.state.entries[0];
+    assert.match(a.screen.innerHTML, /通り過ぎるだけの道/);
+    assert.match(a.screen.innerHTML, /data-completed-reflection="placeMeaning"/);
+    assert.equal(a.screen.innerHTML.includes('data-completed-reflection="stanceReason"'), condition === "B");
+    a.updateStudyReflection(entry.id, "placeMeaning", "雨の流れに気づける道");
+    a.updateStudyReflection(entry.id, "stanceReason", "問いと違う手がかりを見た");
+    const restored = app(a.storage);
+    const record = restored.state.studyRecords[0];
+    assert.equal(record.beforePlaceMeaning, "通り過ぎるだけの道");
+    assert.equal(record.placeMeaning, "雨の流れに気づける道");
+    assert.equal(Boolean(record.stanceReason), condition === "B");
+    assert.ok(record.reflectionUpdatedAt);
+    const csv = restored.studyCSV([record]);
+    assert.match(csv, /通り過ぎるだけの道/);
+    assert.match(csv, /雨の流れに気づける道/);
+    assert.equal("beforePlaceMeaning" in a.cloudEntry(entry), false);
+    assert.equal("placeMeaning" in a.cloudEntry(entry).observationTrace, false);
+    a.navigate("home"); a.navigate("pause");
+    assert.equal(a.state.activeStudy.beforePlaceMeaning, "");
+  }
+});
+
+test("post-study editing is bounded, escaped and cannot change study identity", async () => {
+  const a = app();
+  a.state.studySettings = { condition: "A", participant: "P05", place: "道", order: "BA" };
+  a.navigate("pause"); a.advance(30000); a.navigate("note");
+  a.state.note = "光"; await a.saveNote();
+  const id = a.state.entries[0].id;
+  a.updateStudyReflection(id, "participant", "changed");
+  a.updateStudyReflection("unknown", "placeMeaning", "wrong record");
+  assert.equal(a.state.studyRecords[0].participant, "P05");
+  assert.equal(a.state.studyRecords[0].placeMeaning, "");
+  a.updateStudyReflection(id, "placeMeaning", "x".repeat(300));
+  assert.equal(a.state.studyRecords[0].placeMeaning.length, 280);
+  a.updateStudyReflection(id, "placeMeaning", '</textarea><script>alert(1)</script>');
   a.render();
   assert.doesNotMatch(a.screen.innerHTML, /<script>/);
   assert.match(a.screen.innerHTML, /&lt;script&gt;/);
