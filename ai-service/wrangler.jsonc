@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "basho-perspective",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-16",
+  "workers_dev": true,
+  "vars": {
+    "OPENAI_MODEL": "gpt-4.1-mini",
+    "ALLOWED_ORIGIN": "https://mimiko5082-png.github.io"
+  }
+}
