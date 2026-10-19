@@ -23,7 +23,7 @@ function app(storage = new Map(), perspectiveRequester = requestPerspective) {
     navigator: {}, console: { warn() {}, error() {} }, Date: Clock, URL, URLSearchParams,
     setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective: perspectiveRequester, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,
   });
-  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderMap,renderObservationTrace,studyCSV,saveEntryToFirebase,updateStudyReflection};", context);
+  vm.runInContext(source + "\nglobalThis.api={state,navigate,saveNote,finishObservation,cloudEntry,compactEntry,render,renderEntry,renderObservationTrace,studyCSV,saveEntryToFirebase,updateStudyReflection};", context);
   return { ...context.api, storage, screen, tabbar, advance: ms => { now += ms; } };
 }
 
@@ -107,12 +107,12 @@ test("malformed AI responses fall back instead of being marked as AI", async () 
   assert.equal(result.kind, "prepared");
 });
 
-test("old entries still load and maps distinguish examples from location data", () => {
+test("old notebook entries open directly without a map or location permission", () => {
   const a = app(); a.state.entries = [{ id: "entry-old", title: "昔の記録", category: "音" }];
   a.state.activeEntryId = "entry-old";
-  assert.match(a.renderMap(), /昔の記録/); assert.match(a.renderMap(), /地図に配置しません/);
-  a.state.currentLocation = { lat: 35, lng: 139 };
-  assert.match(a.renderMap(), /場所が付いていません/);
+  assert.match(a.renderEntry(), /昔の記録/);
+  assert.doesNotMatch(a.renderEntry(), /tile.openstreetmap|request-location|地図/);
+  a.navigate("entry"); assert.match(a.screen.innerHTML, /昔の記録/);
 });
 
 const origin = "https://mimiko5082-png.github.io";
@@ -161,23 +161,13 @@ test("public place is rounded and survives cloud serialization; old entries neve
   assert.equal(a.cloudEntry({id: "old"}).place, undefined);
   for (const value of [{lat: NaN, lng: 139}, {lat: 90, lng: 139}, {lat: "35", lng: 139}]) assert.equal(normalizePlace(value), null);
 });
-test("map places only located entries and groups by distance, not category", () => {
-  const a = app();
-  a.state.entries = [
-    {id:"entry-a", title:"光", category:"光", place:{lat:35, lng:139}},
-    {id:"entry-b", title:"音", category:"音", place:{lat:35.001, lng:139}},
-    {id:"entry-c", title:"遠い記録", category:"光", place:{lat:36, lng:139}},
-    {id:"entry-d", title:"場所なし", category:"光"}
-  ];
-  a.state.activeEntryId = "entry-a";
-  const html = a.renderMap();
-  assert.match(html, /この場所のまなざし · 2件/);
-  assert.equal(mapGeometry({lat:35,lng:139}, a.state.entries).pins.length, 2);
-  assert.ok(distanceMeters({lat:35,lng:139}, {lat:35.001,lng:139}) < 200);
-  assert.doesNotMatch(html, /iframe/);
+test("legacy map navigation migrates to the reading calendar", () => {
+  const a = app(); a.navigate("map");
+  assert.equal(a.state.view, "calendar");
+  assert.match(a.screen.innerHTML, /basho-reading mode="calendar"/);
+  const reloaded = app(a.storage);
+  assert.equal(reloaded.state.view, "calendar");
 });
-
-
 
 test("condition A saves after the first observation without contacting AI or sharing study identity", async () => {
   let calls = 0;

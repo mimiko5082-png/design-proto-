@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v40-daily-push";
+const CACHE_NAME = "basho-manazashi-v41-reading-garden";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,9 @@ const APP_SHELL = [
   "./basho-app.js",
   "./perspective.js",
   "./place.js",
+  "./tanka-catalog.js",
+  "./reading-store.js",
+  "./reading-garden.js",
   "./image-config.js",
   "./image-tools.js",
   "./image-service.js",
@@ -22,7 +25,6 @@ const APP_SHELL = [
   "./assets/kotoba-forest.png",
   "./assets/kotoba-lake.png",
   "./assets/kotoba-sunset.png",
-  "./assets/kotoba-map.png",
   "./assets/kotoba-icon-192.png",
   "./assets/kotoba-icon-512.png",
   "./assets/apple-touch-icon.png"

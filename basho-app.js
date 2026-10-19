@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { requestPerspective, preparedPerspective } from "./perspective.js?v=39";
-import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=39";
+import { normalizePlace } from "./place.js?v=39";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -262,7 +262,9 @@ function render() {
     update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
-    map: renderMap,
+    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>`,
+    garden: () => `<div class="view"><basho-reading mode="garden"></basho-reading></div>`,
+    entry: renderEntry,
     notebook: renderNotebook,
     share: renderShare,
     book: renderBook,
@@ -279,6 +281,7 @@ function renderHome() {
       <button class="round-button basho-mark-button" type="button" aria-label="芭蕉">芭</button>
       <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
     </header>
+    <basho-reading></basho-reading>
     <section class="manazashi-card source-home-card quiet-card">
       <span class="screen-label">今日のまなざし</span>
       <div class="ink-branch"></div>
@@ -296,7 +299,7 @@ function renderHome() {
         <li><strong>お題を受け取る</strong><span>見過ごしていたものに目を向ける。</span></li>
         <li><strong>30秒観察する</strong><span>スマホを下ろして、目や耳や肌で。</span></li>
         <li><strong>気づきを記録する</strong><span>自分の言葉を先に残す。問い返しと比べ、もう一度見る。</span></li>
-        <li><strong>地図で共有する</strong><span>場所を任意で添え、同じ場所の異なるまなざしに出会う。</span></li>
+        <li><strong>句帳で振り返る</strong><span>記録した気づきを読み返し、ほかの人の見方にも出会う。</span></li>
       </ol>
     </section>
     <details class="experience-guide"><summary>記録と問い返しの進め方</summary>
@@ -306,7 +309,7 @@ function renderHome() {
         <li><strong>30秒、観察する</strong><span>スマホを下ろし、自分の感覚で。</span></li>
         <li><strong>自分の言葉で記録する</strong><span>俳句にせず、一語や一文でも。</span></li>
         <li><strong>別の見方に出会う</strong><span>問いに同意しても、疑っても大丈夫。</span></li>
-        <li><strong>同じ場所を、もう一度見る</strong><span>気づきの変化を残し、地図で見比べる。</span></li>
+        <li><strong>同じ場所を、もう一度見る</strong><span>気づきの変化を残し、句帳で見比べる。</span></li>
       </ol>
       <p>比較実験の条件Aでは、最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
     </details>
@@ -421,12 +424,6 @@ function renderNote() {
       <p class="lens-footnote">俳句にしなくても大丈夫。見聞きしたことと、想像したことを自分の言葉で。</p>
       <button class="main-button" type="button" data-action="save-note">${state.activeStudy?.condition === "A" ? "この気づきを残す" : "別の見方に出会う"}</button>
       <p class="lens-footnote">${state.activeStudy?.condition === "A" ? "条件A：問い返しと再観察を行わず、記録をこの端末に残します。" : (state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint) ? "次へ進むと、お題と記録の文章をAIへ送ります。写真・位置情報は送りません。" : "現在は用意された問いを表示します。AIは未接続です。"}</p>
-      <section class="place-attach">
-        <strong>観察した場所（任意）</strong>
-        <p>現在地を約100m単位に丸めて添えます。${state.activeStudy ? "実験中はこの端末にだけ保存します。" : "保存すると、記録と場所が共有句帳に公開されます。"}AIには送りません。</p>
-        <button class="outline-button" type="button" data-action="attach-place" ${state.placeLoading ? "disabled" : ""}>${state.placeLoading ? "場所を取得中…" : state.observationPlace ? "場所を取り直す" : "この場所を地図に添える"}</button>
-        ${state.observationPlace ? `<p>添付済み · ${escapeHtml(String(state.observationPlace.lat))}, ${escapeHtml(String(state.observationPlace.lng))}</p><button type="button" data-action="remove-place">場所を外す</button>` : ""}
-      </section>
       <div class="memo-row photo-attach-row">
         <div>
           <strong>写真を添える</strong>
@@ -537,7 +534,7 @@ function renderEncounter() {
       </article>
       ${renderObservationTrace(entry)}
       ${renderCompletedStudyReflection(entry)}
-      <button class="outline-button" type="button" data-nav="map">地図でまなざしを見る</button>
+      <button class="outline-button" type="button" data-nav="notebook">句帳でまなざしを見る</button>
       <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
     </section>
   </div>`;
@@ -594,28 +591,9 @@ function renderSeeds() {
   </div>`;
 }
 
-function renderMap() {
+function renderEntry() {
   const entry = activeEntry();
-  const located = allEntries().filter(item => normalizePlace(item.place));
-  const center = normalizePlace(entry.place) || normalizePlace(state.currentLocation) || normalizePlace(located[0]?.place);
-  const nearby = center ? located.filter(item => distanceMeters(center, item.place) <= 200) : [];
-  const geometry = center ? mapGeometry(center, located) : null;
-  const map = geometry ? `<div class="place-map" aria-label="記録の観察場所の地図">
-    <svg viewBox="0 0 768 768" aria-hidden="true">${geometry.tiles.map(tile => `<image x="${tile.left}" y="${tile.top}" width="256" height="256" href="https://tile.openstreetmap.org/15/${tile.x}/${tile.y}.png"/>`).join("")}</svg>
-    ${geometry.pins.map(pin => `<button class="place-pin ${pin.id === entry.id ? "active" : ""}" style="left:${pin.x}%;top:${pin.y}%" type="button" data-action="open-entry" data-entry-id="${escapeAttr(pin.id)}" aria-label="${escapeAttr(pin.title)}">◎</button>`).join("")}
-    <a class="map-credit" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>
-  </div>` : `<div class="place-map-empty"><p>場所を添えた記録はまだありません。</p><p>観察後の記録画面で「この場所を地図に添える」を選んでください。</p></div>`;
-  return `<div class="view map-view">
-    <header class="map-head"><span>07　まなざしの地図</span><button class="round-button" type="button" data-action="request-location" aria-label="現在地を表示">⌖</button></header>
-    <section class="location-status-card"><div><strong>同じ場所に、いくつもの見方</strong><p>場所は約100m単位。ピンを選ぶと、その周辺の記録が重なります。</p></div><button type="button" data-action="request-location">現在地で見る</button></section>
-    ${map}
-    <p class="lens-footnote">地図画像はOpenStreetMapから取得します。通信できない場合も、下の記録は読めます。場所がない記録や体験例は地図に配置しません。</p>
-    <section class="layered-gazes"><h2>この場所のまなざし · ${nearby.length}件</h2><p>表示中心から約200m以内の記録。丸めた位置のため、同じベンチや建物とは限りません。</p>
-      ${nearby.length ? nearby.map(item => `<article class="layered-gaze ${item.id === entry.id ? "active" : ""}"><button type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}"><small>${escapeHtml(item.category)} · ${escapeHtml(item.date)}</small><p>${escapeHtml(item.title)}</p></button>${renderObservationTrace(item)}</article>`).join("") : "<p>この周辺には、まだ記録がありません。</p>"}
-    </section>
-    <section class="layered-gazes"><h2>すべての観察場所</h2>${located.map(item => `<button class="outline-button" type="button" data-action="open-entry" data-entry-id="${escapeAttr(item.id)}">${escapeHtml(item.title)}</button>`).join("")}</section>
-    ${!normalizePlace(entry.place) ? `<p class="lens-footnote">選択中の「${escapeHtml(entry.title)}」には場所が付いていません。</p>` : ""}
-  </div>`;
+  return `<div class="view entry-view"><header class="simple-head"><button class="back-button" type="button" data-nav="notebook" aria-label="句帳に戻る">←</button><span>まなざしの記録</span></header><section class="reflection-card quiet-card"><small>${escapeHtml(entry.date || entry.source || "")}</small><h1>${lineBreak(entry.title)}</h1><p>${escapeHtml(entry.body || entry.task || "")}</p>${renderObservationTrace(entry)}<button class="main-button" type="button" data-action="borrow-gaze">このまなざしで観察する</button></section></div>`;
 }
 
 function renderNotebook() {
@@ -656,7 +634,7 @@ function renderNotebook() {
     : "";
   return `<div class="view notebook-view ${state.notebookEditing ? "editing" : ""}">
     <header class="journal-head">
-      <button class="back-button" type="button" data-nav="map" aria-label="戻る">←</button>
+      <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
       <div>
         <span>08　わたしの句帳</span>
         <h1>わたしの句帳</h1>
@@ -796,7 +774,7 @@ function handleAction(target) {
       state.activeEntryId = seed.id;
       saveState();
     }
-    navigate("map");
+    navigate("entry");
     return;
   }
   if (action === "borrow-gaze") {
@@ -835,12 +813,6 @@ function handleAction(target) {
     window.BASHO_PERSPECTIVE = { endpoint: "" };
     saveState(); render(); showToast("この端末のAI接続を解除しました。"); return;
   }
-  if (action === "attach-place") { attachObservationPlace(); return; }
-  if (action === "remove-place") { state.observationPlace = null; saveState(); render(); return; }
-  if (action === "request-location") {
-    requestCurrentLocation();
-    return;
-  }
   if (action === "toggle-notebook-edit") {
     toggleNotebookEdit();
     return;
@@ -868,7 +840,7 @@ function handleAction(target) {
     }
     state.activeEntryId = target.dataset.entryId;
     saveState();
-    navigate("map");
+    navigate("entry");
   }
 }
 
@@ -911,8 +883,8 @@ async function deleteSelectedEntries() {
   state.deletedEntryIds = Array.from(new Set([...(state.deletedEntryIds || []), ...idsToDelete]));
   state.selectedEntryIds = [];
   state.notebookEditing = false;
-  if (!mapEntries().some((entry) => entry.id === state.activeEntryId)) {
-    state.activeEntryId = mapEntries()[0]?.id || "";
+  if (!detailEntries().some((entry) => entry.id === state.activeEntryId)) {
+    state.activeEntryId = detailEntries()[0]?.id || "";
   }
   saveEntriesOnly();
   saveState();
@@ -920,62 +892,6 @@ async function deleteSelectedEntries() {
 
   const deletedOnline = await deleteEntriesFromFirebase(idsToDelete);
   showToast(deletedOnline ? "削除をほかの端末にも反映しました。" : "句帳から削除しました。");
-}
-
-function attachObservationPlace() {
-  if (state.placeLoading) return;
-  if (!navigator.geolocation) { showToast("この端末では位置情報を使えません。"); return; }
-  state.placeLoading = true;
-  render();
-  navigator.geolocation.getCurrentPosition(position => {
-    state.placeLoading = false;
-    if (state.view !== "note") return;
-    state.observationPlace = normalizePlace({ lat: position.coords.latitude, lng: position.coords.longitude });
-    saveState(); render();
-    showToast("観察場所を添えました。保存すると共有されます。");
-  }, () => {
-    state.placeLoading = false; render(); showToast("場所を取得できませんでした。場所なしでも記録できます。");
-  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
-}
-
-function requestCurrentLocation() {
-  if (!navigator.geolocation) {
-    state.locationStatus = "error";
-    saveState();
-    showToast("この端末では現在地を使えません。");
-    render();
-    return;
-  }
-
-  state.locationStatus = "loading";
-  saveState();
-  render();
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      state.currentLocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: Math.round(position.coords.accuracy || 0),
-        updatedAt: Date.now(),
-      };
-      state.locationStatus = "ready";
-      saveState();
-      showToast("現在地を表示しました。");
-      render();
-    },
-    () => {
-      state.locationStatus = "error";
-      saveState();
-      showToast("位置情報を許可すると現在地を表示できます。");
-      render();
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000,
-    }
-  );
 }
 
 async function initFirebaseSync() {
@@ -1031,7 +947,7 @@ async function initFirebaseSync() {
         state.cloudUpdatedAt = Date.now();
         saveEntriesOnly();
         saveState();
-        if (state.view === "notebook" || state.view === "map") render();
+        if (state.view === "notebook" || state.view === "entry") render();
       },
       (error) => {
         console.error(error);
@@ -1113,6 +1029,7 @@ function logStudyEvent(action, view = state.view) {
 }
 
 function navigate(view) {
+  if (view === "map") view = "calendar";
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
     if (view === "note") state.observationSeconds = 30;
@@ -1362,13 +1279,13 @@ function allEntries() {
     .sort((a, b) => entrySortTime(b) - entrySortTime(a));
 }
 
-function mapEntries() {
+function detailEntries() {
   const deletedIds = new Set(state.deletedEntryIds || []);
   return [...state.entries, ...seeds, ...sampleEntries].filter((entry) => !deletedIds.has(entry.id));
 }
 
 function activeEntry() {
-  const entries = mapEntries();
+  const entries = detailEntries();
   return entries.find((entry) => entry.id === state.activeEntryId) || entries[0] || sampleEntries[0];
 }
 
@@ -1403,7 +1320,7 @@ function updateTabs() {
     const active =
       state.view === nav ||
       (["images", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
-      (["share", "book"].includes(state.view) && nav === "notebook");
+      (["share", "book", "entry"].includes(state.view) && nav === "notebook");
     tab.classList.toggle("active", active);
   });
 }
@@ -1513,7 +1430,8 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
+    if (state.view === "map") state.view = "calendar";
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "entry", "notebook", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);

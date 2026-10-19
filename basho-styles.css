@@ -3394,3 +3394,65 @@ basho-image-tools p, basho-image-tools small { line-height: 1.8; }
 .image-tool button:disabled { opacity: .55; cursor: wait; }
 .image-tool [role="status"], .image-analysis-result p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .image-tool .outline-button { display: block; text-align: center; margin-top: 12px; }
+
+/* 短歌・ことばの庭・読書カレンダー */
+basho-reading { display: block; }
+.reading-feature { color: #303e32; margin: 12px 0 30px; }
+.reading-feature button { cursor: pointer; font: inherit; }
+.reading-feature button:focus-visible, .reading-feature summary:focus-visible { outline: 3px solid #a87244; outline-offset: 3px; }
+.reading-eyebrow { font: 11px/1.6 sans-serif; letter-spacing: .12em; color: #687764; }
+.reading-growth { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; padding: 24px 18px; background: #eaf0e1; border: 1px solid #d6dfcd; border-radius: 22px; overflow: hidden; }
+.reading-growth h2 { font-size: 21px; margin: 10px 0 6px; }
+.reading-growth p { font-size: 12px; line-height: 1.8; margin: 0 0 8px; }
+.reading-growth small { font-size: 11px; line-height: 1.8; }
+.reading-tree { width: 100%; min-width: 0; height: auto; }
+.reading-xp { display: block; font-size: 30px; font-family: Georgia, serif; }
+.reading-progress { height: 6px; background: #d3ddc9; border-radius: 6px; margin: 8px 0; overflow: hidden; }
+.reading-progress i { display: block; height: 100%; background: #587653; border-radius: inherit; }
+.reading-intro { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 30px 2px 15px; }
+.reading-intro h2 { font-size: 24px; margin: 6px 0; }
+.reading-count { font-size: 11px; white-space: nowrap; padding: 6px 10px; border: 1px solid #c5cbbd; border-radius: 30px; }
+.reading-poem { background: #fffcf4; border: 1px solid #ded7c8; border-radius: 18px; padding: 24px; box-shadow: 0 5px 16px #64553a08; margin: 0 0 16px; }
+.reading-verse { font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif; font-size: 23px; line-height: 1.9; letter-spacing: .13em; margin: 22px 0; }
+.reading-verse span { display: block; }
+.reading-verse span:nth-child(even) { padding-left: 1em; }
+.reading-author { text-align: right; font-size: 13px; letter-spacing: .15em; }
+.reading-hint { border-top: 1px solid #e6e0d4; padding-top: 14px; font-size: 12px; line-height: 1.9; }
+.reading-hint summary, .reading-library summary { cursor: pointer; }
+.reading-feature .main-button { display: block; width: 100%; margin-top: 14px; }
+.reading-feedback { font-size: 13px; min-height: 24px; line-height: 1.7; padding: 10px 2px; color: #45613e; }
+.reading-library { border: 1px solid #d4d6c9; border-radius: 14px; padding: 16px; }
+.reading-library summary { font-size: 14px; }
+.reading-library summary small { float: right; font-size: 11px; }
+.reading-library button { display: flex; width: 100%; justify-content: space-between; align-items: center; text-align: left; gap: 8px; border: 0; border-bottom: 1px solid #e1dfd4; padding: 17px 2px; background: transparent; color: #394c39; }
+.reading-library button[aria-pressed="true"] { font-weight: bold; }
+.reading-library button small { font-size: 10px; text-align: right; }
+.reading-calendar-link { width: 100%; background: transparent; border: 0; padding: 20px 0 8px; color: #526c48; font-size: 13px!important; }
+.reading-help { font-size: 11px; line-height: 1.9; color: #717166; margin: 18px 2px 0; }
+.reading-heading { padding: 12px 0 26px; }
+.reading-heading h1 { font-size: 27px; margin: 10px 0; }
+.reading-heading p { font-size: 13px; }
+.reading-calendar { background: #fffcf4; border: 1px solid #ded7c8; padding: 16px 10px; border-radius: 20px; }
+.reading-month { display: flex; align-items: center; justify-content: space-between; }
+.reading-month h2 { font-size: 19px; }
+.reading-month button { width: 42px; height: 42px; border: 1px solid #d6dbce; background: #f0f3e8; border-radius: 50%; color: #455e42; }
+.reading-today { display: block; margin: 4px auto 16px; background: transparent; border: 0; text-decoration: underline; font-size: 12px!important; color: #526c48; padding: 8px; }
+.reading-week, .reading-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; text-align: center; }
+.reading-week { font-size: 11px; color: #7b7c71; padding-bottom: 10px; }
+.reading-days button { display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center; min-height: 52px; padding: 3px; background: transparent; border: 1px solid transparent; border-radius: 10px; color: #394b39; font-size: 14px; }
+.reading-days button small { font-size: 10px; color: #64785b; }
+.reading-days button.is-today { border-color: #849778; }
+.reading-days button.selected { background: #49664b; color: #fffdf5; }
+.reading-days button.selected small { color: #fffdf5; }
+.reading-date-records { margin-top: 26px; }
+.reading-date-records h2 { font-size: 18px; margin-bottom: 18px; }
+.reading-date-records h2 small { font-size: 12px; }
+.reading-date-records .reading-verse { font-size: 20px; }
+.reading-empty { padding: 24px 0; color: #7a7c70; line-height: 2; font-size: 13px; }
+.reading-stats { display: grid; grid-template-columns: repeat(3,1fr); text-align: center; margin: 24px 0; }
+.reading-stats p { font-size: 11px; }
+.reading-stats strong { display: block; font: 30px/1.6 Georgia, serif; }
+.reading-error { border: 1px solid #b77f63; padding: 14px; background: #fff0e6; font-size: 13px; line-height: 1.8; }
+.tabbar { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.tabbar .tab { min-width: 0; padding-left: 2px; padding-right: 2px; }
+@media (max-width: 360px) { .reading-growth { padding: 16px 12px; } .reading-growth h2 { font-size: 18px; } .reading-verse { font-size: 21px; } .tabbar .tab { font-size: 10px; } }
