@@ -32,6 +32,7 @@ try:
         errors, held, requests = [], [], []
         generation_calls = [0]
         page.on("pageerror", lambda error: errors.append(str(error)))
+        page.route("**/api/notifications/config", lambda route: route.fulfill(status=503, content_type="application/json", body='{}'))
         page.route("**/firebase-config.js*", lambda route: route.fulfill(content_type="application/javascript", body="window.BASHO_FIREBASE = {};"))
         # Throw if image tooling accidentally invokes a shared Firebase operation.
         def firebase(route):

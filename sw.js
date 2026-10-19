@@ -1,4 +1,5 @@
-const CACHE_NAME = "basho-manazashi-v39-free-ai";
+importScripts("./notification-push.js");
+const CACHE_NAME = "basho-manazashi-v40-daily-push";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +11,10 @@ const APP_SHELL = [
   "./image-tools.js",
   "./image-service.js",
   "./image-validation.js",
+  "./notification-config.js",
+  "./notification-settings.js",
+  "./notification-service.js",
+  "./notification-push.js",
   "./perspective-config.js",
   "./firebase-config.js",
   "./manifest.webmanifest",

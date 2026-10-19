@@ -4,11 +4,15 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-10-16",
   "workers_dev": true,
+  "triggers": { "crons": ["* * * * *"] },
   "ai": { "binding": "AI" },
   "ratelimits": [
-    { "name": "IMAGE_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } }
+    { "name": "IMAGE_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } },
+    { "name": "PUSH_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
   ],
   "vars": {
-    "ALLOWED_ORIGIN": "https://mimiko5082-png.github.io"
+    "ALLOWED_ORIGIN": "https://mimiko5082-png.github.io",
+    "NOTIFY_START_HOUR": "9",
+    "NOTIFY_END_HOUR": "21"
   }
 }

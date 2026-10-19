@@ -3377,6 +3377,11 @@ button {
 .study-reflection h2 { font-size: 17px; line-height: 1.7; }
 
 basho-image-tools { display: block; }
+basho-notifications { display: block; }
+.daily-notifications h2 { font-size: 17px; line-height: 1.7; }
+.daily-notifications [hidden] { display: none; }
+.daily-notifications button:disabled { opacity: .55; }
+.daily-notifications [role="status"] { overflow-wrap: anywhere; }
 basho-image-tools p, basho-image-tools small { line-height: 1.8; }
 .image-tool { margin: 22px 0; padding: 18px; border: 1px solid #d6cebc; border-radius: 16px; background: #fffdf780; }
 .image-tool h2 { font-size: 19px; }

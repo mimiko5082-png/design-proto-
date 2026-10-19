@@ -1,0 +1,10 @@
+{
+  "d1_databases": [
+    {
+      "binding": "NOTIFICATIONS_DB",
+      "database_name": "basho-notifications",
+      "database_id": "REPLACE_WITH_ACTUAL_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

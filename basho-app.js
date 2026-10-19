@@ -289,6 +289,7 @@ function renderHome() {
       <span class="source-badge">観察 → 記録 → 問い返し → 再観察</span>
       <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
+    <basho-notifications></basho-notifications>
     <section class="experience-guide basic-experience" aria-label="基本の4段階">
       <h2>いつもの街を見る、4つのステップ</h2>
       <ol>

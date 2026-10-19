@@ -42,3 +42,10 @@ test("copy-paste bundle preserves free quota stop", async () => {
   assert.equal(data.code, "FREE_QUOTA_EXCEEDED");
   assert.doesNotMatch(JSON.stringify(data), /private/);
 });
+
+test("dashboard bundle exposes Cron and safely skips it until notification setup is complete", async () => {
+  assert.equal(typeof dashboard.scheduled, "function");
+  let pending;
+  dashboard.scheduled({ scheduledTime: Date.now() }, {}, { waitUntil(value) { pending = value; } });
+  await pending;
+});

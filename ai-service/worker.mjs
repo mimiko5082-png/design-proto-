@@ -1,6 +1,7 @@
 import { normalizePerspective } from "../perspective.js";
 import { handleImageRequest } from "./image-handlers.mjs";
 import { TEXT_MODEL, runAI, aiFailure } from "./free-ai.mjs";
+import { notificationRequest, sendDailyNotifications } from "./notifications.mjs";
 
 const instructions = `あなたは街の観察を広げる問いを作ります。入力はユーザーの文章だけです。
 場所・画像・現在地を見たとは言わず、入力にない対象が実在すると断定しないでください。
@@ -35,6 +36,7 @@ export async function handleRequest(request, env) {
     headers["Access-Control-Allow-Headers"] = "Content-Type";
     return new Response(null, { status: 204, headers });
   }
+  if (path.startsWith("/api/notifications/")) return notificationRequest(request, env, headers);
   if (request.method !== "POST") return reply({ error: "POST required" }, 405);
   if (new URL(request.url).pathname.startsWith("/api/images/")) return handleImageRequest(request, env, headers);
   if (!env.AI?.run || !env.IMAGE_RATE_LIMITER?.limit) return reply({ error: "Workers AIまたは利用制限が未設定です。" }, 503);
@@ -65,4 +67,11 @@ export async function handleRequest(request, env) {
   } catch (error) { const { status, ...body } = aiFailure(error); return reply(body, status); }
 }
 
-export default { fetch(request, env) { return handleRequest(request, env); } };
+export default {
+  fetch(request, env) { return handleRequest(request, env); },
+  scheduled(controller, env, context) {
+    context.waitUntil(sendDailyNotifications(env, controller.scheduledTime).catch(() => {
+      console.warn("Notification scheduling failed. Check notification bindings and database migration.");
+    }));
+  },
+};
