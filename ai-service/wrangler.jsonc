@@ -6,6 +6,14 @@
   "workers_dev": true,
   "triggers": { "crons": ["* * * * *"] },
   "ai": { "binding": "AI" },
+  "d1_databases": [
+    {
+      "binding": "NOTIFICATIONS_DB",
+      "database_name": "basho-notifications",
+      "database_id": "ee4e5844-ed98-415b-869b-35018fdf0509",
+      "migrations_dir": "migrations"
+    }
+  ],
   "ratelimits": [
     { "name": "IMAGE_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 5, "period": 60 } },
     { "name": "PUSH_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }

@@ -30,7 +30,7 @@ GitHub連携や有料プランへの変更は不要です。既存の`basho-ai` 
 8. 最新の`dashboard-worker.js`をコード編集画面の`worker.js`全体へ貼り付け、Deployします。古い284行版には通知処理がありません。
 9. アプリを更新し、対象端末で通知を許可して「テスト通知」を押します。サーバーの送信受け付けと端末に実際に表示されることは別なので、実機で確認してください。
 
-登録済みのD1のDatabase IDが分かったら、`notifications-bindings.example.jsonc`の例に従って、`wrangler.jsonc`にも実際の`d1_databases`を追加します。例のダミーIDをそのまま使わないでください。現在のメイン設定には未知のDatabase IDを捏造して追加していません。手動設定だけで運用する場合も、後でCLIからdeployするときは設定を揃えてください。
+`wrangler.jsonc`には、管理画面で作成を確認した`basho-notifications`のDatabase IDを登録済みです。これだけでは実アカウントのWorkerに接続されないため、管理画面では手順3のバインディング追加も行ってください。別アカウントへ移す場合は、`notifications-bindings.example.jsonc`の例に従って実際のIDに置き換えます。例のダミーIDは使わないでください。
 
 ## CLIを使う場合
 
