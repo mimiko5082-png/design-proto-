@@ -3375,3 +3375,17 @@ button {
 .basic-experience li::before { content: "0" counter(experience); position: absolute; left: 0; top: 2px; color: #6a735b; font-size: 13px; }
 .experience-guide summary { cursor: pointer; font-size: 14px; line-height: 1.8; }
 .study-reflection h2 { font-size: 17px; line-height: 1.7; }
+
+basho-image-tools { display: block; }
+basho-image-tools p, basho-image-tools small { line-height: 1.8; }
+.image-tool { margin: 22px 0; padding: 18px; border: 1px solid #d6cebc; border-radius: 16px; background: #fffdf780; }
+.image-tool h2 { font-size: 19px; }
+.image-tool label, basho-image-tools .place-attach label { display: block; margin: 12px 0; line-height: 1.8; }
+.image-tool input, .image-tool textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 12px; border: 1px solid #b8b2a2; border-radius: 8px; background: #fffdf7; color: #282b25; font: inherit; }
+.image-tool img { display: block; max-width: 100%; max-height: 480px; object-fit: contain; margin: 12px auto; border-radius: 10px; }
+.image-tool [hidden] { display: none; }
+.image-tool figure { margin: 16px 0; }
+.image-tool figcaption { font-size: 13px; line-height: 1.8; }
+.image-tool button:disabled { opacity: .55; cursor: wait; }
+.image-tool [role="status"], .image-analysis-result p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.image-tool .outline-button { display: block; text-align: center; margin-top: 12px; }

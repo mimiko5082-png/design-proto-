@@ -38,32 +38,22 @@
   APIキーは入力しません。未接続や通信失敗では用意された問いと明示します。
 ・新しいお題は現代向けの独自設計と明示。芭蕉の実際の発言とは扱いません。
 
-■ AIの接続（公開ファイルへAPIキーを入れない）
-初期設定ではAI未接続です。「用意された問い・AI生成ではありません」と表示します。
-この状態でも再観察と記録の比較を体験できます。
-AI接続後の応答と、未接続時／通信失敗時の用意された問いは明確に区別します。
-AIを使った比較実験を行う場合は接続し、observationTrace.perspectiveKind が
-ai の記録と prepared の記録を分けてください。
+■ AIの接続（v39・無料枠版）
+Cloudflare Workers AIの無料枠を利用します。OpenAIのAPIキーは不要です。
+CloudflareはWorkers Freeプランを維持してください。Paidでは無料枠超過分が
+課金される可能性があります。プランはアプリのコードから変更・確認できません。
 
-実際のAI用サーバーとして ai-service/worker.mjs を同梱しています。
-このファイルはGitHub Pages内で実行されません。別のサーバーが必要です。
-Cloudflare Workersのモジュールとして、perspective.jsと一緒にバンドルします。
-ホスト側に設定する環境変数:
-  OPENAI_API_KEY    APIキー（Secretとして保存）
-  OPENAI_MODEL      使用するResponses API対応のモデルID
-  ALLOWED_ORIGIN    https://mimiko5082-png.github.io
-公開サービスにはホスト側の利用量制限を設定してください。
-Origin制限はブラウザ向けの制限であり、利用者認証ではありません。
+ai-service/README.mdの手順でサーバーを公開し、実際のHTTPS URLを
+ホームの「AIの接続設定」へ保存してください。画像認識・生成の接続設定は
+「画像AIを開く」内にあります。同じWorkerのURLを利用できます。
+全員の初期値にする場合はperspective-config.jsとimage-config.jsにURLのみ設定します。
 
-サーバーをHTTPSで公開できたら、perspective-config.jsのendpointを
-そのURLへ変更してGitHubへアップロードします。
-  window.BASHO_PERSPECTIVE = { endpoint: "https://YOUR-SERVICE-URL" };
-公開用フロントエンドにOPENAI_API_KEYを置いてはいけません。
-
-送信するのは、お題と本人の記録文だけです。写真・位置情報はAIへ送りません。
-AIの応答は、未確認の仮説1〜2個と問い1つ。完成した俳句や正解を出さない指示です。
-モデルの指示遵守を完全に保証するものではないため、問いの質は実地確認してください。
-実際のAPI接続は、認証情報とサーバーがないため未検証です。
+文章の問い返し、画像認識、画像生成は同じ1日10,000 Neuronsの無料枠を共有します。
+上限時は画像処理を停止し、文章は「用意された問い」へ戻します。
+有料APIへの自動切り替えは行いません。実アカウントでの動作は未検証です。
+文章の問い返しではお題と記録文だけを送信します。
+画像AI画面では、実行ボタンを押した写真または説明文を送信します。
+詳しい制限とテスト手順はai-service/IMAGES.mdを参照してください。
 
 ■ 確認したこと
 node --test tests/observation.test.mjs : 14件成功
@@ -77,9 +67,9 @@ JavaScript構文チェック、git diff --check も成功。
 実機ブラウザでのレイアウト、Firebaseへの実際の書き込み、公開後の動作は未確認。
 
 ■ AIサービス実装の参照
-OpenAI Responses API / Structured Outputs:
-https://platform.openai.com/docs/api-reference/responses
-https://platform.openai.com/docs/guides/structured-outputs
+Cloudflare Workers AI:
+https://developers.cloudflare.com/workers-ai/platform/pricing/
+https://developers.cloudflare.com/workers-ai/configuration/bindings/
 
 
 ■ 比較実験の機能（v35）

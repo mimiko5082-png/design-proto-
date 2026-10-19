@@ -45,7 +45,14 @@ export async function requestPerspective(note, gaze, endpoint = "", fetcher = fe
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ note, prompt: gaze.modernTask }), signal: controller.signal,
     });
-    if (!response.ok) throw new Error("Perspective service unavailable");
+    if (!response.ok) {
+      if (response.status === 429) {
+        try {
+          if ((await response.json())?.code === "FREE_QUOTA_EXCEEDED") return preparedPerspective(note, gaze.id, "free-quota");
+        } catch {}
+      }
+      throw new Error("Perspective service unavailable");
+    }
     return normalizePerspective(await response.json(), note);
   } catch {
     return preparedPerspective(note, gaze.id, "unavailable");

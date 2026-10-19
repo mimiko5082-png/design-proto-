@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-import { requestPerspective, preparedPerspective } from "./perspective.js?v=37";
-import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=37";
+import { requestPerspective, preparedPerspective } from "./perspective.js?v=39";
+import { normalizePlace, distanceMeters, mapGeometry } from "./place.js?v=39";
 
 const STORAGE_KEY = "basho_manazashi_v3";
 const ENTRIES_STORAGE_KEY = "basho_manazashi_entries_v1";
@@ -252,6 +252,7 @@ tabbar.addEventListener("click", (event) => {
 function render() {
   const views = {
     home: renderHome,
+    images: () => `<div class="view image-tools-view"><header class="simple-head"><button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button><span>写真と言葉の画像AI</span></header><basho-image-tools></basho-image-tools></div>`,
     classic: renderClassic,
     pause: renderPause,
     note: renderNote,
@@ -308,6 +309,7 @@ function renderHome() {
       </ol>
       <p>比較実験の条件Aでは、最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
     </details>
+    <section class="place-attach"><strong>写真と言葉で、別の見方を</strong><p>画像認識と画像生成を、観察の体験とは別に試せます。</p><button class="outline-button" type="button" data-nav="images">画像AIを開く</button></section>
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
@@ -448,6 +450,7 @@ function renderPerspective() {
       ${state.perspectiveLoading ? `<p role="status">記録をもとに、問いを考えています…</p>` : perspective ? `
         <span class="perspective-label">${perspective.kind === "ai" ? "AIからの問い返し" : "用意された問い · AI生成ではありません"}</span>
         ${perspective.reason === "unavailable" ? `<p class="lens-footnote" role="status">AIに接続できなかったため、用意された問いを表示しています。</p>` : ""}
+        ${perspective.reason === "free-quota" ? `<p class="lens-footnote" role="status">本日のAI無料枠を使い切ったため、用意された問いを表示しています。有料APIには切り替えません。</p>` : ""}
         <article class="hypothesis-card"><small>別の見方の仮説 · 未確認</small>${perspective.hypotheses.map(item => `<p>${escapeHtml(item)}</p>`).join("")}</article>
         <blockquote class="reflection-question">${escapeHtml(perspective.question)}</blockquote>
         <p class="lens-footnote">場所や写真を確認した解釈ではありません。あなたの記録から考えた可能性です。正解として受け取る必要はありません。</p>
@@ -1398,7 +1401,7 @@ function updateTabs() {
     const nav = tab.dataset.nav;
     const active =
       state.view === nav ||
-      (["classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
+      (["images", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
       (["share", "book"].includes(state.view) && nav === "notebook");
     tab.classList.toggle("active", active);
   });
@@ -1510,7 +1513,7 @@ function loadState() {
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
     const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "map", "notebook", "share", "book"];
-    if (!allowedViews.includes(state.view)) state.view = "home";
+    if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);
     if (!Array.isArray(state.studyRecords)) state.studyRecords = [];

@@ -1,4 +1,6 @@
 import { normalizePerspective } from "../perspective.js";
+import { handleImageRequest } from "./image-handlers.mjs";
+import { TEXT_MODEL, runAI, aiFailure } from "./free-ai.mjs";
 
 const instructions = `あなたは街の観察を広げる問いを作ります。入力はユーザーの文章だけです。
 場所・画像・現在地を見たとは言わず、入力にない対象が実在すると断定しないでください。
@@ -9,9 +11,19 @@ const instructions = `あなたは街の観察を広げる問いを作ります�
 ユーザーの見方への反証や別の見方を含めつつ、否定や迎合を避けてください。
 日本語で、各仮説と問いをそれぞれ120字以内で返してください。`;
 
-// Deploy as a Worker module with OPENAI_API_KEY secret, OPENAI_MODEL and
-// ALLOWED_ORIGIN=https://mimiko5082-png.github.io on the host (never in Pages).
-export async function handleRequest(request, env, fetcher = fetch) {
+// Use a Workers Free account and the AI binding. No paid API fallback.
+export async function handleRequest(request, env) {
+  const path = new URL(request.url).pathname;
+  // A browser visit checks bindings only; it never runs a model or uses AI quota.
+  if (request.method === "GET" && path === "/") {
+    const configured = !!env.AI?.run && !!env.IMAGE_RATE_LIMITER?.limit;
+    return new Response(configured
+      ? "芭蕉AIサーバー：AI接続と利用制限の設定を確認しました。実際のAI応答はアプリから確認してください。"
+      : "芭蕉AIサーバー：AI または IMAGE_RATE_LIMITER のバインディングが未設定です。", {
+      status: configured ? 200 : 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+    });
+  }
   const origin = request.headers.get("Origin");
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://mimiko5082-png.github.io";
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Vary": "Origin" };
@@ -24,7 +36,8 @@ export async function handleRequest(request, env, fetcher = fetch) {
     return new Response(null, { status: 204, headers });
   }
   if (request.method !== "POST") return reply({ error: "POST required" }, 405);
-  if (!env.OPENAI_API_KEY || !env.OPENAI_MODEL) return reply({ error: "AI service is not configured" }, 503);
+  if (new URL(request.url).pathname.startsWith("/api/images/")) return handleImageRequest(request, env, headers);
+  if (!env.AI?.run || !env.IMAGE_RATE_LIMITER?.limit) return reply({ error: "Workers AIまたは利用制限が未設定です。" }, 503);
   if (!request.headers.get("Content-Type")?.includes("application/json")) return reply({ error: "JSON required" }, 415);
   let input;
   try {
@@ -32,33 +45,24 @@ export async function handleRequest(request, env, fetcher = fetch) {
     if (raw.length > 2000) return reply({ error: "Request too large" }, 413);
     input = JSON.parse(raw);
   } catch { return reply({ error: "Invalid JSON" }, 400); }
-  if (typeof input.note !== "string" || !input.note.trim() || input.note.length > 280
+  if (!input || typeof input !== "object" || Array.isArray(input) || typeof input.note !== "string" || !input.note.trim() || input.note.length > 280
       || typeof input.prompt !== "string" || input.prompt.length > 280) return reply({ error: "Invalid observation" }, 400);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetcher("https://api.openai.com/v1/responses", {
-      method: "POST", signal: controller.signal,
-      headers: { "Authorization": `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: env.OPENAI_MODEL, instructions, store: false, max_output_tokens: 500,
-        input: JSON.stringify({ observation_prompt: input.prompt, user_record: input.note }),
-        text: { format: { type: "json_schema", name: "observation_perspective", strict: true,
-          schema: { type: "object", properties: {
-            hypotheses: { type: "array", items: { type: "string" } }, question: { type: "string" },
-          }, required: ["hypotheses", "question"], additionalProperties: false } } },
-      }),
-    });
-    if (!response.ok) return reply({ error: "AI unavailable" }, 502);
-    const result = await response.json();
-    if (result.status !== "completed") return reply({ error: "AI response incomplete" }, 502);
-    const output = (result.output || []).filter(item => item.type === "message")
-      .flatMap(item => item.content || []).filter(item => item.type === "output_text")
-      .map(item => item.text).join("");
-    const validated = normalizePerspective(JSON.parse(output), input.note);
+    const perUser = await env.IMAGE_RATE_LIMITER.limit({ key: `text:ip:${request.headers.get("CF-Connecting-IP") || "local"}` });
+    const global = perUser.success && await env.IMAGE_RATE_LIMITER.limit({ key: "text:global" });
+    if (!perUser.success || !global.success) return reply({ error: "利用上限です。時間をおいて再試行してください。" }, 429);
+    const result = await runAI(env, TEXT_MODEL, {
+      max_tokens: 400,
+      messages: [
+        { role: "system", content: instructions + '\nJSONだけを返してください。形式: {"hypotheses":["仮説"],"question":"問い"}' },
+        { role: "user", content: JSON.stringify({ observation_prompt: input.prompt, user_record: input.note }) },
+      ],
+    }, 12000);
+    const output = typeof result?.response === "string" ? result.response.trim() : "";
+    if (!output || output.length > 6000) throw new Error("Invalid result");
+    const validated = normalizePerspective(JSON.parse(output.replace(/^```(?:json)?\s*|\s*```$/g, "")), input.note);
     return reply({ hypotheses: validated.hypotheses, question: validated.question });
-  } catch { return reply({ error: "AI unavailable" }, 502); }
-  finally { clearTimeout(timeout); }
+  } catch (error) { const { status, ...body } = aiFailure(error); return reply(body, status); }
 }
 
 export default { fetch(request, env) { return handleRequest(request, env); } };

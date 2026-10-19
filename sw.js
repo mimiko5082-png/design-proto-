@@ -1,4 +1,4 @@
-const CACHE_NAME = "basho-manazashi-v37-field-study";
+const CACHE_NAME = "basho-manazashi-v39-free-ai";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,10 @@ const APP_SHELL = [
   "./basho-app.js",
   "./perspective.js",
   "./place.js",
+  "./image-config.js",
+  "./image-tools.js",
+  "./image-service.js",
+  "./image-validation.js",
   "./perspective-config.js",
   "./firebase-config.js",
   "./manifest.webmanifest",

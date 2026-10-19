@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { preparedPerspective, requestPerspective } from "../perspective.js";
 import { normalizePlace, distanceMeters, mapGeometry } from "../place.js";
 import worker, { handleRequest } from "../ai-service/worker.mjs";
+import { TEXT_MODEL } from "../ai-service/free-ai.mjs";
 
 function app(storage = new Map(), perspectiveRequester = requestPerspective) {
   const screen = { innerHTML: "", addEventListener() {} };
@@ -123,22 +124,31 @@ test("AI service handles preflight and missing configuration", async () => {
   assert.equal((await worker.fetch(request({ note: "壁", prompt: "跡" }), {}, {})).status, 503);
 });
 
-test("AI service validates input, keeps provider secrets server side and formats output", async () => {
-  const env = { OPENAI_API_KEY: "test-only-secret", OPENAI_MODEL: "test-model" };
+test("AI service validates input and formats free Workers AI output without secrets", async () => {
+  const env = { IMAGE_RATE_LIMITER: { limit: async () => ({ success: true }) }, AI: { run: async (model, body) => {
+    assert.equal(model, TEXT_MODEL);
+    assert.deepEqual(JSON.parse(body.messages[1].content), { observation_prompt: "跡", user_record: "壁" });
+    return { response: JSON.stringify({ hypotheses: ["雨の跡かもしれません。"], question: "ほかの壁にもありますか？" }) };
+  } } };
   assert.equal((await handleRequest(request({ note: "", prompt: "跡" }), env)).status, 400);
-  const result = await handleRequest(request({ note: "壁", prompt: "跡" }), env, async (url, options) => {
-    assert.equal(url, "https://api.openai.com/v1/responses");
-    const body = JSON.parse(options.body);
-    assert.equal(body.store, false); assert.equal(body.text.format.type, "json_schema");
-    return new Response(JSON.stringify({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ hypotheses: ["雨の跡かもしれません。"], question: "ほかの壁にもありますか？" }) }] }] }));
-  });
+  const result = await handleRequest(request({ note: "壁", prompt: "跡" }), env);
   assert.equal(result.status, 200);
   const body = await result.text(); assert.doesNotMatch(body, /test-only-secret/); assert.match(body, /雨の跡/);
 });
 
 test("upstream failures produce a recoverable service error", async () => {
-  const result = await handleRequest(request({ note: "壁", prompt: "跡" }), { OPENAI_API_KEY: "test", OPENAI_MODEL: "test" }, async () => new Response("unavailable", { status: 503 }));
+  const result = await handleRequest(request({ note: "壁", prompt: "跡" }), {
+    AI: { run: async () => { throw new Error("provider unavailable"); } }, IMAGE_RATE_LIMITER: { limit: async () => ({ success: true }) },
+  });
   assert.equal(result.status, 502);
+});
+
+test("text requests fall back to prepared questions when the daily free quota is exhausted", async () => {
+  const env = { AI: { run: async () => { throw Object.assign(new Error("private"), { code: 3036 }); } }, IMAGE_RATE_LIMITER: { limit: async () => ({ success: true }) } };
+  const response = await handleRequest(request({ note: "壁", prompt: "跡" }), env);
+  assert.equal(response.status, 429);
+  const result = await requestPerspective("壁", { id: "trace", modernTask: "跡" }, "https://service.test", async () => response);
+  assert.equal(result.kind, "prepared"); assert.equal(result.reason, "free-quota");
 });
 
 
