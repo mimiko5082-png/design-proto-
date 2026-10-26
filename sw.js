@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v51-sensory-options";
+const CACHE_NAME = "basho-manazashi-v52-calendar-view-only";
 const APP_SHELL = [
   "./",
   "./index.html",

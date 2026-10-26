@@ -1,4 +1,4 @@
-import { japanDay, loadPoems, savePoem, growth, monthCells, shiftMonth } from './reading-store.js?v=47';
+import { japanDay, loadPoems, growth, monthCells, shiftMonth } from './reading-store.js?v=47';
 const esc = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 function tree(level) {
   const leaves = [[92,113],[143,95],[88,75],[153,59],[112,35],[68,49],[174,103]];
@@ -7,30 +7,16 @@ function tree(level) {
 class ReadingGarden extends HTMLElement {
   connectedCallback() {
     this.selectedDay = japanDay(); this.month = this.selectedDay.slice(0,7);
-    this.draft = ''; this.draftDay = this.selectedDay;
-    this.message = ''; this.error = '';
+    this.error = '';
     this.onClick = event => this.handleClick(event);
-    this.onInput = event => {
-      if (event.target.name === 'poem') this.draft = event.target.value;
-      if (event.target.name === 'day') this.draftDay = event.target.value;
-    };
-    this.onSubmit = event => {
-      if (!event.target.matches('.tanka-form')) return;
-      event.preventDefault();
-      this.save(event.target);
-    };
     this.onUpdate = () => this.render();
     this.addEventListener('click', this.onClick);
-    this.addEventListener('input', this.onInput);
-    this.addEventListener('submit', this.onSubmit);
     window.addEventListener('basho-poems-updated', this.onUpdate);
     window.addEventListener('storage', this.onUpdate);
     this.render();
   }
   disconnectedCallback() {
     this.removeEventListener('click', this.onClick);
-    this.removeEventListener('input', this.onInput);
-    this.removeEventListener('submit', this.onSubmit);
     window.removeEventListener('basho-poems-updated', this.onUpdate);
     window.removeEventListener('storage', this.onUpdate);
   }
@@ -38,32 +24,10 @@ class ReadingGarden extends HTMLElement {
     const button = event.target.closest('[data-reading-action]');
     if (!button) return;
     const action = button.dataset.readingAction;
-    if (action === 'day') { this.selectedDay = button.dataset.day; this.draftDay = this.selectedDay; }
-    if (action === 'month') { this.month = shiftMonth(this.month, Number(button.dataset.delta)); this.selectedDay = `${this.month}-01`; this.draftDay = this.selectedDay; }
-    if (action === 'today') { this.selectedDay = japanDay(); this.month = this.selectedDay.slice(0,7); this.draftDay = this.selectedDay; }
-    this.message = '';
+    if (action === 'day') { this.selectedDay = button.dataset.day; }
+    if (action === 'month') { this.month = shiftMonth(this.month, Number(button.dataset.delta)); this.selectedDay = `${this.month}-01`; }
+    if (action === 'today') { this.selectedDay = japanDay(); this.month = this.selectedDay.slice(0,7); }
     this.render();
-  }
-  save(form) {
-    const data = new FormData(form);
-    this.draft = String(data.get('poem') || '');
-    this.draftDay = String(data.get('day') || '');
-    try {
-      const before = growth(loadPoems(localStorage));
-      const result = savePoem(localStorage, {text: this.draft, day: this.draftDay});
-      const after = growth(result.poems);
-      this.error = '';
-      this.message = result.added ? (after.level > before.level ? `累計${after.xp}首。${after.stage.name}に育ちました！` : '自分で詠んだ短歌をカレンダーに記録しました。') : 'この日の同じ短歌は、すでに記録されています。';
-      this.selectedDay = this.draftDay; this.month = this.draftDay.slice(0,7);
-      this.draft = '';
-      window.dispatchEvent(new Event('basho-poems-updated'));
-    } catch {
-      this.error = '短歌を保存できませんでした。入力内容とブラウザの保存設定・空き容量を確認し、もう一度お試しください。';
-      this.render();
-    }
-  }
-  composer() {
-    return `<form class="tanka-form"><div class="reading-intro"><div><span class="reading-eyebrow">見つけた景色を、自分の言葉に</span><h2>短歌を記録する</h2></div></div><p class="reading-help">目の前の景色や、そこで感じたことを短歌にして残してみましょう。</p><label>詠んだ日<input type="date" name="day" value="${esc(this.draftDay)}" required></label><label>自分で詠んだ短歌<textarea name="poem" rows="5" maxlength="500" required placeholder="見た景色、聞こえた音、感じたことを一首に。改行して入力できます。">${esc(this.draft)}</textarea></label><button class="main-button" type="submit">カレンダーに記録する</button></form><div class="reading-feedback" role="status" aria-live="polite">${esc(this.message)}</div>`;
   }
   render() {
     let poems = [];
@@ -84,7 +48,7 @@ class ReadingGarden extends HTMLElement {
         if (!day) return '<span></span>';
         const count = poems.filter(poem=>poem.day===day).length;
         return `<button type="button" class="${day === this.selectedDay ? 'selected' : ''} ${day === today ? 'is-today' : ''}" data-reading-action="day" data-day="${day}" aria-pressed="${day===this.selectedDay}" aria-label="${day}、${count}首${day===today?'、今日':''}"><span>${Number(day.slice(8))}</span><small>${count ? `${count}首` : '·'}</small></button>`;
-      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length}首</small></h2>${selected.length ? selected.map(poem=>this.poemCard(poem)).join('') : '<p class="reading-empty">この日に詠んだ短歌はまだありません。<br>景色を見て生まれた一首を、下の欄から記録できます。</p>'}</section>${this.composer()}${help}`;
+      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length}首</small></h2>${selected.length ? selected.map(poem=>this.poemCard(poem)).join('') : '<p class="reading-empty">この日に詠んだ短歌はまだありません。</p>'}</section><p class="reading-help">日付を選ぶと、その日に記録した短歌を振り返れます。</p>`;
     } else if (mode === 'garden') {
       content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set(poems.map(poem=>poem.day)).size}</strong>詠んだ日</p><p><strong>${poems.length}</strong>詠んだ短歌</p><p><strong>${todayPoems.length}</strong>今日の短歌</p></div><button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
     } else {
