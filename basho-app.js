@@ -386,7 +386,7 @@ function renderNote() {
       </label>
       <div class="category-line">
         <span>いちばん気になった感覚</span>
-        ${["音", "流れ", "跡", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
+        ${["音", "流れ", "光", "風", "匂い"].map((category) => `<button class="${state.noteCategory === category ? "active" : ""}" type="button" data-action="category" data-category="${escapeAttr(category)}">${escapeHtml(category)}</button>`).join("")}
       </div>
       <p class="lens-footnote">俳句にしなくても大丈夫。見聞きしたことと、想像したことを自分の言葉で。</p>
       <button class="main-button" type="button" data-action="save-note">${state.activeStudy?.condition === "A" ? "この気づきを残す" : "別の見方に出会う"}</button>

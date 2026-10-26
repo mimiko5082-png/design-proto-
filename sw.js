@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v50-remove-connection-settings";
+const CACHE_NAME = "basho-manazashi-v51-sensory-options";
 const APP_SHELL = [
   "./",
   "./index.html",
