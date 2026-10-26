@@ -304,26 +304,6 @@ function renderHome() {
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
-    <details class="place-attach"><summary>比較実験の設定・記録の書き出し</summary>
-      <p>Aは「お題 → 30秒観察 → 記録」、Bは問い返しと再観察を加えます。同じお題を選び、場所と条件の順序を入れ替えて使ってください。条件Aでは最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
-      <label>体験の条件<select data-study-condition>${[["off", "通常の体験"], ["A", "A：問い返し・再観察なし"], ["B", "B：問い返し・再観察あり"]].map(([v,l]) => `<option value="${v}" ${state.studySettings.condition === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
-      <label>参加者コード（本名を使わない）<input data-study-participant maxlength="40" value="${escapeAttr(state.studySettings.participant)}" placeholder="P01" /></label>
-      <label>場所の呼び名<input data-study-place maxlength="80" value="${escapeAttr(state.studySettings.place)}" placeholder="場所1" /></label>
-      <label>体験する順序<select data-study-order><option value="AB" ${state.studySettings.order === "AB" ? "selected" : ""}>A → B</option><option value="BA" ${state.studySettings.order === "BA" ? "selected" : ""}>B → A</option></select></label>
-      <label class="study-reflection">観察前、この場所はどんな場所に感じますか？（任意）<textarea data-study-before maxlength="280" placeholder="いつも通り過ぎる道、落ち着く場所など。次の観察にだけ保存します。">${escapeHtml(state.studySettings.beforePlaceMeaning || "")}</textarea></label>
-      <button class="outline-button" type="button" data-action="set-study">次の観察に設定を適用</button>
-      <p>現在：${state.studySettings.condition === "off" ? "通常の体験" : `条件${escapeHtml(state.studySettings.condition)}`}。実験の記録はこのブラウザに保存し、共有句帳には送りません。設定は観察開始時に固定されます。</p>
-      <p>実験中は、画面の移動・問いの表示・保存などの時刻も端末内に記録します。再観察後には、問いをどう受け取ったかと、場所の意味の変化を任意で残せます。入力途中の文章は操作ログに含めません。</p>
-      <p>AI未接続時のBは「用意された問い」の体験です。AIの効果を比較する本実験には、AI接続と生成結果の確認が必要です。書き出しにも問いの種別を記録します。</p>
-      <button class="outline-button" type="button" data-action="export-study" ${state.studyRecords.length ? "" : "disabled"}>実験記録をCSVに書き出す（${state.studyRecords.length}件）</button>
-    </details>
-    <details class="place-attach"><summary>AIの接続設定</summary>
-      <p>現在：${state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint ? "AIサーバーの接続先を設定済み（通信時に確認）" : "AI未接続・用意された問いを使用"}</p>
-      <p>管理者から受け取ったHTTPSのAIサーバーURLを設定してください。この接続先へ、お題と記録の文章だけを送ります。写真・位置情報は送信しません。APIキーは入力しないでください。</p>
-      <label>AIサーバーのURL<input type="url" data-endpoint-input value="${escapeAttr(state.perspectiveEndpoint || window.BASHO_PERSPECTIVE?.endpoint || "")}" placeholder="https://…" /></label>
-      <button class="outline-button" type="button" data-action="set-ai-endpoint">接続先を保存</button>
-      <button class="outline-button" type="button" data-action="clear-ai-endpoint">接続を解除</button>
-    </details>
     <p class="lens-footnote">${escapeHtml(gaze.source)}<br>観察のお題は現代の街歩き向けに再構成したものです。</p>
   </div>`;
 }
