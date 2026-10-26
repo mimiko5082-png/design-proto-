@@ -47,7 +47,7 @@ const gazes = [
     sourceNote: "山寺で、物の音が聞こえないほどの静けさを感じた場面。",
     haiku: "閑さや\n岩にしみ入る\n蝉の声",
     observation: "静けさの中にある音を聴く",
-    modernTask: "30秒立ち止まり、一番遠くの音を探す",
+    modernTask: "立ち止まるか座って、30秒間、一番遠くの音を探す",
     encounterNote: "あなたの気づきは、静けさの中の音を聴くまなざしにつながります。",
     pauseTask: "いちばん遠い音を、ひとつ覚えてください。",
     noteExample: "電車が通ったあと、一瞬だけ町が静かになる。",
@@ -96,7 +96,7 @@ const seeds = [
     id: "seed-1",
     title: "閑さや 岩にしみ入る 蝉の声",
     task: "静けさの中にある音を聴く",
-    body: "30秒立ち止まり、一番遠くの音を探す",
+    body: "立ち止まるか座って、30秒間、一番遠くの音を探す",
     source: "松尾芭蕉『おくのほそ道』立石寺",
     category: "音",
     image: "./assets/kotoba-sunset.png",
@@ -252,7 +252,6 @@ tabbar.addEventListener("click", (event) => {
 function render() {
   const views = {
     home: renderHome,
-    images: () => `<div class="view image-tools-view"><header class="simple-head"><button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button><span>写真と言葉の画像AI</span></header><basho-image-tools></basho-image-tools></div>`,
     classic: renderClassic,
     pause: renderPause,
     note: renderNote,
@@ -293,32 +292,20 @@ function renderHome() {
       <button class="main-button" type="button" data-nav="pause">30秒、まわりを見る</button>
     </section>
     <basho-notifications></basho-notifications>
-    <section class="experience-guide basic-experience" aria-label="基本の4段階">
+    <section class="experience-guide basic-experience" aria-label="街を観察して振り返る4つのステップ">
       <h2>いつもの街を見る、4つのステップ</h2>
       <ol>
-        <li><strong>お題を受け取る</strong><span>見過ごしていたものに目を向ける。</span></li>
-        <li><strong>30秒観察する</strong><span>スマホを下ろして、目や耳や肌で。</span></li>
-        <li><strong>気づきを記録する</strong><span>自分の言葉を先に残す。問い返しと比べ、もう一度見る。</span></li>
-        <li><strong>句帳で振り返る</strong><span>記録した気づきを読み返し、ほかの人の見方にも出会う。</span></li>
+        <li><strong>お題を受け取る</strong><span>気になるお題をひとつ選び、見過ごしていたものに目を向ける。</span></li>
+        <li><strong>30秒、観察する</strong><span>安全な場所で立ち止まるか、ベンチなどに座って。スマホを下ろし、目や耳や肌で感じる。</span></li>
+        <li><strong>気づきを残し、別の見方に出会う</strong><span>まずは自分の言葉で、一語や一文を記録する。俳句にしなくても大丈夫。そのあとに届く問いは、同意しても、疑っても。</span></li>
+        <li><strong>もう一度見て、句帳で振り返る</strong><span>同じ場所をもう一度観察し、気づきの変化を残す。句帳で見比べ、ほかの人の見方にも出会う。</span></li>
       </ol>
     </section>
-    <details class="experience-guide"><summary>記録と問い返しの進め方</summary>
-      <h2>自分のまなざしから、もう一度。</h2>
-      <ol>
-        <li><strong>お題を受け取る</strong><span>気になるお題をひとつ選ぶ。</span></li>
-        <li><strong>30秒、観察する</strong><span>スマホを下ろし、自分の感覚で。</span></li>
-        <li><strong>自分の言葉で記録する</strong><span>俳句にせず、一語や一文でも。</span></li>
-        <li><strong>別の見方に出会う</strong><span>問いに同意しても、疑っても大丈夫。</span></li>
-        <li><strong>同じ場所を、もう一度見る</strong><span>気づきの変化を残し、句帳で見比べる。</span></li>
-      </ol>
-      <p>比較実験の条件Aでは、最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
-    </details>
-    <section class="place-attach"><strong>写真と言葉で、別の見方を</strong><p>画像認識と画像生成を、観察の体験とは別に試せます。</p><button class="outline-button" type="button" data-nav="images">画像AIを開く</button></section>
     <details class="prompt-options"><summary>ほかのお題を選ぶ</summary>
       ${gazes.map(item => `<button type="button" data-action="choose-gaze" data-gaze-id="${item.id}" aria-pressed="${item.id === gaze.id}">${escapeHtml(item.prompt.replace(/\n/g, ""))}</button>`).join("")}
     </details>
     <details class="place-attach"><summary>比較実験の設定・記録の書き出し</summary>
-      <p>Aは「お題 → 30秒観察 → 記録」、Bは問い返しと再観察を加えます。同じお題を選び、場所と条件の順序を入れ替えて使ってください。</p>
+      <p>Aは「お題 → 30秒観察 → 記録」、Bは問い返しと再観察を加えます。同じお題を選び、場所と条件の順序を入れ替えて使ってください。条件Aでは最初の記録で終了します。AI未接続時は用意された問いを使います。</p>
       <label>体験の条件<select data-study-condition>${[["off", "通常の体験"], ["A", "A：問い返し・再観察なし"], ["B", "B：問い返し・再観察あり"]].map(([v,l]) => `<option value="${v}" ${state.studySettings.condition === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>参加者コード（本名を使わない）<input data-study-participant maxlength="40" value="${escapeAttr(state.studySettings.participant)}" placeholder="P01" /></label>
       <label>場所の呼び名<input data-study-place maxlength="80" value="${escapeAttr(state.studySettings.place)}" placeholder="場所1" /></label>
@@ -388,7 +375,7 @@ function renderPause() {
     </header>
     <section class="feel-paper quiet-card">
       <span class="screen-label">${revisiting ? "同じ場所を、もう一度" : "30秒、まわりを見る"}</span>
-      <p>安全な場所で立ち止まり、スマホを下ろす。<br>画面を見続ける必要はありません。</p>
+      <p>安全な場所で立ち止まるか、ベンチなどに座ってみましょう。<br>スマホを下ろして、楽な姿勢でまわりを眺めてみてください。<br>画面を見続ける必要はありません。</p>
       <div class="timer-ring" data-el="timer" aria-hidden="true" style="--dash:${dash}">
         <strong>${remaining}</strong>
         <span>秒</span>
@@ -1262,7 +1249,7 @@ function borrowedGaze(item) {
     sourceNote: "誰かが街で残した気づきを、次の人の観察の入口にします。",
     haiku: item.title,
     observation: `${item.from}の気づきを借りる`,
-    modernTask: `30秒立ち止まり、「${oneLine(item.title)}」という視点で街を見る`,
+    modernTask: `立ち止まるか座って、30秒間、「${oneLine(item.title)}」という視点で街を見る`,
     encounterNote: "あなたの気づきは、次の誰かのまなざしになります。",
     pauseTask: "同じものを探すのではなく、その視点で別の気づきを見つけてください。",
     noteExample: item.title,
@@ -1319,7 +1306,7 @@ function updateTabs() {
     const nav = tab.dataset.nav;
     const active =
       state.view === nav ||
-      (["images", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
+      (["classic", "pause", "note", "perspective", "revisit", "update", "encounter", "seeds"].includes(state.view) && nav === "home") ||
       (["share", "book", "entry"].includes(state.view) && nav === "notebook");
     tab.classList.toggle("active", active);
   });
@@ -1432,7 +1419,7 @@ function loadState() {
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
     if (state.view === "map") state.view = "calendar";
     const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "entry", "notebook", "share", "book"];
-    if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
+    if (!allowedViews.includes(state.view)) state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);
     if (!Array.isArray(state.studyRecords)) state.studyRecords = [];

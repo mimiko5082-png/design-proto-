@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v41-reading-garden";
+const CACHE_NAME = "basho-manazashi-v48-calendar-composer";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,11 +7,8 @@ const APP_SHELL = [
   "./basho-app.js",
   "./perspective.js",
   "./place.js",
-  "./tanka-catalog.js",
   "./reading-store.js",
   "./reading-garden.js",
-  "./image-config.js",
-  "./image-tools.js",
   "./image-service.js",
   "./image-validation.js",
   "./notification-config.js",

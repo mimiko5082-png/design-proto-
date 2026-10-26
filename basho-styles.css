@@ -3456,3 +3456,9 @@ basho-reading { display: block; }
 .tabbar { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .tabbar .tab { min-width: 0; padding-left: 2px; padding-right: 2px; }
 @media (max-width: 360px) { .reading-growth { padding: 16px 12px; } .reading-growth h2 { font-size: 18px; } .reading-verse { font-size: 21px; } .tabbar .tab { font-size: 10px; } }
+
+.tanka-form label { display: block; margin: 18px 0; font-size: 13px; line-height: 1.8; }
+.tanka-form input, .tanka-form textarea { display: block; width: 100%; min-width: 0; box-sizing: border-box; margin-top: 6px; padding: 12px; border: 1px solid #c5cbbd; border-radius: 10px; color: #303e32; background: #fffcf4; font: inherit; }
+.tanka-form textarea { resize: vertical; line-height: 1.9; }
+.tanka-form input:focus-visible, .tanka-form textarea:focus-visible { outline: 3px solid #a87244; outline-offset: 3px; }
+.reading-verse { overflow-wrap: anywhere; }
