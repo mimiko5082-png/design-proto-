@@ -40,4 +40,4 @@ jobs:
         run: echo '::notice::Preview deployment is waiting for CLOUDFLARE_PREVIEW_API_TOKEN and CLOUDFLARE_PREVIEW_ACCOUNT_ID repository secrets. No deployment was attempted.'
       - name: Deploy basho-preview only
         if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
-        run: npx --yes wrangler@4.151.0 deploy --config preview/wrangler.jsonc
+        run: node preview/deploy.mjs

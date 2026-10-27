@@ -59,3 +59,11 @@ python3 tests/preview.browser.py
 ```
 
 生成物 `preview/dist/` はGit管理対象外。GitHub Actionsのビルド時に生成します。既存の `ai-service/wrangler.jsonc` は本番AI用なので、プレビューのデプロイに使用しません。
+
+## 認証情報の形式チェック
+
+公開時は `preview/deploy.mjs` を実行します。GitHub Secretsから渡されたトークンとAccount IDの前後の空白・改行を除いて、子プロセスの環境変数でWranglerへ渡します。値はファイルやコマンド引数に書かず、ログにも出力しません。
+
+内部に改行・空白があるトークン、引用符付きの値、「使用例」のコマンド全体、形式の違うAccount IDはWranglerを起動する前に停止し、修正するSecret名だけを案内します。内部の文字を推測してつなぎ直すことはしません。前後の空白だけならユーザーによる再登録は不要です。
+
+スクリプト内でも対象リポジトリ・ブランチ・Worker名を検証します。本番mainからは実行できません。
