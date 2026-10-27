@@ -9,7 +9,7 @@ test('credential edge whitespace is removed without changing the token body', ()
  assert.equal(result.CLOUDFLARE_API_TOKEN,token);assert.equal(result.CLOUDFLARE_ACCOUNT_ID,account);
 });
 test('invalid credential errors never echo the input, and stop before Wrangler',()=>{
- for(const bad of [token+'\nWRONG_VALUE', 'Bearer '+token, '"'+token+'"', 'export CLOUDFLARE_API_TOKEN='+token+'\nnpx wrangler deploy', '使用例'+token]){
+ for(const bad of [token+'\nWRONG_VALUE', '使用例'+token, 'CLOUDFLARE_API_TOKEN="'+token+'\nWRONG_VALUE"', 'CLOUDFLARE_API_TOKEN="'+token+'"\nCLOUDFLARE_API_TOKEN="another-token"', 'CLOUDFLARE_API_TOKEN=$(do-not-execute)']){
   let called=false;
   assert.throws(()=>deployPreview({environment:{...environment,CLOUDFLARE_API_TOKEN:bad},spawn(){called=true;}}),error=>error.message.includes('CLOUDFLARE_PREVIEW_API_TOKEN')&&!error.message.includes(token)&&!error.message.includes(bad));
   assert.equal(called,false);
@@ -33,4 +33,22 @@ test('only the preview branch can deploy and credentials stay out of arguments',
 });
 test('failed deployments keep their failure exit code',()=>{
  assert.equal(deployPreview({environment,spawn:()=>({status:7})}),7);
+});
+
+
+test('known quotation, header and usage formats yield only the token, without executing pasted code',()=>{
+ const forms=[
+  '"'+token+'"', "'"+token+"'", 'Bearer '+token, 'Authorization: Bearer '+token,
+  'export CLOUDFLARE_API_TOKEN="'+token+'"\nnpx wrangler deploy',
+  'CLOUDFLARE_ACCOUNT_ID="'+account+'" \\\nCLOUDFLARE_API_TOKEN="'+token+'" \\\nnpx wrangler deploy',
+ ];
+ for(const form of forms){
+  let calls=0;
+  assert.equal(deployPreview({environment:{...environment,CLOUDFLARE_API_TOKEN:form},spawn(command,args,options){
+   calls++;assert.equal(command,'npx');assert.equal(options.env.CLOUDFLARE_API_TOKEN,token);
+   assert.deepEqual(args,['--yes','wrangler@4.151.0','deploy','--config','preview/wrangler.jsonc']);
+   assert.equal(options.shell,false);return {status:0};
+  }}),0);
+  assert.equal(calls,1);
+ }
 });
