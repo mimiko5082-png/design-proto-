@@ -52,3 +52,23 @@ test('known quotation, header and usage formats yield only the token, without ex
   assert.equal(calls,1);
  }
 });
+
+
+test('a copied curl Authorization header is parsed as data, never run',()=>{
+ const usage = 'curl "https://api.cloudflare.com/client/v4/user/tokens/verify" \\\n  -H "Authorization: Bearer '+token+'"; echo NEVER_EXECUTE_THIS';
+ let called=0;
+ const exit=deployPreview({environment:{...environment,CLOUDFLARE_API_TOKEN:usage},spawn(command,args,options){
+  called++;assert.equal(command,'npx');assert.equal(options.env.CLOUDFLARE_API_TOKEN,token);
+  assert.equal(options.shell,false);assert.ok(!args.join(' ').includes('NEVER_EXECUTE_THIS'));
+  return {status:0};
+ }});
+ assert.equal(exit,0);assert.equal(called,1);
+});
+test('different tokens in multiple recognized fields are rejected with no credential disclosure',()=>{
+ const usage='CLOUDFLARE_API_TOKEN="'+token+'"\ncurl -H "Authorization: Bearer another-value"';
+ assert.throws(()=>normalizePreviewCredentials({...environment,CLOUDFLARE_API_TOKEN:usage}),error=>!error.message.includes(token)&&!error.message.includes('another-value'));
+});
+test('unknown input errors contain safe format flags only, not the input',()=>{
+ const bad='not-a-real-secret$\nこれは値ではなくダミーの説明';
+ assert.throws(()=>normalizePreviewCredentials({...environment,CLOUDFLARE_API_TOKEN:bad}),error=>error.message.includes('非ASCII文字=あり')&&error.message.includes('改行=あり')&&!error.message.includes('not-a-real-secret')&&!error.message.includes('ダミーの説明'));
+});

@@ -17,9 +17,15 @@ function tokenFromInput(input) {
   const bearer = /^(?:Authorization:\s*)?Bearer[ \t]+([A-Za-z0-9._~+/=-]+)$/i.exec(value);
   if (bearer) return bearer[1];
   const assignments = [...value.matchAll(/(?:^|[\s;])(?:export[ \t]+)?CLOUDFLARE_API_TOKEN[ \t]*=[ \t]*(?:"([^"\r\n]*)"|'([^'\r\n]*)'|([^\s;\\]+))/g)];
-  if (assignments.length !== 1) return '';
-  const candidate = assignments[0][1] ?? assignments[0][2] ?? assignments[0][3];
-  return tokenCharacters.test(candidate) ? candidate : '';
+  const authorization = [...value.matchAll(/(?:^|[\s"'])Authorization[ \t]*:[ \t]*Bearer[ \t]+([A-Za-z0-9._~+/=-]+)(?=$|[\s"'])/gi)];
+  const candidates = [
+    ...assignments.map(match => match[1] ?? match[2] ?? match[3]),
+    ...authorization.map(match => match[1]),
+  ];
+  if (!candidates.length || candidates.some(candidate => !tokenCharacters.test(candidate))) return '';
+  const unique = [...new Set(candidates)];
+  return unique.length === 1 ? unique[0] : '';
+
 }
 export function normalizePreviewCredentials(environment) {
   const rawToken = String(environment.CLOUDFLARE_API_TOKEN || '').trim();
@@ -27,7 +33,13 @@ export function normalizePreviewCredentials(environment) {
   const account = String(environment.CLOUDFLARE_ACCOUNT_ID || '').trim();
   if (!rawToken) throw new Error('CLOUDFLARE_PREVIEW_API_TOKEN が空です。GitHubのRepository SecretにAPIトークンの値だけを登録してください。');
   if (!token || token.length > 4096) {
-    throw new Error('CLOUDFLARE_PREVIEW_API_TOKEN からAPIトークンを特定できませんでした。GitHubのRepository Secretを、Cloudflareで発行したAPIトークンの値だけに更新してください。トークン自体を途中で改行したり、Account IDだけを入れたりしないでください。');
+    const format = [
+      'Bearer欄=' + (/Bearer/i.test(rawToken) ? 'あり' : 'なし'),
+      'API_TOKEN代入欄=' + (/CLOUDFLARE_API_TOKEN/.test(rawToken) ? 'あり' : 'なし'),
+      '改行=' + (/[\r\n]/.test(rawToken) ? 'あり' : 'なし'),
+      '非ASCII文字=' + (/[^\x00-\x7F]/.test(rawToken) ? 'あり' : 'なし'),
+    ].join('、');
+    throw new Error('CLOUDFLARE_PREVIEW_API_TOKEN からAPIトークンを特定できませんでした。形式確認（値は非表示）: ' + format + '。GitHubのRepository SecretにはCloudflareで発行したトークンの値だけを登録してください。');
   }
   if (!/^[a-fA-F0-9]{32}$/.test(account)) {
     throw new Error('CLOUDFLARE_PREVIEW_ACCOUNT_ID は32文字のアカウントIDだけを登録してください。使用例のコマンド・URL・APIトークンは入れないでください。');
