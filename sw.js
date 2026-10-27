@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v41-reading-garden";
+const CACHE_NAME = "basho-manazashi-v43-observe-then-compose";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,11 @@ const APP_SHELL = [
   "./tanka-catalog.js",
   "./reading-store.js",
   "./reading-garden.js",
+  "./haiku-catalog.js",
+  "./haiku-store.js",
+  "./haiku-service.js",
+  "./haiku-cards.js",
+  "./observation-timer.js",
   "./image-config.js",
   "./image-tools.js",
   "./image-service.js",

@@ -281,7 +281,9 @@ function renderHome() {
       <button class="round-button basho-mark-button" type="button" aria-label="芭蕉">芭</button>
       <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
     </header>
-    <basho-reading></basho-reading>
+    <basho-reading mode="summary"></basho-reading>
+    <basho-haiku></basho-haiku>
+    <details class="reading-library legacy-reading"><summary>これまでの短歌を読む</summary><basho-reading mode="library"></basho-reading></details>
     <section class="manazashi-card source-home-card quiet-card">
       <span class="screen-label">今日のまなざし</span>
       <div class="ink-branch"></div>

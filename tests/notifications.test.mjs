@@ -39,6 +39,8 @@ const registration = { id, token, endpoint };
 const today = Date.parse("2026-10-20T03:00:00Z"); // Noon in Japan.
 async function ready(env, day = "2026-10-20") {
   assert.equal((await api("subscribe", registration, env)).status, 200);
+  // Registration must predate the fixed simulated schedule, independent of the wall clock.
+  await env.NOTIFICATIONS_DB.prepare("UPDATE push_subscriptions SET created_at = ? WHERE id = ?").bind(today - 86400000, id).run();
   await env.NOTIFICATIONS_DB.prepare("INSERT INTO notification_days (day, minute) VALUES (?, ?)").bind(day, 600).run();
 }
 

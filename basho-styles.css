@@ -3456,3 +3456,39 @@ basho-reading { display: block; }
 .tabbar { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .tabbar .tab { min-width: 0; padding-left: 2px; padding-right: 2px; }
 @media (max-width: 360px) { .reading-growth { padding: 16px 12px; } .reading-growth h2 { font-size: 18px; } .reading-verse { font-size: 21px; } .tabbar .tab { font-size: 10px; } }
+
+/* 写真からつくる、新しい俳句の読み札 */
+basho-haiku { display: block; }
+.haiku-create { margin: 24px 0 32px; color: #344735; }
+.haiku-create h1 { margin: 8px 0 0; font-size: 27px; line-height: 1.55; letter-spacing: .03em; }
+.haiku-topic { background: #faf7ed; border-left: 4px solid #7e9470; }
+.haiku-topic .reading-verse { font-size: 25px; }
+.haiku-topic .reading-author { line-height: 1.8; font-size: 11px; }
+.haiku-hint { font-size: 13px; line-height: 1.9; padding-top: 16px; border-top: 1px solid #dddccd; }
+.haiku-create small { display: block; font-size: 11px; line-height: 1.8; color: #767c70; }
+.haiku-steps { padding: 0; margin: 24px 0; list-style: none; display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; counter-reset: steps; }
+.haiku-steps li { text-align: center; font-size: 10px; line-height: 1.6; }
+.haiku-steps li::before { counter-increment: steps; content: '0' counter(steps); display: block; color: #6c8062; font: 20px/1.8 Georgia, serif; }
+.haiku-photo-box { padding: 16px; border: 1px dashed #b4c1a8; background: #f3f5eb; border-radius: 18px; }
+.haiku-file-label { display: block; font-size: 15px; font-weight: bold; }
+.haiku-file-label input { display: block; margin: 14px 0; width: 100%; min-width: 0; font-size: 12px; }
+.haiku-photo { display: block; width: 100%; max-height: 330px; object-fit: cover; border-radius: 12px; margin: 16px 0; }
+.haiku-photo-empty { padding: 28px 0 15px; text-align: center; color: #7c8d72; }
+.haiku-photo-empty span { font-size: 34px; }
+.haiku-photo-empty p { font-size: 13px; line-height: 1.9; }
+.haiku-create > .main-button { width: 100%; margin-top: 18px; }
+.haiku-create button:disabled { cursor: default; opacity: .5; }
+.haiku-draft { margin-top: 24px; padding: 22px 18px; background: #fffaf0; border: 1px solid #ddd2b9; border-radius: 18px; }
+.haiku-draft h2 { font-size: 22px; margin: 10px 0; }
+.haiku-observed { padding: 12px; background: #ecf0e4; font-size: 12px; line-height: 1.9; border-radius: 10px; }
+.haiku-draft label { font-size: 12px; line-height: 1.8; }
+.haiku-draft textarea { display: block; box-sizing: border-box; width: 100%; padding: 16px; margin: 8px 0; border: 1px solid #bac5ae; border-radius: 10px; background: #fffdf7; color: #344735; font: 21px/1.9 'Yu Mincho',serif; resize: vertical; }
+.haiku-draft .main-button { width: 100%; margin-top: 18px; }
+.haiku-status { color: #526c48; font-size: 13px; line-height: 1.9; }
+.legacy-reading { margin: 22px 0; }
+.haiku-observation { text-align: center; padding: 24px 6px; }
+.haiku-observation > p { line-height: 2; font-size: 14px; }
+.haiku-countdown { padding: 36px 0; font: 64px/1.3 Georgia,serif; color: #59794f; }
+.haiku-examples { margin: 20px 0; }
+.haiku-examples p:not(.reading-verse) { font-size: 13px; line-height: 1.9; }
+.haiku-opening { font: 27px/1.9 'Yu Mincho',serif; margin: 14px 0; }

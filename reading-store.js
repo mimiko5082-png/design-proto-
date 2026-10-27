@@ -1,12 +1,12 @@
 import { poemById } from './tanka-catalog.js';
 export const READING_KEY = 'basho_reading_v1';
 export const STAGES = [
-  { xp: 0, name: 'まなざしの種', message: '一首読むたび、少しずつ育つ。' },
+  { xp: 0, name: 'まなざしの種', message: 'ことばを残すたび、少しずつ育つ。' },
   { xp: 1, name: '小さな芽', message: '言葉にふれて、芽が出ました。' },
   { xp: 3, name: 'ひらく双葉', message: 'いろんな景色を受けとめています。' },
-  { xp: 7, name: '風にゆれる若木', message: 'あなたの読書が、枝を伸ばしています。' },
+  { xp: 7, name: '風にゆれる若木', message: 'あなたのことばが、枝を伸ばしています。' },
   { xp: 15, name: '花咲く木', message: '出会った言葉が、花になりました。' },
-  { xp: 30, name: '実りの木', message: '繰り返し読む時間が、実っています。' },
+  { xp: 30, name: '実りの木', message: '日々のまなざしが、実っています。' },
   { xp: 60, name: 'まなざしの大樹', message: '今日の一首も、新しい葉になります。' },
 ];
 export function japanDay(now = new Date()) {
@@ -43,7 +43,9 @@ export function markRead(storage, poemId, now = new Date()) {
   return { reads: next, added: true };
 }
 export function growth(reads) {
-  const xp = normalizeReads({ reads }).length;
+  return growthForCount(normalizeReads({ reads }).length);
+}
+export function growthForCount(xp) {
   let level = STAGES.findLastIndex(stage => xp >= stage.xp);
   return { xp, level, stage: STAGES[level], next: STAGES[level + 1] || null };
 }

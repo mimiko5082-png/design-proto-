@@ -49,3 +49,14 @@ test("dashboard bundle exposes Cron and safely skips it until notification setup
   dashboard.scheduled({ scheduledTime: Date.now() }, {}, { waitUntil(value) { pending = value; } });
   await pending;
 });
+
+
+test("copy-paste bundle matches structured photo haiku source", async () => {
+  const output = { lines: ["閑さや", "ひかりのしずく", "ひとつ落つ"], observed: "葉が見えます。" };
+  const bindings = { ...env, AI: { run: async () => ({ response: JSON.stringify(output) }) } };
+  for (const worker of [source, dashboard]) {
+    const response = await worker.fetch(request("/api/images/haiku", { image: `data:image/png;base64,${png}`, topicId: "basho-shizukasa" }), bindings);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), output);
+  }
+});
