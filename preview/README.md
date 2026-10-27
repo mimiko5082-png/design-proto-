@@ -5,29 +5,29 @@
 - 準備済み: 実アプリのソースからプレビュー専用の静的ファイルを作るビルド。
 - 準備済み: 名前を `basho-preview` に限定したCloudflare設定。
 - 許可済み: 今後このアプリで依頼された変更を `codex-preview` へ送信してプレビューを更新する運用。
-- 未確認: CloudflareのGit接続。初回接続が終わるまでは自動公開は有効になりません。
+- 設定待ち: GitHub Actionsにプレビュー用のトークンとAccount IDを登録するまで自動公開は有効になりません。
 
 ユーザーはプレビュー専用ブランチへの送信を許可済みです。本番のプッシュ・マージ・公開には別途明示的な許可が必要です。この接続は本番用 `main` とは別の `codex-preview` ブランチを対象にします。ローカルには未公開のアプリ変更があります。公開前にその内容とブランチを確認してください。
 
-## 最初の一度だけ行う設定
+## 最初の一度だけ行う設定：GitHub Actions
 
-1. ユーザーの明示的な許可後、レビュー済みの作業内容を `codex-preview` ブランチへコミット・プッシュ。`main` へはプッシュしません。
-2. Cloudflareで既存の **basho-preview** を開く。**Settings（設定）→ Builds（ビルド）→ Connect（接続）** からGitHubを選ぶ。
-3. リポジトリ `mimiko5082-png/design-proto-` を選ぶ。
-4. Cloudflare上の「Production branch／ビルドするブランチ」は **codex-preview** に設定する。この項目はこのプレビュー専用Workerが追うブランチを意味します。本番サイトのmainではありません。
-5. 下記を指定して保存・ビルド。
+現在のCloudflare画面は「Git repository」のGitHub/GitLab/Originボタンと「API token for external CI/CD」を表示します。「Connect」が表示されずGitHubボタンがリポジトリを開くため、外部CI/CD方式に切り替えます。
 
-| 項目 | 値 |
-| --- | --- |
-| Root directory | `/`（リポジトリのルート） |
-| Build command | `node preview/build.mjs` |
-| Deploy command | `npx wrangler@4.151.0 deploy --config preview/wrangler.jsonc` |
+1. **basho-preview** の Settings → Builds → **API token for external CI/CD → Create token** を選ぶ。この画面の説明どおり、このWorkerだけに公開できるトークンを使用します。
+2. トークンはチャットやスクリーンショットに出さず、GitHubの対象リポジトリで **Settings → Secrets and variables → Actions → New repository secret** に保存します。
+3. トークンのSecret名は `CLOUDFLARE_PREVIEW_API_TOKEN`。この名前に実際のトークンを記入せず、値欄へ入力します。
+4. 同じ場所に `CLOUDFLARE_PREVIEW_ACCOUNT_ID` を追加し、CloudflareのAccount IDを値として保存します。Account IDはWorker名やURLとは別です。
+5. 登録完了後、`codex-preview` にコミットを送って初回実行を確認します。画面に現れる秘密情報を見せる必要はありません。「登録した」という返答で次へ進めます。
 
-既存のCloudflare GitHubアプリがある場合は、そのアクセス許可を再利用します。APIキーやトークンをチャットに入力する必要はありません。接続画面の選択肢はCloudflareのUIによって異なるため、表示を確認して案内します。
+ワークフローは `.github/workflows/deploy-preview.yml`。対象ブランチ・リポジトリ・Worker名を固定しています。GitHubとCloudflareの直接のGit接続は不要です。
+
+Secretsが未設定の実行では、ビルドとテストだけを行い、デプロイせずに設定待ちと表示します。Secret追加だけでは再実行されないため、登録後に次のプレビュー用コミットを送ります。手動実行ボタンはワークフローがmainに存在しないと表示されない場合があるため、この設定ではmainを変更せずpushで起動します。
+
+APIトークンをチャット、ソースコード、設定ファイル、Actionsのログへ書きません。既存の本番用トークンは利用しません。Cloudflareでスコープがbasho-previewだけであることを確認してから使用します。
 
 ## 設定後の使い方
 
-許可された更新を `codex-preview` へ送る → Cloudflareが自動ビルド・公開 → 同じURLを再読み込み。
+許可された更新を `codex-preview` へ送る → GitHub ActionsがビルドしてCloudflareのbasho-previewだけを公開 → 同じURLを再読み込み。
 
 URL: `https://basho-preview.mimiko5082.workers.dev/`
 
@@ -58,4 +58,4 @@ node --test tests/preview.test.mjs
 python3 tests/preview.browser.py
 ```
 
-生成物 `preview/dist/` はGit管理対象外。Cloudflareビルド時に生成します。既存の `ai-service/wrangler.jsonc` は本番AI用なので、プレビューのデプロイに使用しません。
+生成物 `preview/dist/` はGit管理対象外。GitHub Actionsのビルド時に生成します。既存の `ai-service/wrangler.jsonc` は本番AI用なので、プレビューのデプロイに使用しません。

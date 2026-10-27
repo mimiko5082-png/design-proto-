@@ -1,0 +1,43 @@
+name: Update preview only
+
+on:
+  push:
+    branches:
+      - codex-preview
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: basho-preview
+  cancel-in-progress: false
+
+jobs:
+  deploy-preview:
+    if: github.ref == 'refs/heads/codex-preview' && github.repository == 'mimiko5082-png/design-proto-'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PREVIEW_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PREVIEW_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Check out preview source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build and validate isolated preview
+        run: |
+          node preview/build.mjs
+          node --test tests/*.test.mjs
+      - name: Initial setup is still needed
+        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        run: echo '::notice::Preview deployment is waiting for CLOUDFLARE_PREVIEW_API_TOKEN and CLOUDFLARE_PREVIEW_ACCOUNT_ID repository secrets. No deployment was attempted.'
+      - name: Deploy basho-preview only
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx --yes wrangler@4.151.0 deploy --config preview/wrangler.jsonc
