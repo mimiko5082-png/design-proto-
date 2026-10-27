@@ -1,0 +1,7 @@
+{
+  "name": "basho-standalone-preview",
+  "private": true,
+  "type": "module",
+  "scripts": { "share": "node share.mjs" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

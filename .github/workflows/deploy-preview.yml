@@ -31,6 +31,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Build downloadable preview without Cloudflare credentials
+        run: |
+          npm ci --prefix preview --ignore-scripts --no-audit --no-fund
+          npm --prefix preview run share
+      - name: Attach browser preview HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: basho-preview-html
+          path: preview/share.html
+          retention-days: 7
       - name: Build and validate isolated preview
         run: |
           node preview/build.mjs

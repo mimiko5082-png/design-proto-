@@ -69,3 +69,25 @@ APIトークン単体のほか、引用符で囲まれた値、Bearer形式、�
 スクリプト内でも対象リポジトリ・ブランチ・Worker名を検証します。本番mainからは実行できません。
 
 未知の形式で停止した場合、Bearer欄・API_TOKEN代入欄・改行・非ASCII文字の有無だけをログに表示します。値の一部、先頭・末尾、文字数などは表示しません。
+
+## Cloudflareなしで見る方法
+
+`preview/share.html` はJS・CSS・画像をまとめた単一HTMLです。実アプリの同じプレビュー用コードから作成し、Cloudflareのトークンやデプロイ完了に依存しません。
+
+ブラウザ用の候補URL（GitHubの公開ファイルを表示する外部サービス）:
+
+https://raw.githack.com/mimiko5082-png/design-proto-/codex-preview/preview/share.html
+
+この環境からGitHackへの接続はプロキシに遮断されるため、外部URLの表示は未確認です。ブランチURLのため更新後は同じURLで確認できますが、外部サービスのキャッシュで反映が遅れる場合があります。外部サービスの可用性は保証しません。
+
+別の入手経路として、GitHub Actionsの実行結果の添付 `basho-preview-html` をダウンロードできます。展開して `share.html` を開いてください。AIは固定例で、写真を外部送信しません。ローカルファイルでのブラウザ保存の可否はブラウザ設定に依存します。
+
+更新コマンド:
+
+```
+npm ci --prefix preview --ignore-scripts --no-audit --no-fund
+npm --prefix preview run share
+python3 tests/share.browser.py
+```
+
+変更時は `share.html` もプレビュー専用ブランチにコミットします。本番のmainは変更しません。
