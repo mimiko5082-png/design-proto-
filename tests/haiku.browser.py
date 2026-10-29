@@ -42,6 +42,7 @@ try:
         expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
         page.locator('[data-haiku-action=save]').click()
         expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+        page.locator('.tabbar [data-nav=garden]').click()
         expect(page.locator('.reading-xp')).to_have_text('1 ことば')
         page.locator('.tabbar [data-nav=calendar]').click()
         expect(page.locator('.saved-haiku')).to_contain_text(prompt)
@@ -50,6 +51,7 @@ try:
         page.locator('.tabbar [data-nav=home]').click()
         expect(page.locator('[data-haiku-photo]')).to_have_count(1)
         expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
+        expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
         page.screenshot(path=str(OUT/'photo-challenge.png'),full_page=True)
         # The Japanese midnight changes the prompt while the page stays open.
         page.clock.pause_at(datetime(2026,10,26,14,59,58,tzinfo=timezone.utc))

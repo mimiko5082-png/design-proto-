@@ -7,7 +7,7 @@ const esc = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<
 class HaikuCards extends HTMLElement {
   connectedCallback() {
     this.day = japanDay(); this.topic = dailyTopic(this.day);
-    this.reflection = ''; this.noteEdited = false; this.showHint = false;
+    this.reflection = ''; this.noteEdited = false; this.showHint = false; this.noteOpen = false; this.restoring = true;
     this.busy = false; this.message = ''; this.error = ''; this.selection = 0;
     this.onDayCheck = () => this.refreshDay();
     this.dayTimer = setInterval(this.onDayCheck, 1000);
@@ -24,19 +24,25 @@ class HaikuCards extends HTMLElement {
         button.setAttribute('aria-expanded', String(this.showHint));
         this.querySelector('[data-photo-hint]').hidden = !this.showHint;
       }
+      if (action === 'retake' && !this.busy && !this.restoring) {
+        const input = this.querySelector('[data-haiku-photo]');
+        input.value = ''; input.click();
+      }
       if (action === 'save') this.save();
       if (action === 'cancel-photo' && !this.busy) { this.image = this.card.image; this.reflection = this.card.reflection || ''; this.message = '写真・メモの変更を取り消しました。'; this.error = ''; this.render(); }
-      if (action === 'simulate') { this.message = '今日のお題が届きました！ 下のお題に合う景色を撮ってみよう。これはプレビュー内の通知体験です。'; this.render(); }
     };
     this.onChange = event => { if (this.refreshDay()) return; if (event.target.matches('[data-haiku-photo]')) this.selectPhoto(event.target.files[0]); };
     this.onInput = event => {
       if (event.target.matches('[data-haiku-reflection]')) { this.reflection = event.target.value; this.noteEdited = true; this.paintDraftControls(); }
     };
+    this.onToggle = event => { if (event.target.matches('[data-photo-note]')) this.noteOpen = event.target.open; };
+    this.addEventListener('toggle', this.onToggle, true);
     this.addEventListener('input', this.onInput);
     this.addEventListener('click', this.onClick); this.addEventListener('change', this.onChange);
     this.render(); this.restore();
   }
   disconnectedCallback() {
+    this.removeEventListener('toggle', this.onToggle, true);
     this.removeEventListener('input', this.onInput);
     clearInterval(this.dayTimer);
     document.removeEventListener('visibilitychange', this.onDayCheck);
@@ -48,7 +54,7 @@ class HaikuCards extends HTMLElement {
     const day = japanDay();
     if (day === this.day) return false;
     this.selection++;
-    this.day = day; this.topic = dailyTopic(day); this.showHint = false;
+    this.day = day; this.topic = dailyTopic(day); this.showHint = false; this.noteOpen = false; this.restoring = true;
     this.card = null; this.image = null; this.reflection = ''; this.noteEdited = false; this.saved = false; this.busy = false; this.error = '';
     this.message = '新しい日になりました。今日のお題に切り替わりました。昨日までの保存済み写真はカレンダーに残っています。';
     this.render(); this.restore();
@@ -65,12 +71,12 @@ class HaikuCards extends HTMLElement {
         this.card = card; this.image = card.image; if (!this.noteEdited) this.reflection = card.reflection || ''; this.saved = true;
         const savedTopic = topicById(card.topicId);
         if (savedTopic) this.topic = { ...savedTopic, modern: card.modern || savedTopic.modern, original: card.original || savedTopic.original };
-        this.render();
       }
-    } catch { if (!this.isConnected || revision !== this.selection) return; this.error = '写真の保存領域を開けません。ブラウザの保存設定をご確認ください。'; this.render(); }
+    } catch { if (!this.isConnected || revision !== this.selection) return; this.error = '写真の保存領域を開けません。ブラウザの保存設定をご確認ください。'; }
+    finally { if (revision === this.selection && this.isConnected) { this.restoring = false; this.render(); } }
   }
   async selectPhoto(file) {
-    if (this.busy || !file) return;
+    if (this.busy || this.restoring || !file) return;
     const revision = ++this.selection;
     this.busy = true; this.error = ''; this.render();
     try { const image = await preparePhoto(file); if (revision === this.selection) this.image = image; }
@@ -78,7 +84,7 @@ class HaikuCards extends HTMLElement {
     finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
   }
   async save() {
-    if (this.busy || !this.image || (this.saved && !this.hasPendingChanges())) return;
+    if (this.busy || this.restoring || !this.image || (this.saved && !this.hasPendingChanges())) return;
     if (this.refreshDay()) return;
     const revision = this.selection;
     this.busy = true; this.error = ''; this.render();
@@ -113,9 +119,9 @@ class HaikuCards extends HTMLElement {
     return !!this.saved && (this.image !== this.card.image || this.reflection.trim() !== (this.card.reflection || ''));
   }
   saveLabel() {
-    if (!this.saved) return '今日の一枚を保存 ＋1ことば';
+    if (!this.saved) return '送信する';
     if (!this.hasPendingChanges()) return '今日の写真を保存済み';
-    return this.image !== this.card.image ? 'この写真に変更' : '気づきを保存';
+    return this.image !== this.card.image ? '送信する' : '気づきを保存';
   }
   paintDraftControls() {
     const pending = this.hasPendingChanges();
@@ -126,17 +132,14 @@ class HaikuCards extends HTMLElement {
   }
   render() {
     const pending = this.hasPendingChanges();
-    this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>一日のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
-    <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><button type="button" class="outline-button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p></details></article>
-    <p>30秒ほど周りを見渡して、お題に合う景色を一枚。俳句を書く必要はありません。</p>
-    <section class="haiku-photo-box"><label class="haiku-file-label">${this.saved?'写真を変更する':'お題に合う写真を撮る・選ぶ'}<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。${this.saved?'選び直したあと「この写真に変更」を押すと差し替わります。':'撮影・選択だけでは誰にも送信されません。'}</small>${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
-    <section class="photo-reflection"><label>いつもは気づかなかったこと <small>（任意）</small><textarea data-haiku-reflection rows="3" maxlength="280" placeholder="いつもの道なのに、葉っぱの影がこんなにきれいだと初めて気づいた。" ${this.busy?'disabled':''}>${esc(this.reflection)}</textarea></label><small>ひとことでも、空欄でも大丈夫。280文字までの自分用メモです。</small></section>
-    <button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||(this.saved&&!pending)?'disabled':''}>${this.saveLabel()}</button>
-    <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button><p class="reading-help" data-pending-edit ${pending?'':'hidden'}>まだ変更は保存していません。保存すると写真とメモがカレンダーにも反映されます。</p>
-    ${this.saved ? `<button type="button" class="main-button" data-nav="friends">友達の写真を見る</button><button type="button" class="outline-button" data-nav="calendar">写真カレンダーを見る →</button>` : ''}
+    this.innerHTML = `<section class="haiku-create photo-capture-home">
+    <article class="haiku-topic"><header><span class="reading-eyebrow">${esc(this.day)}</span><h1>今日のお題</h1></header><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button><details><summary>もとの俳句</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p></details></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
+    <section class="haiku-photo-box photo-capture-box"><input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>${this.image?`<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<label for="basho-photo-file" class="photo-capture-empty"><span aria-hidden="true">📷</span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'写真を撮る'}</strong></label>`}</section>
+    <div class="photo-capture-actions" ${this.image?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||(this.saved&&!pending)?'disabled':''}>${this.saveLabel()}</button></div>
+    ${this.image?`<p class="photo-capture-preview-note">プレビュー：送信するを押すと、この端末に保存します。友達への送信は未接続です。</p><details class="photo-reflection-details" data-photo-note ${this.noteOpen?'open':''}><summary>いつもは気づかなかったことを書く（任意）</summary><section class="photo-reflection"><label>いつもは気づかなかったこと <small>（任意）</small><textarea data-haiku-reflection rows="3" maxlength="280" placeholder="いつもの道なのに、葉っぱの影がこんなにきれいだと初めて気づいた。" ${this.busy?'disabled':''}>${esc(this.reflection)}</textarea></label><small>空欄でも大丈夫。280文字までの自分用メモです。</small></section></details>`:''}
+    <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
     <p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
-    <p class="reading-help">お題は毎日、日本時間の午前0時に切り替わります。同じ日のお題はみんな共通で、昨日とは必ず別のお題。保存は1日1枚です。写真はこのブラウザに残り、このプレビューでは外部へ送信しません。</p>
-    ${window.BASHO_PHOTO_PREVIEW ? '<button type="button" class="outline-button" data-haiku-action="simulate">プレビューでお題の通知を体験する</button><p class="reading-help">プレビューでは実際のプッシュ通知は届きません。お題は今すぐ試せます。</p>' : ''}</section>`;
+    </section>`;
   }
 }
 customElements.define('basho-haiku', HaikuCards);

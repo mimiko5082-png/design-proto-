@@ -275,14 +275,7 @@ function render() {
 }
 
 function renderHome() {
-  return `<div class="view home-view">
-    <header class="topbar">
-      <button class="round-button basho-mark-button" type="button" aria-label="芭蕉">芭</button>
-      <button class="today-chip" type="button" data-action="today">今日の<br>まなざし</button>
-    </header>
-    <basho-reading mode="summary"></basho-reading>
-    <basho-haiku></basho-haiku>
-  </div>`;
+  return `<div class="view home-view home-photo-only"><basho-haiku></basho-haiku></div>`;
 }
 
 function renderClassic() {

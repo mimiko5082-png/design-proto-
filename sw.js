@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v54-photo-color-flowers";
+const CACHE_NAME = "basho-manazashi-v55-simple-photo-capture";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -3621,3 +3621,25 @@ basho-haiku { display: block; }
 .garden-color-help { display: block; font-size: 10px; line-height: 1.8; color: #778267; }
 @keyframes garden-flower-bloom { from { opacity: 0; transform: scale(.6) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 @media(prefers-reduced-motion: reduce) { .garden-color-flowers > span { animation: none; } }
+
+/* Home is just the daily prompt and a photo capture/confirmation surface. */
+.home-photo-only { padding-top: 12px; }
+.photo-capture-home .haiku-topic { padding: 4px 2px 16px; }
+.photo-capture-home .haiku-topic h1 { font-size: 23px; margin: 8px 0 14px; }
+.photo-capture-home .photo-modern { margin: 12px 0 18px; font-size: 22px; line-height: 1.8; }
+.photo-topic-options { display: flex; align-items: flex-start; gap: 18px; font-size: 11px; color: #748066; }
+.photo-topic-options > button { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+.photo-topic-options details { margin: 0; }
+.photo-topic-options .reading-verse { font-size: 16px; }
+.photo-capture-home .photo-capture-box { padding: 0; border: 1px solid #d5dbc9; border-radius: 22px; background: #e8eddf; overflow: hidden; margin: 12px 0 16px; }
+.photo-capture-box .haiku-photo { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; max-height: none; border-radius: 0; margin: 0; }
+.photo-capture-empty { min-height: 260px; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; color: #657358; cursor: pointer; }
+.photo-capture-empty > span { font-size: 44px; filter: grayscale(.35); }
+.photo-capture-empty strong { font-size: 16px; }
+.photo-capture-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.photo-capture-box:focus-within { outline: 3px solid #8b9c77; outline-offset: 3px; }
+.photo-capture-actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; }
+.photo-capture-actions > button { width: 100%; min-width: 0; margin: 0; min-height: 48px; padding: 12px 5px; font-size: 14px; }
+.photo-capture-preview-note { font-size: 10px; line-height: 1.8; color: #768168; margin: 12px 0; }
+.photo-reflection-details { border-top: 1px solid #d9ddcd; padding-top: 14px; font-size: 12px; line-height: 1.8; }
+.photo-reflection-details > summary { cursor: pointer; }
