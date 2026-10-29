@@ -1,3 +1,4 @@
+import { postcardMarkup } from './photo-postcard.js';
 import { FLOWER_COLORS, colorFromPhoto, flowerSvg } from './garden-colors.js';
 import { buildPhotoAlbums, makeAlbumImage } from './photo-albums.js';
 import { loadCards } from './haiku-store.js';
@@ -88,7 +89,7 @@ class ReadingGarden extends HTMLElement {
       const days = monthCells(this.month);
       const selected = reads.filter(read => read.day === this.selectedDay);
       const selectedCards = cards.filter(card => card.day === this.selectedDay);
-      content = `<header class="reading-heading"><span class="reading-eyebrow">写真と言葉で残す、日々のまなざし</span><h1>写真カレンダー</h1><p>同じお題から見つけた、自分だけの景色。</p></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
+      content = `<header class="reading-heading"><h1>自分の記録</h1><button type="button" class="records-close" data-nav="friends" aria-label="みんなの投稿に戻る">×</button></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
         if (!day) return '<span></span>';
         const photo = cards.find(card=>card.day===day);
         const count = reads.filter(read=>read.day===day).length + cards.filter(card=>card.day===day).length;
@@ -138,7 +139,7 @@ class ReadingGarden extends HTMLElement {
   }
   haikuCard(card) {
     const topic = topicById(card.topicId);
-    if (card.creation === 'photo-challenge') return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">今日の芭蕉フォト · ${esc(card.day)}</span><p class="photo-modern">${esc(card.modern || topic?.modern || '')}</p><img class="haiku-photo" src="${esc(card.image)}" alt="お題に合わせて保存した写真">${card.caption?`<p class="saved-photo-caption">${esc(card.caption)}</p>`:''}${card.reflection ? `<section class="photo-reflection-saved"><small>いつもは気づかなかったこと</small><p>${esc(card.reflection)}</p></section>` : ''}<small>原句：${esc(card.original || card.lines.join(' ／ '))} · 松尾芭蕉</small></article>`;
+    if (card.creation === 'photo-challenge') return `<article class="saved-haiku">${postcardMarkup(card,{imageClass:'haiku-photo',captionClass:'saved-photo-caption'})}</article>`;
     return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">あなたの読み札 · ${card.creation === 'user' ? 'あなたが詠んだ一句' : card.edited ? 'AI案をあなたが編集' : 'AIとつくった一句'}</span><img class="haiku-photo" src="${esc(card.image)}" alt="この読み札に保存した写真"><p class="reading-verse">${card.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><details class="reading-hint"><summary>お題とAIの提案を見る</summary><p>お題：${esc(topic?.lines.join(' ／ ') || '')}</p><p>${esc(topic?.source || '')} · ${esc(card.topicDay)}</p>${card.aiLines ? `<p>AIの元の案：${card.aiLines.map(esc).join(' ／ ')}</p>` : ''}${card.observed ? `<p>写真で見えること（AIの認識）：${esc(card.observed)}</p>` : ''}<small>新しい一句は創作です。芭蕉の実作ではありません。</small></details></article>`;
   }
   poemCard(poem, full) {

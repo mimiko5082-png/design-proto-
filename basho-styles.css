@@ -3664,3 +3664,104 @@ basho-haiku { display: block; }
 .photo-caption-field textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 12px; border: 1px solid #cdd5c0; border-radius: 13px; background: #fffdf6; color: inherit; font: inherit; resize: vertical; }
 .friend-own-caption { white-space: pre-wrap; overflow-wrap: anywhere; padding: 0 11px 12px; margin: 0; font-size: 12px; line-height: 1.8; }
 .saved-photo-caption { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.9; }
+
+/* Reference direction: black, vivid green, and framed photographic postcards. */
+:root { --neo-green: #32b96e; --ink: #f0f2e9; --soft-ink: #a6aca0; --paper: #0b0e0b; --paper-light: #111611; --line: #293128; }
+html, body { background: #080b08; color: #f0f2e9; }
+body { background: radial-gradient(ellipse at top,#182619,#080b08 65%); }
+.app-shell { background: transparent; }
+.phone { background: #0b0e0b; border-color: #30382f; box-shadow: 0 20px 80px #0008; }
+.phone .screen { background: #0b0e0b; }
+.screen::before, .screen::after { display: none; }
+.view { color: #e8eee3; }
+.main-button { background: var(--neo-green); color: #07160c; border: 1px solid var(--neo-green); box-shadow: none; font-weight: 900; }
+.outline-button { background: transparent; color: var(--neo-green); border-color: var(--neo-green); box-shadow: none; }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-color: #86e8ab; }
+.tabbar { border: 0; box-shadow: none; background: #0b0e0bee; border-radius: 0; left: 10px; right: 10px; padding: 4px; gap: 8px; }
+.tabbar .tab { min-height: 43px; height: auto; color: #64bc85; background: transparent; border-radius: 50%; font-size: 9px; padding: 3px; gap: 1px; }
+.tabbar .tab.active { color: #07160c; background: var(--neo-green); border-radius: 22px; }
+.tabbar .tab-icon { color: inherit; background: none; box-shadow: none; font-size: 19px; height: 22px; width: auto; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+.home-photo-only { padding: 0 0 70px; }
+.neo-capture .capture-stage { position: relative; height: calc(100svh - 104px); min-height: 560px; overflow: hidden; border-left: 9px solid var(--neo-green); background: #151e15; }
+.capture-full-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 0 !important; margin: 0 !important; max-height: none !important; }
+.capture-placeholder { filter: saturate(.7) brightness(.86); }
+.capture-stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(#0006,transparent 45%,#0009 75%,#000b); }
+.neo-capture .capture-prompt { position: absolute; z-index: 2; inset: 30px 24px auto 22px; padding: 0; background: none; border: 0; }
+.capture-prompt > small { display: block; color: #79d39a; font-size: 9px; letter-spacing: .1em; line-height: 1.8; }
+.neo-capture .photo-modern { color: var(--neo-green); font-size: clamp(25px,7.5vw,33px); line-height: 1.4; font-style: italic; font-weight: 950; letter-spacing: -.04em; text-shadow: 0 2px 6px #0009; margin: 10px 0; }
+.capture-prompt .photo-topic-options { color: #b4dfbf; opacity: .85; font-size: 10px; margin-top: 14px; }
+.capture-prompt .haiku-hint { color: #daf0dc; font-size: 12px; background: #071107d9; padding: 12px; border: 1px solid #2b6c42; border-radius: 8px; }
+.capture-date { position: absolute; z-index: 2; writing-mode: vertical-rl; right: 10px; bottom: 113px; color: var(--neo-green); font: 700 11px/1.3 monospace; letter-spacing: .12em; }
+.neo-capture .photo-caption-field { position: absolute; z-index: 3; left: 22px; right: 36px; bottom: 154px; margin: 0; color: var(--neo-green); }
+.neo-capture .photo-caption-field > small { color: var(--neo-green); font-size: 9px; font-weight: 700; }
+.neo-capture .photo-caption-field textarea { color: var(--neo-green); background: transparent; border: 0; border-bottom: 1px solid #2da85c66; padding: 4px 0; margin: 0; border-radius: 0; font-style: italic; font-weight: 900; font-size: 20px; line-height: 1.35; resize: none; }
+.neo-capture .photo-caption-field textarea::placeholder { color: #79b68e; opacity: .8; }
+.neo-capture .photo-capture-empty { position: absolute; z-index: 3; width: 90px; min-height: 0; aspect-ratio: auto; left: calc(50% - 45px); bottom: 92px; padding: 0; color: var(--neo-green); gap: 8px; }
+.camera-shutter { width: 64px; height: 64px; border: 2px solid var(--neo-green); box-shadow: inset 0 0 0 5px #183321; border-radius: 50%; background: var(--neo-green); display: block; }
+.neo-capture .photo-capture-empty strong { white-space: nowrap; font-size: 9px; }
+.neo-capture .photo-capture-actions { position: absolute; z-index: 3; left: 70px; right: 22px; bottom: 91px; gap: 8px; }
+.neo-capture .photo-capture-actions > button { min-height: 40px; border-radius: 25px; padding: 9px 5px; font-size: 12px; }
+.capture-extra-actions { position: absolute; z-index: 3; left: 16px; right: 18px; bottom: 91px; display: flex; justify-content: space-between; pointer-events: none; }
+.capture-extra-actions button { width: 38px; height: 38px; border: 1px solid var(--neo-green); border-radius: 50%; background: #0a160c66; color: var(--neo-green); font-size: 22px; pointer-events: auto; }
+.capture-stage.has-photo .capture-extra-actions button:last-child { display: none; }
+.neo-capture .haiku-status { font-size: 11px; color: #8ecea0; margin: 7px 16px; }
+.neo-capture .haiku-status:empty { display: none; }
+.neo-capture > .outline-button, .neo-capture > .reading-error { margin: 10px 16px; width: calc(100% - 32px); }
+.photo-camera-dialog { background: #0b100c; border: 1px solid var(--neo-green); color: var(--neo-green); }
+.photo-camera-dialog > header button { background: #12291a; color: var(--neo-green); }
+.photo-camera-dialog > p { color: #b4c8b7; }
+.photo-postcard { position: relative; width: 100%; aspect-ratio: 9/14; margin: 0; border: 8px solid var(--neo-green); overflow: hidden; background: #151d14; color: var(--neo-green); }
+.photo-postcard::after { content: ''; position: absolute; inset: 0; background: linear-gradient(#0008,transparent 45%,#0004 80%); pointer-events: none; }
+.photo-postcard .postcard-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 0; margin: 0; max-height: none; }
+.postcard-prompt { position: absolute; z-index: 2; left: 16px; right: 22px; top: 16px; color: var(--neo-green); font-size: 24px; font-style: italic; font-weight: 950; line-height: 1.4; letter-spacing: -.04em; text-shadow: 0 2px 5px #0008; }
+.postcard-date { position: absolute; z-index: 2; right: 6px; bottom: 86px; writing-mode: vertical-rl; font: 700 10px/1 monospace; letter-spacing: .08em; color: var(--neo-green); }
+.postcard-caption { position: absolute; z-index: 2; margin: 0; left: 0; right: 0; bottom: 0; background: #080f09ee; color: var(--neo-green); padding: 18px 16px; font-size: 17px; font-style: italic; font-weight: 900; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.friends-feature { margin: 0 -18px; padding-top: 10px; color: #eee; }
+.feed-heading { padding: 0 18px; display: flex; align-items: center; justify-content: space-between; }
+.friends-feature h1 { color: var(--neo-green); font-style: italic; font-weight: 950; font-size: 23px; }
+.feed-heading > small { font-size: 9px; color: #9ca693; }
+.friends-prompt { padding: 0 18px; margin: 4px 0 10px; border: 0; background: none; }
+.friends-prompt p { margin: 0; font-size: 10px; color: #a9b4a2; font-weight: 400; }
+.friend-photo-grid { display: block; }
+.friend-own-photo, .feed-post { display: block; border: 0; border-radius: 0; background: none; margin: 0 0 22px; }
+.friend-photo-tile { display: block; border: 0; border-radius: 0; background: none; width: 100%; }
+.friend-photo-tile.selected { outline-color: #91e8ab; outline-offset: -3px; }
+.feed-post-author { display: flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 11px; color: #e4e9df; }
+.feed-post-author > span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--neo-green); color: #06180b; font-weight: 900; }
+.feed-post-author small { color: #89977d; font-size: 9px; }
+.friend-own-photo .friend-own-caption { padding: 18px 16px; margin: 0; font-size: 17px; }
+.friend-detail { background: #0f1711; color: #e0e9d9; border-color: #25673d; margin: 20px 14px; }
+.friend-detail h3 { color: var(--neo-green); }
+.friend-stamps button, .friend-phrases button { color: #b8d8bc; border-color: #28623b; background: #142318; }
+.friend-stamps button.is-reacted { background: #245435; border-color: var(--neo-green); color: #fff; }
+.friend-detail textarea { background: #09110b; border-color: #27613a; color: #ecf2e9; }
+.friend-close { color: var(--neo-green); background: #17311e; }
+.friend-comments li { border-color: #273d2b; }
+.reading-feature { color: #e5ecdd; }
+.reading-heading { position: relative; }
+.reading-mode-calendar .reading-heading h1 { color: var(--neo-green); font-style: italic; font-size: 24px; margin: 10px 0 32px; }
+.records-close { position: absolute; top: 0; right: 0; border: 1px solid var(--neo-green); border-radius: 50%; background: transparent; color: var(--neo-green); width: 32px; height: 32px; font-size: 23px; }
+.reading-calendar { border: 0; padding: 0; background: #0b0e0b; box-shadow: none; }
+.reading-month h2 { color: #e5ecdd; font-size: 15px; }
+.reading-month button, .reading-today { color: var(--neo-green); background: #131d14; border-color: #2c4f31; }
+.reading-week { color: #87917f; font-size: 10px; }
+.reading-days button { border: 1px solid #222c21; color: #c7d3bc; border-radius: 6px; min-height: 44px; font-size: 11px; }
+.reading-days button small { color: #65765c; }
+.reading-days button.selected { background: var(--neo-green); color: #07170c; }
+.reading-days button.is-today { border-color: var(--neo-green); }
+.reading-date-records h2, .reading-date-records small { color: #a6c5a2; }
+.saved-haiku { padding: 0; margin: 18px -18px; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.reading-date-records > h2 { color: var(--neo-green); font-size: 13px; }
+.reading-help { color: #7b8f72; }
+.post-complete-dialog { max-width: 350px; width: calc(100% - 44px); padding: 28px 24px; background: #0c120d; color: #ecf0e8; border: 1px solid var(--neo-green); border-radius: 25px; }
+.post-complete-dialog::backdrop { background: #000b; }
+.post-complete-dialog h2 { color: var(--neo-green); font-weight: 950; font-style: italic; font-size: 21px; line-height: 1.5; margin: 0 0 10px; }
+.post-complete-dialog > strong { font-size: 13px; }
+.post-complete-dialog > p { font-size: 11px; color: #a2b09b; line-height: 1.9; }
+.post-complete-dialog .main-button { display: block; width: 100%; margin-top: 20px; border-radius: 25px; }
+.post-later { display: block; margin: 15px auto 0; background: none; color: #a0b399; padding: 8px 20px; font-size: 12px; }
+@media(max-width:360px) { .neo-capture .photo-modern { font-size: 25px; } .postcard-prompt { font-size: 21px; } .postcard-caption { font-size: 15px; } }
+.friend-detail .friend-large-photo { display: none; }
+.neo-capture .photo-capture-actions .outline-button { border: 1px solid var(--neo-green); background: #07120b66; }
+.friends-feature .photo-postcard { aspect-ratio: 9/12; }

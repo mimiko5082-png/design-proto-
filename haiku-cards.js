@@ -1,3 +1,4 @@
+import { openPostCompletion, postDate } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { preparePhoto } from './haiku-service.js';
@@ -10,7 +11,7 @@ class HaikuCards extends HTMLElement {
     this.caption = '';
     this.reflection = ''; this.noteEdited = false; this.showHint = false; this.noteOpen = false; this.restoring = true;
     this.busy = false; this.message = ''; this.error = ''; this.selection = 0;
-    this.cameraSession = 0; this.cameraStream = null; this.cameraOpening = false; this.cameraReady = false;
+    this.cameraFacing = 'environment'; this.cameraSession = 0; this.cameraStream = null; this.cameraOpening = false; this.cameraReady = false;
     this.onDayCheck = () => this.refreshDay();
     this.dayTimer = setInterval(this.onDayCheck, 1000);
     this.onCameraVisibility = event => { if ((document.hidden || event?.type === 'pagehide') && (this.cameraStream || this.cameraOpening)) this.closeCamera(); };
@@ -30,6 +31,7 @@ class HaikuCards extends HTMLElement {
         this.querySelector('[data-photo-hint]').hidden = !this.showHint;
       }
       if (action === 'retake' || action === 'camera') this.openCamera();
+      if (action === 'camera-flip' && !this.cameraOpening) { this.cameraFacing=this.cameraFacing==='environment'?'user':'environment'; this.stopCamera(); this.openCamera(); }
       if (action === 'camera-close') this.closeCamera();
       if (action === 'camera-shoot') this.capturePhoto();
       if (action === 'pick-file' && !this.busy && !this.restoring) { const input=this.querySelector('[data-haiku-photo]'); input.value=''; input.click(); }
@@ -106,7 +108,7 @@ class HaikuCards extends HTMLElement {
     const session=++this.cameraSession;
     this.cameraOpening=true; this.render();
     try {
-      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false});
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:this.cameraFacing},width:{ideal:1280},height:{ideal:960}},audio:false});
       if(session!==this.cameraSession || !this.isConnected) { stream.getTracks().forEach(track=>track.stop()); return; }
       this.cameraStream=stream; this.cameraOpening=false;
       for(const track of stream.getVideoTracks()) track.addEventListener('ended',()=>{
@@ -179,7 +181,8 @@ class HaikuCards extends HTMLElement {
       this.card = savedCard;
       if (!this.card) throw Error('Save failed');
       this.image = this.card.image; this.caption = this.card.caption || ''; this.reflection = this.card.reflection || ''; this.saved = true;
-      this.message = added ? '今日の写真を保存しました。カレンダーでも見返せます。' : '今日の写真は保存済みです。';
+      this.message = added ? '今日の写真を保存しました。' : '今日の写真は保存済みです。';
+      if(added) openPostCompletion(this.card);
       window.dispatchEvent(new Event('basho-reading-updated'));
     } catch { if (revision === this.selection) this.error = '保存できませんでした。空き容量やブラウザの保存設定を確認してください。'; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
@@ -188,9 +191,9 @@ class HaikuCards extends HTMLElement {
     return !!this.saved && (this.image !== this.card.image || this.caption.trim() !== (this.card.caption || ''));
   }
   saveLabel() {
-    if (!this.saved) return '送信する';
+    if (!this.saved) return '投稿する';
     if (!this.hasPendingChanges()) return '今日の写真を保存済み';
-    return '送信する';
+    return '投稿する';
   }
   paintDraftControls() {
     const pending = this.hasPendingChanges();
@@ -201,15 +204,20 @@ class HaikuCards extends HTMLElement {
   }
   render() {
     const pending = this.hasPendingChanges();
-    this.innerHTML = `<section class="haiku-create photo-capture-home">
-    <article class="haiku-topic"><header><span class="reading-eyebrow">${esc(this.day)}</span><h1>今日のお題</h1></header><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button><details><summary>もとの俳句</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p></details></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
-    <section class="haiku-photo-box photo-capture-box"><input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>${this.image?`<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<button type="button" data-haiku-action="camera" class="photo-capture-empty" ${this.busy||this.restoring?'disabled':''}><span aria-hidden="true">📷</span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'写真を撮る'}</strong></button>`}</section>
-    ${this.image?`<label class="photo-caption-field">写真にひとこと <small>（任意）</small><textarea data-photo-caption rows="2" maxlength="120" placeholder="いつもの帰り道で見つけた。" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>${esc(this.caption)}</textarea></label>`:''}
+    this.innerHTML = `<section class="haiku-create photo-capture-home neo-capture">
+    <input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>
+    <div class="capture-stage ${this.image?'has-photo':'no-photo'}">
+    ${this.image?`<img class="haiku-photo capture-full-image" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:'<img class="capture-full-image capture-placeholder" src="./assets/kotoba-sunset.png" alt="撮影前の背景イメージ">'}
+    <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><small>${esc(this.topic.original || this.topic.lines.join(''))}</small><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
+    <time class="capture-date">${esc(this.saved?postDate(this.card):postDate({day:this.day,createdAt:Date.now()}))}</time>
+    ${this.image?`<label class="photo-caption-field"><small>もう一言だけ</small><textarea data-photo-caption rows="2" maxlength="120" aria-label="写真にひとこと（任意）" placeholder="見つけたことを、ひとこと。" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>${esc(this.caption)}</textarea></label>`:`<button type="button" data-haiku-action="camera" class="photo-capture-empty" ${this.busy||this.restoring?'disabled':''}><span class="camera-shutter" aria-hidden="true"></span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'タップしてカメラを開く'}</strong></button>`}
     <div class="photo-capture-actions" ${this.image?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||this.cameraStream||this.cameraOpening||(this.saved&&!pending)?'disabled':''}>${this.saveLabel()}</button></div>
+    <div class="capture-extra-actions"><button type="button" data-nav="calendar" aria-label="自分の記録を開く">▦</button><button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える">↻</button></div>
+    </div>
     <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
     ${this.cameraError?`<p class="reading-error" role="alert">${esc(this.cameraError)}</p><button type="button" class="outline-button" data-haiku-action="pick-file">端末のカメラ・写真選択を使う</button>`:''}
     <p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
-    ${(this.cameraOpening||this.cameraStream)?`<dialog class="photo-camera-dialog" aria-label="写真を撮影"><header><strong>今日の一枚を撮る</strong><button type="button" data-haiku-action="camera-close" aria-label="カメラを閉じる">×</button></header><div class="photo-camera-view"><video data-camera-video autoplay muted playsinline></video></div><p data-camera-status role="status">${this.cameraOpening?'カメラを開いています…':'カメラの準備をしています…'}</p><div class="photo-camera-controls"><button type="button" class="outline-button" data-haiku-action="camera-close">やめる</button><button type="button" class="main-button" data-haiku-action="camera-shoot" disabled>撮影する</button></div></dialog>`:''}
+    ${(this.cameraOpening||this.cameraStream)?`<dialog class="photo-camera-dialog" aria-label="写真を撮影"><header><strong>今日の一枚を撮る</strong><button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える">↻</button><button type="button" data-haiku-action="camera-close" aria-label="カメラを閉じる">×</button></header><div class="photo-camera-view"><video data-camera-video autoplay muted playsinline></video></div><p data-camera-status role="status">${this.cameraOpening?'カメラを開いています…':'カメラの準備をしています…'}</p><div class="photo-camera-controls"><button type="button" class="outline-button" data-haiku-action="camera-close">やめる</button><button type="button" class="main-button" data-haiku-action="camera-shoot" disabled>撮影する</button></div></dialog>`:''}
     </section>`;
     const dialog=this.querySelector('.photo-camera-dialog');
     if(dialog) { dialog.addEventListener('cancel',event=>{event.preventDefault();this.closeCamera();}); if(dialog.showModal) dialog.showModal(); else dialog.setAttribute('open',''); }

@@ -18,7 +18,7 @@ function app(storage = new Map(), perspectiveRequester = requestPerspective) {
     document: { getElementById: id => id === "screen" ? screen : element,
       querySelector: selector => selector === ".tabbar" ? tabbar : null,
       querySelectorAll: () => [], addEventListener() {} },
-    window: { BASHO_PERSPECTIVE: { endpoint: "" }, location: { search: "", href: "https://example.test/" } },
+    window: { addEventListener() {}, BASHO_PERSPECTIVE: { endpoint: "" }, location: { search: "", href: "https://example.test/" } },
     localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
     navigator: {}, console: { warn() {}, error() {} }, Date: Clock, URL, URLSearchParams,
     setInterval() {}, setTimeout() { return 1; }, clearTimeout() {}, requestPerspective: perspectiveRequester, preparedPerspective, normalizePlace, distanceMeters, mapGeometry,

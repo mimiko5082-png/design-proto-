@@ -41,6 +41,9 @@ try:
         page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))
         expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
         page.locator('[data-haiku-action=save]').click()
+        expect(page.locator('.post-complete-dialog')).to_be_visible()
+        page.locator('.post-later').click()
+        page.locator('.tabbar [data-nav=home]').click()
         expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
         page.locator('.tabbar [data-nav=calendar]').click()
         expect(page.locator('.saved-haiku')).to_contain_text(prompt)
@@ -56,7 +59,7 @@ try:
         page.clock.run_for(1000)
         expect(page.locator('.photo-modern')).to_have_text(prompt)
         page.clock.run_for(2000)
-        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-27')
+        expect(page.locator('.capture-date')).to_contain_text('2026.10.27')
         expect(page.locator('[data-haiku-photo]')).to_have_count(1)
         assert page.locator('.photo-modern').inner_text()!=prompt
         expect(page.locator('basho-haiku .haiku-photo')).to_have_count(0)
@@ -67,10 +70,10 @@ try:
         # Simulate returning after background timers were suspended for two days.
         page.clock.set_system_time(datetime(2026,10,29,3,0,tzinfo=timezone.utc))
         page.evaluate("window.dispatchEvent(new Event('focus'))")
-        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-29')
+        expect(page.locator('.capture-date')).to_contain_text('2026.10.29')
         assert page.locator('.photo-modern').inner_text() != next_prompt
         page.reload(wait_until='networkidle')
-        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-29')
+        expect(page.locator('.capture-date')).to_contain_text('2026.10.29')
         page.locator('[data-haiku-photo]').set_input_files({'name':'bad.png','mimeType':'image/png','buffer':b'not an image'})
         expect(page.locator('.reading-error')).to_be_visible()
         expect(page.locator('[data-haiku-action=save]')).to_be_disabled()

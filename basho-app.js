@@ -249,6 +249,8 @@ tabbar.addEventListener("click", (event) => {
   navigate(target.dataset.nav);
 });
 
+window.addEventListener('basho-show-posts',()=>navigate('friends'));
+
 function render() {
   const views = {
     home: renderHome,

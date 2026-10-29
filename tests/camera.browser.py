@@ -44,7 +44,7 @@ try:
   page.locator('[data-haiku-action=camera-shoot]').click()
   expect(page.locator('.photo-camera-dialog')).to_have_count(0)
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('送信する')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
   first=page.locator('basho-haiku .haiku-photo').get_attribute('src')
   # Closing retake preserves the existing photograph; Escape also stops tracks.
@@ -64,6 +64,9 @@ try:
   page.locator('[data-photo-caption]').fill('いつもの道の光がきれい。')
   assert page.locator('basho-haiku').evaluate('(node)=>node.caption')=='いつもの道の光がきれい。'
   page.locator('[data-haiku-action=save]').click()
+  expect(page.locator('.post-complete-dialog')).to_be_visible()
+  page.locator('.post-later').click()
+  page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
   assert page.locator('basho-haiku').evaluate('(node)=>node.card.caption')=='いつもの道の光がきれい。'
   saved=page.locator('basho-haiku .haiku-photo').get_attribute('src')

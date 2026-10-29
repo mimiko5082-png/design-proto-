@@ -10,7 +10,7 @@ mkdirSync(out, { recursive: true });
 const files = [
   'basho-app.js', 'basho-styles.css', 'perspective.js', 'place.js',
   'image-tools.js', 'image-service.js', 'image-validation.js',
-  'reading-garden.js', 'photo-albums.js', 'garden-colors.js', 'reading-store.js', 'tanka-catalog.js',
+  'reading-garden.js', 'photo-albums.js', 'garden-colors.js', 'photo-postcard.js', 'reading-store.js', 'tanka-catalog.js',
   'haiku-cards.js', 'haiku-catalog.js', 'haiku-service.js', 'haiku-store.js',
   'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js',
 ];
@@ -41,12 +41,12 @@ if (html.includes('serviceWorker.register')) throw Error('Service worker registr
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
-html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内<br>お題 → 写真 → 友達の写真（サンプル）・ひとこと・スタンプ</aside>');
+html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内</aside>');
 html = html.replace('</head>', `<style>
-.preview-banner { position:fixed; top:0; left:0; right:0; z-index:100; padding:10px 12px; background:#344d38; color:#fff; font:12px/1.8 sans-serif; text-align:center; }
-.app-shell { padding-top:82px; }
-.phone { height:calc(100svh - 100px); min-height:calc(100svh - 100px); }
-@media(min-width:600px){ .phone { height:min(900px,calc(100svh - 100px)); min-height:min(700px,calc(100svh - 100px)); } }
+.preview-banner { position:fixed; top:0; left:0; right:0; z-index:100; padding:6px 8px; background:#102418; color:#b9d8c1; font:10px/1.6 sans-serif; text-align:center; }
+.app-shell { padding-top:42px; }
+.phone { height:calc(100svh - 56px); min-height:calc(100svh - 56px); }
+@media(min-width:600px){ .phone { height:min(900px,calc(100svh - 56px)); min-height:min(700px,calc(100svh - 56px)); } }
 </style></head>`);
 writeFileSync(join(out, 'index.html'), html);
 writeFileSync(join(out, '_headers'), `/*
