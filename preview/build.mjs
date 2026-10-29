@@ -12,7 +12,7 @@ const files = [
   'image-tools.js', 'image-service.js', 'image-validation.js',
   'reading-garden.js', 'reading-store.js', 'tanka-catalog.js',
   'haiku-cards.js', 'haiku-catalog.js', 'haiku-service.js', 'haiku-store.js',
-  'observation-timer.js',
+  'observation-timer.js', 'photo-sharing.js',
 ];
 for (const file of files) {
   let content = readFileSync(join(root, file), 'utf8');
@@ -41,7 +41,7 @@ if (html.includes('serviceWorker.register')) throw Error('Service worker registr
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
-html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · AIは固定サンプル／写真の外部送信なし<br>30秒観察 → お題の書き出し → 自分の一句</aside>');
+html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真は共有を選ぶまで端末内<br>現代語のお題 → 写真 → 友達に共有（実通知・友達フィードなし）</aside>');
 html = html.replace('</head>', `<style>
 .preview-banner { position:fixed; top:0; left:0; right:0; z-index:100; padding:10px 12px; background:#344d38; color:#fff; font:12px/1.8 sans-serif; text-align:center; }
 .app-shell { padding-top:82px; }

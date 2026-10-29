@@ -3,8 +3,8 @@ import { notificationSupport, pushAPI, applicationKey, newPushToken, endpointID 
 class BashoNotifications extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `<section class="place-attach daily-notifications" aria-label="1日1回の通知">
-      <h2>今日のまなざしを通知</h2>
-      <p data-notification-window>毎日、日本時間9〜21時のランダムなタイミングで1回。みんなに同じタイミングで、街を見るきっかけを届けます。</p>
+      <h2>今日の写真のお題を通知</h2>
+      <p data-notification-window>毎日、日本時間9〜21時のランダムなタイミングで1回。みんなに同じタイミングで、写真のお題を届けます。</p>
       <p>通知は任意です。端末の設定や通信状態によって、遅れたり届かない場合があります。</p>
       <p data-notification-status role="status" aria-live="polite">通知の設定を確認しています…</p>
       <button class="outline-button" type="button" data-notification-enable disabled>1日1回の通知を受け取る</button>
@@ -48,7 +48,7 @@ class BashoNotifications extends HTMLElement {
       this.config = await pushAPI(this.endpoint, "config");
       applicationKey(this.config.publicKey);
       if (!this.isConnected) return;
-      this.querySelector("[data-notification-window]").textContent = `毎日、日本時間${this.config.startHour}〜${this.config.endHour}時のランダムなタイミングで1回。みんなに同じタイミングで、街を見るきっかけを届けます。`;
+      this.querySelector("[data-notification-window]").textContent = `毎日、日本時間${this.config.startHour}〜${this.config.endHour}時のランダムなタイミングで1回。みんなに同じタイミングで、写真のお題を届けます。`;
       this.message(this.enabled ? "この端末で1日1回の通知を受け取ります。" : Notification.permission === "denied" ? "通知がブロックされています。端末・ブラウザの設定から通知を許可してください。" : "通知を受け取りたい場合だけ、下のボタンから許可してください。");
     } catch (error) {
       this.config = null;

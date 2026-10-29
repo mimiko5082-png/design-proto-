@@ -1,8 +1,8 @@
 // Classic service-worker script. A push has no payload or user-supplied URL.
 self.addEventListener("push", event => {
   const day = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
-  event.waitUntil(self.registration.showNotification("今日のまなざしの時間です", {
-    body: "30秒、スマホを下ろして街を見てみよう。",
+  event.waitUntil(self.registration.showNotification("今日の芭蕉フォトのお題が届きました", {
+    body: "芭蕉のことばを、今日の一枚に。お題に合う景色を撮って友達に送ろう。",
     icon: new URL("assets/kotoba-icon-192.png", self.registration.scope).href,
     badge: new URL("assets/kotoba-icon-192.png", self.registration.scope).href,
     tag: "basho-daily-" + day,

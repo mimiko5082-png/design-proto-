@@ -3492,3 +3492,7 @@ basho-haiku { display: block; }
 .haiku-examples { margin: 20px 0; }
 .haiku-examples p:not(.reading-verse) { font-size: 13px; line-height: 1.9; }
 .haiku-opening { font: 27px/1.9 'Yu Mincho',serif; margin: 14px 0; }
+
+.photo-modern { font-size: 1.35rem; line-height: 1.8; font-weight: 700; overflow-wrap: anywhere; }
+.haiku-create > button { margin-top: 12px; width: 100%; }
+.haiku-create details { margin-top: 16px; }

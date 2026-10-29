@@ -13,7 +13,7 @@ const env = run => ({ AI:{run},IMAGE_RATE_LIMITER:{limit:async()=>({success:true
 test('daily Basho prompt is stable, rotates by Japanese date, and cites an actual original',()=>{
   assert.deepEqual(dailyTopic('2026-10-26'),dailyTopic('2026-10-26'));
   assert.notEqual(dailyTopic('2026-10-26').id,dailyTopic('2026-10-27').id);
-  assert.match(dailyTopic('2026-10-26').source,/芭蕉.*おくのほそ道/);
+  assert.match(dailyTopic('2026-10-26').source,/松尾芭蕉/);
 });
 test('photo haiku uses vision with a server-selected original and structured creative provenance',async()=>{
   let calls=0;

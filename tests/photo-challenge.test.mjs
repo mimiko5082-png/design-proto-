@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { BASHO_TOPICS, dailyTopic } from '../haiku-catalog.js';
+import { makeCard } from '../haiku-store.js';
+import { photoShareFile } from '../photo-sharing.js';
+const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+test('every daily photo topic has a modern paraphrase, a photo cue and a distinct Basho original', () => {
+  assert.equal(new Set(BASHO_TOPICS.map(t => t.id)).size, BASHO_TOPICS.length);
+  for (const topic of BASHO_TOPICS) {
+    assert.ok(topic.modern && topic.photoHint); assert.equal(topic.lines.length, 3);
+    assert.match(topic.source, /松尾芭蕉/);
+  }
+});
+test('photo challenge preserves modern prompt and original without requiring an AI-created poem', () => {
+  const topic = dailyTopic('2026-10-29');
+  const card = makeCard({id:'photo-challenge-2026-10-29',topicId:topic.id,topicDay:'2026-10-29',creation:'photo-challenge',image},topic.lines,new Date('2026-10-29T03:00:00Z'));
+  assert.equal(card.modern,topic.modern); assert.equal(card.aiLines,null);
+  assert.deepEqual(card.lines,topic.lines); assert.equal(card.day,'2026-10-29');
+});
+test('sharing includes the actual saved photo bytes, not a local-only or invented URL', async () => {
+  const file = photoShareFile({image,day:'2026-10-29'});
+  assert.equal(file.name,'basho-2026-10-29.png'); assert.equal(file.type,'image/png');
+  assert.deepEqual(new Uint8Array(await file.arrayBuffer()),Uint8Array.from(atob(image.split(',')[1]),c=>c.charCodeAt(0)));
+  assert.throws(()=>photoShareFile({image:'data:text/html;base64,PGgxPg==',day:'2026-10-29'}));
+});

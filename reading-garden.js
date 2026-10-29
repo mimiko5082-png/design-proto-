@@ -1,4 +1,5 @@
 import { loadCards } from './haiku-store.js';
+import { sharePhotoCard } from './photo-sharing.js';
 import { topicById } from './haiku-catalog.js';
 import { TANKA, poemById } from './tanka-catalog.js';
 import { japanDay, loadReads, markRead, growth, growthForCount, monthCells, shiftMonth } from './reading-store.js';
@@ -28,6 +29,11 @@ class ReadingGarden extends HTMLElement {
     const button = event.target.closest('[data-reading-action]');
     if (!button) return;
     const action = button.dataset.readingAction;
+    if (action === 'share-photo') {
+      const card = this.cards?.find(card => card.id === button.dataset.card);
+      if (card) sharePhotoCard(card).then(message => { this.error = message; this.render(); }).catch(error => { if (error.name !== 'AbortError') { this.error = '共有できませんでした。もう一度お試しください。'; this.render(); } });
+      return;
+    }
     if (action === 'poem') { this.poemId = button.dataset.poem; this.message = ''; }
     if (action === 'day') this.selectedDay = button.dataset.day;
     if (action === 'month') { this.month = shiftMonth(this.month, Number(button.dataset.delta)); this.selectedDay = `${this.month}-01`; }
@@ -54,6 +60,7 @@ class ReadingGarden extends HTMLElement {
     let reads = [];
     try { reads = loadReads(localStorage); }
     catch { this.error = '読書記録を読み込めません。ブラウザの保存設定をご確認ください。既存の記録は上書きしません。'; }
+    this.cards = cards;
     const mode = this.getAttribute('mode') || 'home';
     const { xp, level, stage, next } = growthForCount(reads.length + cards.length);
     const today = japanDay();
@@ -67,13 +74,13 @@ class ReadingGarden extends HTMLElement {
       const days = monthCells(this.month);
       const selected = reads.filter(read => read.day === this.selectedDay);
       const selectedCards = cards.filter(card => card.day === this.selectedDay);
-      content = `<header class="reading-heading"><span class="reading-eyebrow">写真と言葉で残す、日々のまなざし</span><h1>読み札カレンダー</h1><p>あの日の景色と、自分の一句を振り返る。</p></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
+      content = `<header class="reading-heading"><span class="reading-eyebrow">写真と言葉で残す、日々のまなざし</span><h1>読み札カレンダー</h1><p>同じお題から見つけた、自分だけの景色。</p></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
         if (!day) return '<span></span>';
         const count = reads.filter(read=>read.day===day).length + cards.filter(card=>card.day===day).length;
         return `<button type="button" class="${day === this.selectedDay ? 'selected' : ''} ${day === today ? 'is-today' : ''}" data-reading-action="day" data-day="${day}" aria-pressed="${day===this.selectedDay}" aria-label="${day}、${count}件${day===today?'、今日':''}"><span>${Number(day.slice(8))}</span><small>${count ? `${count}件` : '·'}</small></button>`;
-      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length + selectedCards.length}件</small></h2>${selectedCards.map(card=>this.haikuCard(card)).join('')}${selected.length ? selected.map(read=>this.poemCard(poemById(read.poemId),false)).join('') : selectedCards.length ? '' : '<p class="reading-empty">この日の読み札はまだありません。<br>写真と俳句を保存すると、この日に残ります。</p>'}<button class="outline-button" type="button" data-nav="home">今日の読み札をつくる</button></section>${help}`;
+      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length + selectedCards.length}件</small></h2>${selectedCards.map(card=>this.haikuCard(card)).join('')}${selected.length ? selected.map(read=>this.poemCard(poemById(read.poemId),false)).join('') : selectedCards.length ? '' : '<p class="reading-empty">この日の読み札はまだありません。<br>お題に合う写真を保存すると、この日に残ります。</p>'}<button class="outline-button" type="button" data-nav="home">今日の読み札をつくる</button></section>${help}`;
     } else if (mode === 'garden') {
-      content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set([...reads,...cards].map(read=>read.day)).size}</strong>記録した日</p><p><strong>${cards.length}</strong>集めた読み札</p><p><strong>${todayReads.length + cards.filter(card=>card.day===today).length}</strong>今日のことば</p></div><button class="main-button" type="button" data-nav="home">今日の景色を詠もう</button><button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
+      content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set([...reads,...cards].map(read=>read.day)).size}</strong>記録した日</p><p><strong>${cards.length}</strong>集めた読み札</p><p><strong>${todayReads.length + cards.filter(card=>card.day===today).length}</strong>今日のことば</p></div><button class="main-button" type="button" data-nav="home">今日の一枚を撮ろう</button><button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
     } else {
       const poem = poemById(this.poemId);
       const done = todayReads.some(read=>read.poemId === poem.id);
@@ -84,6 +91,7 @@ class ReadingGarden extends HTMLElement {
   }
   haikuCard(card) {
     const topic = topicById(card.topicId);
+    if (card.creation === 'photo-challenge') return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">今日の芭蕉フォト · ${esc(card.day)}</span><p class="photo-modern">${esc(card.modern || topic?.modern || '')}</p><img class="haiku-photo" src="${esc(card.image)}" alt="お題に合わせて保存した写真"><small>原句：${esc(card.lines.join(' ／ '))} · 松尾芭蕉</small><button type="button" class="outline-button" data-reading-action="share-photo" data-card="${esc(card.id)}">写真とお題を友達に送る</button></article>`;
     return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">あなたの読み札 · ${card.creation === 'user' ? 'あなたが詠んだ一句' : card.edited ? 'AI案をあなたが編集' : 'AIとつくった一句'}</span><img class="haiku-photo" src="${esc(card.image)}" alt="この読み札に保存した写真"><p class="reading-verse">${card.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><details class="reading-hint"><summary>お題とAIの提案を見る</summary><p>お題：${esc(topic?.lines.join(' ／ ') || '')}</p><p>${esc(topic?.source || '')} · ${esc(card.topicDay)}</p>${card.aiLines ? `<p>AIの元の案：${card.aiLines.map(esc).join(' ／ ')}</p>` : ''}${card.observed ? `<p>写真で見えること（AIの認識）：${esc(card.observed)}</p>` : ''}<small>新しい一句は創作です。芭蕉の実作ではありません。</small></details></article>`;
   }
   poemCard(poem, full) {

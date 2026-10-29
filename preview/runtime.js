@@ -1,3 +1,4 @@
+window.BASHO_PHOTO_PREVIEW = true;
 // Preview-only: no AI/provider calls, notifications, or shared database writes.
 (() => {
   try {

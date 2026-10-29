@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v43-observe-then-compose";
+const CACHE_NAME = "basho-manazashi-v44-photo-challenge";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./haiku-store.js",
   "./haiku-service.js",
   "./haiku-cards.js",
+  "./photo-sharing.js",
   "./observation-timer.js",
   "./image-config.js",
   "./image-tools.js",

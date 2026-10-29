@@ -16,7 +16,7 @@ export function makeCard(draft, lines, now = new Date()) {
   if (draft.aiLines) validateHaiku({ lines: draft.aiLines, observed: draft.observed || "固定の創作例" });
   if (!topicById(draft.topicId) || !validDay(draft.topicDay) || typeof draft.id !== 'string' || !draft.id) throw new Error('Invalid draft');
   decodeImageData(draft.image, MAX_AI_IMAGE_BYTES);
-  return { id: draft.id, day: japanDay(now), topicId: draft.topicId, topicDay: draft.topicDay, lines: lines.map(line=>line.trim()), aiLines: draft.aiLines ? [...draft.aiLines] : null, creation: draft.creation || 'photo-ai', observed: draft.observed || '', image: draft.image, createdAt: now.getTime(), edited: !!draft.aiLines && lines.map(line=>line.trim()).join('\n') !== draft.aiLines.join('\n') };
+  return { id: draft.id, day: japanDay(now), topicId: draft.topicId, topicDay: draft.topicDay, lines: lines.map(line=>line.trim()), aiLines: draft.aiLines ? [...draft.aiLines] : null, creation: draft.creation || 'photo-ai', modern: draft.creation === 'photo-challenge' ? topicById(draft.topicId).modern : null, observed: draft.observed || '', image: draft.image, createdAt: now.getTime(), edited: !!draft.aiLines && lines.map(line=>line.trim()).join('\n') !== draft.aiLines.join('\n') };
 }
 export async function loadCards() {
   const db = await openDB();
