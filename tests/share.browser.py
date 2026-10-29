@@ -44,20 +44,15 @@ try:
   expect(page.locator('[data-photo-hint]')).to_be_hidden()
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
+  caption='<帰り道> & 小さな光を見つけた。'
+  page.locator('[data-photo-caption]').fill(caption)
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
   expect(page.locator('.photo-capture-preview-note')).to_have_count(0)
   expect(page.locator('[data-photo-note]')).to_have_count(0)
   original=page.locator('basho-haiku .haiku-photo').get_attribute('src')
-  # Retake opens the picker; dismissing it preserves the existing photo.
-  with page.expect_file_chooser() as chooser:
-   page.locator('[data-haiku-action=retake]').click()
-  chooser.value.set_files([])
-  expect(page.locator('basho-haiku .haiku-photo')).to_have_attribute('src',original)
-  # Selecting a replacement is a draft; cancellation preserves the saved photo.
-  with page.expect_file_chooser() as chooser:
-   page.locator('[data-haiku-action=retake]').click()
-  chooser.value.set_files(str(ROOT/'assets/kotoba-lake.png'))
+  # Direct camera open/cancel/capture is covered by tests/camera.browser.py.
+  page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
   expect(page.locator('[data-haiku-action=save]')).to_have_text('送信する')
   page.locator('[data-haiku-action=cancel-photo]').click()
   expect(page.locator('basho-haiku .haiku-photo')).to_have_attribute('src',original)
@@ -80,10 +75,12 @@ try:
   expect(page.locator('.haiku-status')).to_contain_text('写真を変更しました')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.saved-photo-caption')).to_have_text(caption)
   expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   expect(page.locator('[data-day="2026-10-27"] .calendar-day-photo')).to_have_attribute('src',replacement)
   context.set_offline(False);page.reload(wait_until='networkidle');context.set_offline(True)
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.saved-photo-caption')).to_have_text(caption)
   expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   expect(page.locator('[data-day="2026-10-27"] .calendar-day-photo')).to_have_attribute('src',replacement)
   page.locator('.tabbar [data-nav=home]').click()
@@ -95,6 +92,8 @@ try:
   expect(page.locator('.friends-preview-note')).to_have_count(0)
   expect(page.locator('.friends-prompt')).to_contain_text(opening)
   expect(page.locator('.friend-own-photo')).to_have_count(1)
+  expect(page.locator('.friend-own-caption')).to_have_text(caption)
+  expect(page.locator('.friend-own-caption img')).to_have_count(0)
   expect(page.locator('.friend-photo-tile')).to_have_count(3)
   expect(page.locator('body')).not_to_contain_text('写真とお題を友達に送る')
   page.locator('[data-post=sample-aoi]').click()

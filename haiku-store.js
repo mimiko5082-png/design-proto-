@@ -15,12 +15,16 @@ export function normalizeReflection(value = '') {
   if (typeof value !== 'string' || value.length > 280) throw new Error('Invalid reflection');
   return value.trim();
 }
+export function normalizeCaption(value = '') {
+  if (typeof value !== 'string' || value.length > 120) throw new Error('Invalid caption');
+  return value.trim();
+}
 export function makeCard(draft, lines, now = new Date()) {
   validateHaiku({ lines, observed: draft.observed || "自分の観察から作成" });
   if (draft.aiLines) validateHaiku({ lines: draft.aiLines, observed: draft.observed || "固定の創作例" });
   if (!topicById(draft.topicId) || !validDay(draft.topicDay) || typeof draft.id !== 'string' || !draft.id) throw new Error('Invalid draft');
   decodeImageData(draft.image, MAX_AI_IMAGE_BYTES);
-  return { id: draft.id, day: japanDay(now), topicId: draft.topicId, topicDay: draft.topicDay, lines: lines.map(line=>line.trim()), aiLines: draft.aiLines ? [...draft.aiLines] : null, creation: draft.creation || 'photo-ai', modern: draft.creation === 'photo-challenge' ? topicById(draft.topicId).modern : null, original: topicById(draft.topicId).original || lines.join(''), source: topicById(draft.topicId).source, sourceUrl: topicById(draft.topicId).sourceUrl || null, observed: draft.observed || '', reflection: normalizeReflection(draft.reflection), image: draft.image, createdAt: now.getTime(), edited: !!draft.aiLines && lines.map(line=>line.trim()).join('\n') !== draft.aiLines.join('\n') };
+  return { id: draft.id, day: japanDay(now), topicId: draft.topicId, topicDay: draft.topicDay, lines: lines.map(line=>line.trim()), aiLines: draft.aiLines ? [...draft.aiLines] : null, creation: draft.creation || 'photo-ai', modern: draft.creation === 'photo-challenge' ? topicById(draft.topicId).modern : null, original: topicById(draft.topicId).original || lines.join(''), source: topicById(draft.topicId).source, sourceUrl: topicById(draft.topicId).sourceUrl || null, observed: draft.observed || '', reflection: normalizeReflection(draft.reflection), caption: normalizeCaption(draft.caption), image: draft.image, createdAt: now.getTime(), edited: !!draft.aiLines && lines.map(line=>line.trim()).join('\n') !== draft.aiLines.join('\n') };
 }
 export async function loadCards() {
   const db = await openDB();
@@ -53,7 +57,8 @@ export async function saveCard(card) {
 }
 
 // Replace only image data in the existing record; never add a card or change its day/XP.
-export async function replaceCardPhoto(id, image, reflection) {
+export async function replaceCardPhoto(id, image, reflection, caption) {
+  const comment = caption === undefined ? undefined : normalizeCaption(caption);
   const note = reflection === undefined ? undefined : normalizeReflection(reflection);
   decodeImageData(image, MAX_AI_IMAGE_BYTES);
   const db = await openDB();
@@ -66,7 +71,7 @@ export async function replaceCardPhoto(id, image, reflection) {
       request.onsuccess = () => {
         try {
           if (!request.result || request.result.creation !== 'photo-challenge') throw new Error('Photo card not found');
-          updated = { ...request.result, image, ...(note === undefined ? {} : { reflection: note }), updatedAt: Date.now() };
+          updated = { ...request.result, image, ...(note === undefined ? {} : { reflection: note }), ...(comment === undefined ? {} : { caption: comment }), updatedAt: Date.now() };
           store.put(updated);
         } catch (error) { writeError = error; tx.abort(); }
       };

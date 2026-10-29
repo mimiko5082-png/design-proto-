@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BASHO_TOPICS, dailyTopic } from '../haiku-catalog.js';
-import { makeCard, normalizeReflection } from '../haiku-store.js';
+import { makeCard, normalizeReflection, normalizeCaption } from '../haiku-store.js';
 import { photoShareFile } from '../photo-sharing.js';
 const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 test('every daily photo topic has a modern paraphrase, a photo cue and a distinct Basho original', () => {
@@ -61,4 +61,17 @@ test('optional reflection accepts empty/short notes and validates storage size',
   const draft = {id:'photo-challenge-2026-10-29',topicId:topic.id,topicDay:'2026-10-29',creation:'photo-challenge',image};
   assert.equal(makeCard(draft, topic.lines).reflection, '');
   assert.equal(makeCard({...draft,reflection:' 葉っぱの影がきれい '},topic.lines).reflection, '葉っぱの影がきれい');
+});
+
+test('photo caption is optional, bounded, and separate from the private reflection', () => {
+  assert.equal(normalizeCaption(), '');
+  assert.equal(normalizeCaption('  いつもの道  '), 'いつもの道');
+  assert.equal(normalizeCaption('あ'.repeat(120)).length,120);
+  assert.throws(()=>normalizeCaption('あ'.repeat(121)));
+  assert.throws(()=>normalizeCaption({text:'not text'}));
+  const topic=dailyTopic('2026-10-29');
+  const draft={id:'photo-challenge-2026-10-29',topicId:topic.id,topicDay:'2026-10-29',creation:'photo-challenge',image,reflection:'以前の自分用メモ'};
+  const card=makeCard(draft,topic.lines);
+  assert.equal(card.caption,''); assert.equal(card.reflection,'以前の自分用メモ');
+  assert.equal(makeCard({...draft,caption:'みんなに添えるひとこと'},topic.lines).caption,'みんなに添えるひとこと');
 });
