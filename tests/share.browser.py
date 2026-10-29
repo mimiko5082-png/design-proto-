@@ -23,6 +23,9 @@ try:
   page.clock.install(time=datetime(2026,10,27,3,0,tzinfo=timezone.utc))
   page.goto(f'http://127.0.0.1:{server.server_port}/share.html',wait_until='networkidle')
   context.set_offline(True)
+  page.locator('.tabbar [data-nav=garden]').click()
+  expect(page.locator('.reading-mode-garden [data-nav=home]')).to_have_text('今日の一枚を撮ろう')
+  page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('.haiku-topic')).to_be_visible()
   expect(page.locator('[data-haiku-lines]')).to_have_count(0)
   expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
@@ -83,6 +86,7 @@ try:
 
   page.locator('.tabbar [data-nav=garden]').click()
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')
+  expect(page.locator('.reading-mode-garden [data-nav=home]')).to_have_text('今日の写真を保存済み')
   assert len(requests)==2 and all(url.endswith('/share.html') for url in requests),requests
   assert not errors,errors
   for width in [320,390]:

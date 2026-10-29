@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v47-daily-topic-rollover";
+const CACHE_NAME = "basho-manazashi-v48-garden-photo-status";
 const APP_SHELL = [
   "./",
   "./index.html",
