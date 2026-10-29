@@ -8,7 +8,7 @@ import { sharePhotoCard } from './photo-sharing.js';
 class HaikuCards extends HTMLElement {
   connectedCallback() {
     this.day = japanDay(); this.topic = dailyTopic(this.day);
-    this.reflection = ''; this.noteEdited = false;
+    this.reflection = ''; this.noteEdited = false; this.showHint = false;
     this.busy = false; this.message = ''; this.error = ''; this.selection = 0;
     this.onDayCheck = () => this.refreshDay();
     this.dayTimer = setInterval(this.onDayCheck, 1000);
@@ -18,6 +18,13 @@ class HaikuCards extends HTMLElement {
     this.onClick = event => {
       if (this.refreshDay()) return;
       const action = event.target.closest('[data-haiku-action]')?.dataset.haikuAction;
+      if (action === 'hint') {
+        this.showHint = !this.showHint;
+        const button = this.querySelector('[data-haiku-action=hint]');
+        button.textContent = this.showHint ? 'ヒントを閉じる' : 'ヒントを見る';
+        button.setAttribute('aria-expanded', String(this.showHint));
+        this.querySelector('[data-photo-hint]').hidden = !this.showHint;
+      }
       if (action === 'save') this.save();
       if (action === 'cancel-photo' && !this.busy) { this.image = this.card.image; this.reflection = this.card.reflection || ''; this.message = '写真・メモの変更を取り消しました。'; this.error = ''; this.render(); }
       if (action === 'share') this.share();
@@ -43,7 +50,7 @@ class HaikuCards extends HTMLElement {
     const day = japanDay();
     if (day === this.day) return false;
     this.selection++;
-    this.day = day; this.topic = dailyTopic(day);
+    this.day = day; this.topic = dailyTopic(day); this.showHint = false;
     this.card = null; this.image = null; this.reflection = ''; this.noteEdited = false; this.saved = false; this.busy = false; this.error = '';
     this.message = '新しい日になりました。今日のお題に切り替わりました。昨日までの保存済み写真はカレンダーに残っています。';
     this.render(); this.restore();
@@ -132,7 +139,7 @@ class HaikuCards extends HTMLElement {
   render() {
     const pending = this.hasPendingChanges();
     this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>一日のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
-    <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><p class="haiku-hint">${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p><small>${esc(this.topic.source)}</small><p><a href="${esc(this.topic.sourceUrl)}" target="_blank" rel="noopener noreferrer">Wikisourceで出典を見る ↗</a></p><small>全集から選んだ60句を日替わりで。原句は掲載本文の表記、現代語訳と撮影ヒントは本アプリによるものです。</small></details></article>
+    <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><button type="button" class="outline-button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p></details></article>
     <p>30秒ほど周りを見渡して、お題に合う景色を一枚。俳句を書く必要はありません。</p>
     <section class="haiku-photo-box"><label class="haiku-file-label">${this.saved?'写真を変更する':'お題に合う写真を撮る・選ぶ'}<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。${this.saved?'選び直したあと「この写真に変更」を押すと差し替わります。':'撮影・選択だけでは誰にも送信されません。'}</small>${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
     <section class="photo-reflection"><label>いつもは気づかなかったこと <small>（任意）</small><textarea data-haiku-reflection rows="3" maxlength="280" placeholder="いつもの道なのに、葉っぱの影がこんなにきれいだと初めて気づいた。" ${this.busy?'disabled':''}>${esc(this.reflection)}</textarea></label><small>ひとことでも、空欄でも大丈夫。280文字までの自分用メモです。</small></section>
