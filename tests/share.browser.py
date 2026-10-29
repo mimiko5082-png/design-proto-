@@ -30,6 +30,8 @@ try:
   expect(page.locator('[data-haiku-lines]')).to_have_count(0)
   expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
   opening=page.locator('.photo-modern').inner_text()
+  expect(page.locator('.haiku-topic a')).to_have_attribute('href','https://ja.wikisource.org/wiki/芭蕉俳句全集')
+  expect(page.locator('.haiku-topic details')).to_contain_text('全集から選んだ60句')
   page.locator('[data-haiku-action=simulate]').click()
   expect(page.locator('.haiku-status')).to_contain_text('プレビュー内の通知体験')
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))

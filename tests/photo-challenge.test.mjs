@@ -35,3 +35,18 @@ test('daily prompt is stable all day and differs from yesterday through month/ye
     previous = topic;
   }
 });
+
+test('expanded anthology topics retain verified originals and source, and cover 60 distinct days', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const excerpts = JSON.parse(await readFile(new URL('../sources/basho-wikisource-excerpts.json', import.meta.url), 'utf8'));
+  assert.equal(BASHO_TOPICS.length, 60);
+  assert.equal(excerpts.excerpts.length, 60);
+  for (const topic of BASHO_TOPICS) {
+    assert.equal(topic.original, excerpts.excerpts.find(item => item.id === topic.id)?.original);
+    assert.equal(topic.sourceUrl, 'https://ja.wikisource.org/wiki/芭蕉俳句全集');
+  }
+  const ids = Array.from({length:60},(_,i)=>dailyTopic(new Date(Date.UTC(2026,9,30)+i*86400000).toISOString().slice(0,10)).id);
+  assert.equal(new Set(ids).size,60);
+  assert.notEqual(dailyTopic('2026-10-29').id,ids[0]);
+  assert.equal(dailyTopic('2026-10-29').id,'basho-samidare');
+});

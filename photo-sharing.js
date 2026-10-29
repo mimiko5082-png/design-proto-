@@ -9,7 +9,7 @@ export function photoShareFile(card) {
 }
 export async function sharePhotoCard(card) {
   const file = photoShareFile(card);
-  const text = `${card.day} 今日の芭蕉フォト\n「${card.modern}」\n原句：${card.lines.join(' ')}\n松尾芭蕉（現代語のお題は意訳）`;
+  const text = `${card.day} 今日の芭蕉フォト\n「${card.modern}」\n原句：${card.original || card.lines.join(' ')}\n松尾芭蕉（現代語のお題は意訳）`;
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     await navigator.share({ title: '今日の芭蕉フォト', text, files: [file] });
     return '共有画面を開きました。送信結果は共有先のアプリで確認してください。';

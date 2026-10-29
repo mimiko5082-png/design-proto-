@@ -1,4 +1,4 @@
-import { dailyTopic } from './haiku-catalog.js';
+import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { preparePhoto } from './haiku-service.js';
 import { makeCard, saveCard, loadCards, replaceCardPhoto } from './haiku-store.js';
@@ -50,7 +50,12 @@ class HaikuCards extends HTMLElement {
       const cards = await loadCards();
       if (!this.isConnected || revision !== this.selection) return;
       const card = cards.find(card => card.id === `photo-challenge-${this.day}`);
-      if (card) { this.card = card; this.image = card.image; this.saved = true; this.render(); }
+      if (card) {
+        this.card = card; this.image = card.image; this.saved = true;
+        const savedTopic = topicById(card.topicId);
+        if (savedTopic) this.topic = { ...savedTopic, modern: card.modern || savedTopic.modern, original: card.original || savedTopic.original };
+        this.render();
+      }
     } catch { if (!this.isConnected || revision !== this.selection) return; this.error = '写真の保存領域を開けません。ブラウザの保存設定をご確認ください。'; this.render(); }
   }
   async selectPhoto(file) {
@@ -103,7 +108,7 @@ class HaikuCards extends HTMLElement {
   render() {
     const pending = this.saved && this.image !== this.card.image;
     this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>一日のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
-    <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><p class="haiku-hint">${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${this.topic.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><small>${esc(this.topic.source)}</small></details></article>
+    <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><p class="haiku-hint">${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p><small>${esc(this.topic.source)}</small><p><a href="${esc(this.topic.sourceUrl)}" target="_blank" rel="noopener noreferrer">Wikisourceで出典を見る ↗</a></p><small>全集から選んだ60句を日替わりで。原句は掲載本文の表記、現代語訳と撮影ヒントは本アプリによるものです。</small></details></article>
     <p>30秒ほど周りを見渡して、お題に合う景色を一枚。俳句を書く必要はありません。</p>
     <section class="haiku-photo-box"><label class="haiku-file-label">${this.saved?'写真を変更する':'お題に合う写真を撮る・選ぶ'}<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。${this.saved?'選び直したあと「この写真に変更」を押すと差し替わります。':'撮影・選択だけでは誰にも送信されません。'}</small>${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
     <button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||(this.saved&&!pending)?'disabled':''}>${pending?'この写真に変更':this.saved?'今日の写真を保存済み':'今日の一枚を保存 ＋1ことば'}</button>

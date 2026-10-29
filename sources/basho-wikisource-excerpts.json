@@ -1,0 +1,249 @@
+{
+  "title": "芭蕉俳句全集",
+  "url": "https://ja.wikisource.org/wiki/芭蕉俳句全集",
+  "provenance": "ユーザーが2026-10-29に提供した本文からの抜粋。ライブページを取得したものではない。",
+  "inputSha256": "cd45f664a92b3bf1c7c640d9d912429ca4ad321dcd24a9e64d3446756336efb5",
+  "normalization": "空白と改行を除去。縦書き繰返し記号〳〵を保持。",
+  "excerpts": [
+    {
+      "id": "basho-shizukasa",
+      "original": "閑さや岩にしみ入るせみの聲"
+    },
+    {
+      "id": "basho-samidare",
+      "original": "五月雨を集めて早し最上川"
+    },
+    {
+      "id": "basho-natsukusa",
+      "original": "夏草や兵どもが夢の跡"
+    },
+    {
+      "id": "basho-akaaka",
+      "original": "あか〳〵と日はつれなくも秋の風"
+    },
+    {
+      "id": "basho-togarashi",
+      "original": "靑くても有るべきものを唐辛"
+    },
+    {
+      "id": "basho-aoyagi",
+      "original": "靑柳の泥にしだるゝ汐干哉"
+    },
+    {
+      "id": "basho-harunare",
+      "original": "春なれや名もなき山の朝霞"
+    },
+    {
+      "id": "basho-harusame-shizuku",
+      "original": "春雨の木下に傳ふしづく哉"
+    },
+    {
+      "id": "basho-harusame-yomogi",
+      "original": "春雨や蓬をのばす草の道"
+    },
+    {
+      "id": "basho-hibari-nagakihi",
+      "original": "長き日を囀り足らぬ雲雀かな"
+    },
+    {
+      "id": "basho-hibari-touge",
+      "original": "雲雀より上に休らふ峠かな"
+    },
+    {
+      "id": "basho-chou-hikage",
+      "original": "蝶のとぶばかり野中の日影哉"
+    },
+    {
+      "id": "basho-chou-hane",
+      "original": "蝶の羽の幾度越ゆる塀の屋根"
+    },
+    {
+      "id": "basho-umegaka",
+      "original": "梅が香にのつと日の出る山路哉"
+    },
+    {
+      "id": "basho-ume-tori",
+      "original": "梅さいて喜ぶとりの景色哉"
+    },
+    {
+      "id": "basho-ippon-yanagi",
+      "original": "野と山の中に一本柳哉"
+    },
+    {
+      "id": "basho-tsubaki-mizu",
+      "original": "落ちさまに水こぼしけり花椿"
+    },
+    {
+      "id": "basho-sakura-kazenaki",
+      "original": "風なきに散るや若木の花櫻"
+    },
+    {
+      "id": "basho-hatsuzakura",
+      "original": "初櫻をりしもけふはよき日也"
+    },
+    {
+      "id": "basho-hananoyama",
+      "original": "山の名もきゝたし花の山の道"
+    },
+    {
+      "id": "basho-sumire",
+      "original": "山路來て何やらゆかし菫草"
+    },
+    {
+      "id": "basho-furuike",
+      "original": "古池や蛙とびこむ水の音"
+    },
+    {
+      "id": "basho-hotaru-kusanoha",
+      "original": "草の葉を落ちるよりとぶ螢哉"
+    },
+    {
+      "id": "basho-hotaru-hiru",
+      "original": "晝見れば首筋赤き螢哉"
+    },
+    {
+      "id": "basho-katatsumuri",
+      "original": "蝸牛角ふりわけよ須磨明石"
+    },
+    {
+      "id": "basho-minakami",
+      "original": "水上は鶯啼いて水淺し"
+    },
+    {
+      "id": "basho-sara-hachi",
+      "original": "皿鉢のほのかに響く宵すゞみ"
+    },
+    {
+      "id": "basho-kawakaze",
+      "original": "川風や薄かき衣たる夕納凉"
+    },
+    {
+      "id": "basho-natsuzashiki",
+      "original": "山も庭も動き入るゝや夏座敷"
+    },
+    {
+      "id": "basho-minazuki",
+      "original": "六月や峰に雲置く嵐山"
+    },
+    {
+      "id": "basho-kitsutsuki",
+      "original": "木啄も庵は破らず夏木立"
+    },
+    {
+      "id": "basho-atsukihi",
+      "original": "暑き日を海へ入れたり最上川"
+    },
+    {
+      "id": "basho-kumo-tsuki",
+      "original": "雲の峰幾つ崩れて月の山"
+    },
+    {
+      "id": "basho-akino-mizu",
+      "original": "あきの野や草の中ゆく水の音"
+    },
+    {
+      "id": "basho-akifukaki",
+      "original": "秋深き隣は何をする人ぞ"
+    },
+    {
+      "id": "basho-konomichi",
+      "original": "此道や行く人なしに秋の暮"
+    },
+    {
+      "id": "basho-kareeda",
+      "original": "枯枝に烏のとまりけり秋の暮"
+    },
+    {
+      "id": "basho-araumi",
+      "original": "荒海や佐渡に橫ふ天の川"
+    },
+    {
+      "id": "basho-meigetsu-mado",
+      "original": "名月や西にもほしき窓一つ"
+    },
+    {
+      "id": "basho-meigetsu-kage",
+      "original": "名月や我と筆架の影法師"
+    },
+    {
+      "id": "basho-asagao-mizu",
+      "original": "朝顏や水ある方に人の立つ"
+    },
+    {
+      "id": "basho-monoieba",
+      "original": "物いへば唇寒し秋の風"
+    },
+    {
+      "id": "basho-kikunoka",
+      "original": "菊の香や奈良には古き佛達"
+    },
+    {
+      "id": "basho-aki-shiroshi",
+      "original": "石山の石より白し秋の風"
+    },
+    {
+      "id": "basho-hatsuyuki-suisen",
+      "original": "初雪や水仙の葉のたわむ程"
+    },
+    {
+      "id": "basho-hatsuyuki-hashi",
+      "original": "初雪やかけかゝりたる橋のうへ"
+    },
+    {
+      "id": "basho-yuki-asa",
+      "original": "雪の朝ひとり乾鮭をかみ得たり"
+    },
+    {
+      "id": "basho-yukimi",
+      "original": "いざさらば雪見にころぶ所迄"
+    },
+    {
+      "id": "basho-suisen-shoji",
+      "original": "水仙や白き障子のともうつり"
+    },
+    {
+      "id": "basho-fuyugare",
+      "original": "冬枯や世は一色に風の音"
+    },
+    {
+      "id": "basho-umikurete",
+      "original": "海暮れて鴨の聲ほのかに白し"
+    },
+    {
+      "id": "basho-hyakunen",
+      "original": "百年の景色を庭の落葉哉"
+    },
+    {
+      "id": "basho-tabiniyande",
+      "original": "旅に病んで夢は枯野をかけめぐる"
+    },
+    {
+      "id": "basho-fuyunosora",
+      "original": "我ために日はうらゝ也冬の空"
+    },
+    {
+      "id": "basho-chanohana",
+      "original": "茶の花に人里ちかき山路哉"
+    },
+    {
+      "id": "basho-kaitsuburi",
+      "original": "かいつぶり顏見合せて又はいり"
+    },
+    {
+      "id": "basho-kamo-ukine",
+      "original": "己が身を枕に鴨のうきね哉"
+    },
+    {
+      "id": "basho-tsukitoume",
+      "original": "春もやゝ景色とゝのふ月と梅"
+    },
+    {
+      "id": "basho-neko-oboro",
+      "original": "猫の戀やむ時閨のおぼろ月"
+    },
+    {
+      "id": "basho-chanoha-aki",
+      "original": "秋風の吹いても靑し栗の毯"
+    }
+  ]
+}
