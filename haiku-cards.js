@@ -64,7 +64,7 @@ class HaikuCards extends HTMLElement {
     finally { this.busy = false; if (this.isConnected) this.render(); }
   }
   render() {
-    this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>毎日9〜21時のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
+    this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>一日のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
     <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><p class="haiku-hint">${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${this.topic.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><small>${esc(this.topic.source)}</small></details></article>
     <p>30秒ほど周りを見渡して、お題に合う景色を一枚。俳句を書く必要はありません。</p>
     <section class="haiku-photo-box">${!this.saved ? `<label class="haiku-file-label">お題に合う写真を撮る・選ぶ<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。撮影・選択だけでは誰にも送信されません。</small>` : '<strong>今日の一枚</strong>'}${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
