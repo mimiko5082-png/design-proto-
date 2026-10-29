@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v53-photo-garden-albums";
+const CACHE_NAME = "basho-manazashi-v54-photo-color-flowers";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "./reading-store.js",
   "./reading-garden.js",
   "./photo-albums.js",
+  "./garden-colors.js",
   "./haiku-catalog.js",
   "./haiku-store.js",
   "./haiku-service.js",

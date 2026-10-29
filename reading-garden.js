@@ -1,3 +1,4 @@
+import { FLOWER_COLORS, colorFromPhoto, flowerSvg } from './garden-colors.js';
 import { buildPhotoAlbums, makeAlbumImage } from './photo-albums.js';
 import { loadCards } from './haiku-store.js';
 import { topicById } from './haiku-catalog.js';
@@ -12,7 +13,7 @@ class ReadingGarden extends HTMLElement {
   connectedCallback() {
     this.poemId = TANKA[0].id;
     this.selectedDay = japanDay(); this.month = this.selectedDay.slice(0,7);
-    this.message = ''; this.error = ''; this.albumId = null; this.albumPage = 0; this.exportBusy = false;
+    this.message = ''; this.error = ''; this.albumId = null; this.albumPage = 0; this.exportBusy = false; this.selectedColor = null;
     this.onClick = event => this.handleClick(event);
     this.onUpdate = () => this.render();
     this.addEventListener('click', this.onClick);
@@ -29,6 +30,7 @@ class ReadingGarden extends HTMLElement {
     const button = event.target.closest('[data-reading-action]');
     if (!button) return;
     const action = button.dataset.readingAction;
+    if (action === 'color') this.selectedColor = this.selectedColor === button.dataset.color ? null : button.dataset.color;
     if (action === 'album-open') { this.albumId = button.dataset.album; this.albumPage = 0; this.error = ''; this.message = ''; }
     if (action === 'album-close') { this.albumId = null; this.message = ''; }
     if (action === 'album-page') this.albumPage = Math.max(0, Math.min(6,this.albumPage+Number(button.dataset.delta)));
@@ -64,6 +66,14 @@ class ReadingGarden extends HTMLElement {
     this.cards = cards;
     const mode = this.getAttribute('mode') || 'home';
     this.photoAlbums = buildPhotoAlbums(cards);
+    if (mode === 'garden') {
+      const photoColors=[];
+      for(const card of this.photoAlbums.photos) {
+        try { const color=await colorFromPhoto(card.image); if (color) photoColors.push({card,color}); } catch {}
+        if(revision !== this.revision || !this.isConnected) return;
+      }
+      this.photoColors=photoColors;
+    }
     const { xp, level, stage, next } = growthForCount(reads.length + cards.length);
     const gardenVisual = mode === 'garden' ? this.photoGarden(level) : tree(level);
     const today = japanDay();
@@ -84,7 +94,7 @@ class ReadingGarden extends HTMLElement {
         return `<button type="button" class="${day === this.selectedDay ? 'selected' : ''} ${day === today ? 'is-today' : ''}" data-reading-action="day" data-day="${day}" aria-pressed="${day===this.selectedDay}" aria-label="${day}、${count}件${day===today?'、今日':''}"><span>${Number(day.slice(8))}</span><small>${count ? `${count}件` : '·'}</small></button>`;
       }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length + selectedCards.length}件</small></h2>${selectedCards.map(card=>this.haikuCard(card)).join('')}${selected.length ? selected.map(read=>this.poemCard(poemById(read.poemId),false)).join('') : selectedCards.length ? '' : '<p class="reading-empty">この日の読み札はまだありません。<br>お題に合う写真を保存すると、この日に残ります。</p>'}<button class="outline-button" type="button" data-nav="home">今日の読み札をつくる</button></section>${help}`;
     } else if (mode === 'garden') {
-      content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set([...reads,...cards].map(read=>read.day)).size}</strong>記録した日</p><p><strong>${cards.length}</strong>集めた読み札</p><p><strong>${todayReads.length + cards.filter(card=>card.day===today).length}</strong>今日のことば</p></div><button class="main-button" type="button" data-nav="home">${todayPhotoSaved ? '今日の写真を保存済み' : '今日の一枚を撮ろう'}</button>${this.albumShelf()}<button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
+      content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set([...reads,...cards].map(read=>read.day)).size}</strong>記録した日</p><p><strong>${cards.length}</strong>集めた読み札</p><p><strong>${todayReads.length + cards.filter(card=>card.day===today).length}</strong>今日のことば</p></div><button class="main-button" type="button" data-nav="home">${todayPhotoSaved ? '今日の写真を保存済み' : '今日の一枚を撮ろう'}</button>${this.colorCollection()}${this.albumShelf()}<button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
     } else {
       const poem = poemById(this.poemId);
       const done = todayReads.some(read=>read.poemId === poem.id);
@@ -95,7 +105,15 @@ class ReadingGarden extends HTMLElement {
   }
   photoGarden(level) {
     const photos = this.photoAlbums.photos.slice(-5);
-    return `<div class="photo-garden-scene" aria-label="あなたの写真が飾られた庭">${tree(level)}<div class="garden-photo-decorations">${photos.map(card=>`<figure><img src="${esc(card.image)}" alt="${esc(card.day)}に見つけた景色"><figcaption>${esc(card.day.slice(5).replace('-',' / '))}</figcaption></figure>`).join('')}</div>${!photos.length?'<p class="garden-first-photo">最初の一枚を、庭に飾ろう。</p>':''}</div>`;
+    return `<div class="photo-garden-scene" aria-label="あなたの写真が飾られた庭">${tree(level)}<div class="garden-color-flowers" aria-label="写真の色から咲いた花">${(this.photoColors || []).slice(-7).map(({card,color})=>`<span>${flowerSvg(color,esc(card.day+'の'+color.name))}</span>`).join('')}</div><div class="garden-photo-decorations">${photos.map(card=>`<figure><img src="${esc(card.image)}" alt="${esc(card.day)}に見つけた景色"><figcaption>${esc(card.day.slice(5).replace('-',' / '))}</figcaption></figure>`).join('')}</div>${!photos.length?'<p class="garden-first-photo">最初の一枚を、庭に飾ろう。</p>':''}</div>`;
+  }
+  colorCollection() {
+    const colors=this.photoColors || [];
+    const found=new Set(colors.map(item=>item.color.id));
+    const recent=colors.at(-1);
+    const selected=FLOWER_COLORS.find(color=>color.id===this.selectedColor);
+    const matches=colors.filter(item=>item.color.id===this.selectedColor).reverse();
+    return `<section class="garden-color-collection"><span class="reading-eyebrow">いつもの日常に、こんな色があった。</span><h2>見つけた色の花</h2><p>撮った写真からひとつ色を見つけて、庭に花を咲かせます。</p>${recent?`<div class="garden-latest-flower">${flowerSvg(recent.color,esc(recent.color.name))}<div><small>${esc(recent.card.day)}の写真から</small><strong>${esc(recent.color.name)}が咲きました</strong><span>この一枚の色が、庭に仲間入り。</span></div></div>`:`<p class="reading-help">${this.photoAlbums.photos.length?'この写真からは色を読み取れませんでした。写真は庭と写真帖に残ります。':'写真を保存すると、最初の花が咲きます。'}</p>`}<div class="garden-color-grid" aria-label="見つけた色のコレクション">${FLOWER_COLORS.map(color=>{const unlocked=found.has(color.id);return `<button type="button" class="${unlocked?'unlocked':'undiscovered'}" data-reading-action="color" data-color="${color.id}" aria-pressed="${color.id===this.selectedColor}" aria-label="${color.name}${unlocked?'、見つけた写真を見る':'、まだ見つけていない色'}">${flowerSvg({hex:unlocked?color.color:'#dedfce'},esc(color.name))}<small>${unlocked?esc(color.name):'まだつぼみ'}</small></button>`;}).join('')}</div><p class="garden-color-count">${found.size} / ${FLOWER_COLORS.length} 種類の花が咲きました</p>${selected?`<section class="garden-color-discovery"><h3>${esc(selected.name)}</h3>${matches.length?`<p>この色を見つけた日</p><div>${matches.slice(0,5).map(({card})=>`<figure><img src="${esc(card.image)}" alt="${esc(card.day)}に見つけた色"><figcaption>${esc(card.day)}</figcaption></figure>`).join('')}</div>`:`<p>まだ出会っていない色。たとえば、${esc(selected.hint)}にもあるかもしれません。</p><small>全部集めなくても大丈夫。お題から自分が見つけたものを大切に。</small>`}</section>`:''}<small class="garden-color-help">色は写真全体から選んでいます。写真を差し替えると花の色も変わります。写真は端末内で処理します。</small></section>`;
   }
   albumShelf() {
     const {photos,albums,pending,remaining}=this.photoAlbums;
