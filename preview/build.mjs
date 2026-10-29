@@ -10,7 +10,7 @@ mkdirSync(out, { recursive: true });
 const files = [
   'basho-app.js', 'basho-styles.css', 'perspective.js', 'place.js',
   'image-tools.js', 'image-service.js', 'image-validation.js',
-  'reading-garden.js', 'reading-store.js', 'tanka-catalog.js',
+  'reading-garden.js', 'photo-albums.js', 'reading-store.js', 'tanka-catalog.js',
   'haiku-cards.js', 'haiku-catalog.js', 'haiku-service.js', 'haiku-store.js',
   'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js',
 ];

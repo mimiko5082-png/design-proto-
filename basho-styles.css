@@ -3542,3 +3542,51 @@ basho-haiku { display: block; }
 .friend-comments p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; font-size: 13px; line-height: 1.7; }
 .friend-comments button { border: none; background: none; font-size: 10px; color: #66725a; cursor: pointer; padding: 5px 0; }
 .friend-status { font-size: 12px; line-height: 1.8; }
+
+/* Photos grow into a garden and seven saved days become a keepsake. */
+.reading-mode-garden .reading-growth { display: block; }
+.photo-garden-scene { position: relative; min-height: 285px; margin-top: 16px; border-radius: 20px; background: radial-gradient(ellipse at 50% 100%,#d0dfbf66,transparent 65%); }
+.photo-garden-scene > .reading-tree { position: absolute; width: 230px; max-width: 85%; bottom: 5px; left: 50%; transform: translateX(-50%); }
+.garden-photo-decorations figure { position: absolute; margin: 0; width: 61px; padding: 4px 4px 3px; background: #fffdf5; border: 1px solid #e4decb; box-shadow: 0 4px 10px #33482c22; z-index: 1; }
+.garden-photo-decorations figure::before { content: ''; position: absolute; left: 43%; top: -6px; width: 8px; height: 11px; background: #b2a07a; border-radius: 2px; }
+.garden-photo-decorations figure:nth-child(1) { top: 35px; left: 2%; transform: rotate(-9deg); }
+.garden-photo-decorations figure:nth-child(2) { top: 35px; right: 2%; transform: rotate(8deg); }
+.garden-photo-decorations figure:nth-child(3) { top: 151px; left: 1%; transform: rotate(6deg); }
+.garden-photo-decorations figure:nth-child(4) { top: 151px; right: 1%; transform: rotate(-7deg); }
+.garden-photo-decorations figure:nth-child(5) { top: 4px; left: 38%; transform: rotate(-3deg); }
+.garden-photo-decorations img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+.garden-photo-decorations figcaption { text-align: center; font-size: 9px; padding-top: 3px; color: #667058; }
+.reading-growth .garden-first-photo { position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 11px; }
+.garden-keepsake { margin: 24px 0; }
+.garden-rest-note { font-size: 12px; line-height: 1.9; text-align: center; margin: 8px 0 28px; color: #65735b; }
+.garden-keepsake h2 { font-size: 25px; margin: 8px 0; }
+.garden-keepsake header > p { font-size: 12px; line-height: 1.8; }
+.album-progress { background: #f8f5e9; border: 1px solid #dedac9; border-radius: 18px; padding: 16px; margin: 18px 0; }
+.album-progress-slots { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 5px; margin-bottom: 12px; }
+.album-progress-slots > img, .album-progress-slots > span { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+.album-progress-slots > span { display: grid; place-items: center; background: #e8ebdc; color: #98a28b; border: 1px dashed #c1c9b4; box-sizing: border-box; }
+.album-progress strong { font-size: 13px; display: block; }
+.album-progress > small { display: block; font-size: 10px; line-height: 1.8; margin-top: 7px; }
+.album-shelf { display: grid; gap: 14px; }
+.album-cover { display: flex; text-align: left; align-items: stretch; gap: 14px; border: 1px solid #d2d7c1; border-radius: 8px 18px 18px 8px; background: #eef0e1; color: inherit; box-shadow: -4px 0 0 #80906b; padding: 14px; width: 100%; min-width: 0; }
+.album-cover > img { width: 86px; max-width: 30%; aspect-ratio: .8; object-fit: cover; border: 4px solid #fffdf4; box-shadow: 0 2px 8px #394c2522; }
+.album-cover > span { display: grid; align-content: center; gap: 9px; min-width: 0; }
+.album-cover small { font-size: 9px; line-height: 1.7; }
+.album-cover strong { font-size: 14px; line-height: 1.8; }
+.album-cover b { font-size: 11px; }
+.album-reader { margin: 22px 0; padding: 18px; border-radius: 18px; border: 1px solid #d7d6c4; background: #fffdf6; scroll-margin-top: 90px; }
+.album-reader > header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.album-reader header small { font-size: 10px; }
+.album-reader h3 { font-size: 18px; margin: 5px 0 0; }
+.album-reader header > button { border: 0; border-radius: 50%; width: 34px; height: 34px; font-size: 22px; background: #edf0e1; color: inherit; }
+.album-page-photo { width: 100%; aspect-ratio: 1; object-fit: cover; border: 6px solid #fff; box-sizing: border-box; box-shadow: 0 3px 12px #34472b18; }
+.album-page-prompt { font-size: 16px; font-weight: 600; line-height: 1.9; overflow-wrap: anywhere; }
+.album-page-note { border-top: 1px solid #e3dfce; padding: 16px 0 8px; }
+.album-page-note small { font-size: 10px; color: #79826b; }
+.album-page-note p { font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.album-paging { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 16px; }
+.album-paging button { padding: 9px 5px; border: 1px solid #d3d8c6; background: #f4f5eb; border-radius: 9px; color: inherit; font-size: 11px; }
+.album-paging button:disabled { opacity: .4; cursor: default; }
+.album-paging > span { font-size: 12px; white-space: nowrap; }
+.album-export-help, .garden-album-total { display: block; font-size: 10px; line-height: 1.8; margin-top: 14px; color: #65735b; }
+.album-export-status { font-size: 12px; line-height: 1.8; }
