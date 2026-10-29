@@ -34,10 +34,13 @@ try:
   expect(page.locator('.haiku-topic details')).to_contain_text('全集から選んだ60句')
   page.locator('[data-haiku-action=simulate]').click()
   expect(page.locator('.haiku-status')).to_contain_text('プレビュー内の通知体験')
+  note = 'いつもの道の影が、葉っぱの形になっていた。\n<気づき> & 光'
+  page.locator('[data-haiku-reflection]').fill(note)
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-reflection]')).to_have_value(note)
   original=page.locator('basho-haiku .haiku-photo').get_attribute('src')
   # Selecting a replacement is a draft; cancellation preserves the saved photo.
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
@@ -70,13 +73,16 @@ try:
   page.locator('[data-haiku-action=share]').click()
   expect(page.locator('.haiku-status')).to_contain_text('共有画面を開きました')
   assert opening in page.evaluate('window.shared.text')
+  assert note not in page.evaluate('window.shared.text')
   assert page.evaluate('window.shared.size') > 0
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.photo-reflection-saved p')).to_have_text(note)
   expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   context.set_offline(False);page.reload(wait_until='networkidle');context.set_offline(True)
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.photo-reflection-saved p')).to_have_text(note)
   expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   page.evaluate('navigator.canShare = () => false')
   with page.expect_download() as download:
@@ -85,6 +91,17 @@ try:
   page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
+  expect(page.locator('[data-haiku-reflection]')).to_have_value(note)
+  page.locator('[data-haiku-reflection]').fill('追記だけでも保存できる')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('気づきを保存')
+  page.locator('[data-haiku-action=cancel-photo]').click()
+  expect(page.locator('[data-haiku-reflection]')).to_have_value(note)
+  # Empty is valid: a saved note can be removed without creating a new photo/XP.
+  page.locator('[data-haiku-reflection]').fill('')
+  page.locator('[data-haiku-action=save]').click()
+  expect(page.locator('.haiku-status')).to_contain_text('気づきを保存しました')
+  page.locator('.tabbar [data-nav=calendar]').click()
+  expect(page.locator('.photo-reflection-saved')).to_have_count(0)
 
   page.locator('.tabbar [data-nav=garden]').click()
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')

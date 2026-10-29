@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BASHO_TOPICS, dailyTopic } from '../haiku-catalog.js';
-import { makeCard } from '../haiku-store.js';
+import { makeCard, normalizeReflection } from '../haiku-store.js';
 import { photoShareFile } from '../photo-sharing.js';
 const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 test('every daily photo topic has a modern paraphrase, a photo cue and a distinct Basho original', () => {
@@ -49,4 +49,16 @@ test('expanded anthology topics retain verified originals and source, and cover 
   assert.equal(new Set(ids).size,60);
   assert.notEqual(dailyTopic('2026-10-29').id,ids[0]);
   assert.equal(dailyTopic('2026-10-29').id,'basho-samidare');
+});
+
+test('optional reflection accepts empty/short notes and validates storage size', () => {
+  assert.equal(normalizeReflection(), '');
+  assert.equal(normalizeReflection('  いつもの道に、小さな影。\n光もきれい。  '), 'いつもの道に、小さな影。\n光もきれい。');
+  assert.equal(normalizeReflection('あ'.repeat(280)).length, 280);
+  assert.throws(() => normalizeReflection('あ'.repeat(281)));
+  assert.throws(() => normalizeReflection({text:'unexpected'}));
+  const topic = dailyTopic('2026-10-29');
+  const draft = {id:'photo-challenge-2026-10-29',topicId:topic.id,topicDay:'2026-10-29',creation:'photo-challenge',image};
+  assert.equal(makeCard(draft, topic.lines).reflection, '');
+  assert.equal(makeCard({...draft,reflection:' 葉っぱの影がきれい '},topic.lines).reflection, '葉っぱの影がきれい');
 });

@@ -3496,3 +3496,8 @@ basho-haiku { display: block; }
 .photo-modern { font-size: 1.35rem; line-height: 1.8; font-weight: 700; overflow-wrap: anywhere; }
 .haiku-create > button { margin-top: 12px; width: 100%; }
 .haiku-create details { margin-top: 16px; }
+
+.photo-reflection { margin: 20px 0; }
+.photo-reflection label { display: block; line-height: 1.7; }
+.photo-reflection textarea { display: block; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 12px; border: 1px solid #c9cbbb; border-radius: 12px; background: #fffdf7; color: inherit; font: inherit; resize: vertical; }
+.photo-reflection-saved p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
