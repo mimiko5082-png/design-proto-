@@ -48,7 +48,7 @@ try:
         page.reload(wait_until='networkidle')
         expect(page.locator('.saved-haiku')).to_have_count(1)
         page.locator('.tabbar [data-nav=home]').click()
-        expect(page.locator('[data-haiku-photo]')).to_have_count(0)
+        expect(page.locator('[data-haiku-photo]')).to_have_count(1)
         expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
         page.screenshot(path=str(OUT/'photo-challenge.png'),full_page=True)
         # A new Japanese date gets a different prompt and an empty camera input.

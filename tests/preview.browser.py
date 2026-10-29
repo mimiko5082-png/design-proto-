@@ -59,7 +59,7 @@ try:
   assert download.value.suggested_filename.startswith('basho-2026-10-27')
   page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
-  expect(page.locator('[data-haiku-photo]')).to_have_count(0)
+  expect(page.locator('[data-haiku-photo]')).to_have_count(1)
 
   assert page.evaluate('async()=> (await navigator.serviceWorker.getRegistrations()).length')==0
   assert not external,external

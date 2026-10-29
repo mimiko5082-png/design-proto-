@@ -33,6 +33,31 @@ try:
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  original=page.locator('basho-haiku .haiku-photo').get_attribute('src')
+  # Selecting a replacement is a draft; cancellation preserves the saved photo.
+  page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('この写真に変更')
+  expect(page.locator('[data-haiku-action=share]')).to_be_disabled()
+  page.locator('[data-haiku-action=cancel-photo]').click()
+  expect(page.locator('basho-haiku .haiku-photo')).to_have_attribute('src',original)
+  # A failed storage write must preserve the previous saved image and XP.
+  page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('この写真に変更')
+  page.evaluate("() => { window.originalPut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function(){throw new DOMException('Quota','QuotaExceededError')}; }")
+  page.locator('[data-haiku-action=save]').click()
+  expect(page.locator('.reading-error')).to_contain_text('保存できませんでした')
+  page.evaluate('() => { IDBObjectStore.prototype.put = window.originalPut; }')
+  page.locator('.tabbar [data-nav=calendar]').click()
+  expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',original)
+  page.locator('.tabbar [data-nav=home]').click()
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('この写真に変更')
+  replacement=page.locator('basho-haiku .haiku-photo').get_attribute('src')
+  assert replacement != original
+  page.locator('[data-haiku-action=save]').click()
+  expect(page.locator('.haiku-status')).to_contain_text('写真を変更しました')
+  expect(page.locator('.reading-xp')).to_have_text('1 ことば')
   page.evaluate("""() => {
     navigator.canShare = ({files}) => files.length === 1 && files[0].type.startsWith('image/');
     navigator.share = async data => { window.shared = {text:data.text, name:data.files[0].name, size:data.files[0].size}; };
@@ -44,15 +69,17 @@ try:
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   context.set_offline(False);page.reload(wait_until='networkidle');context.set_offline(True)
   expect(page.locator('.saved-haiku')).to_have_count(1)
+  expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',replacement)
   page.evaluate('navigator.canShare = () => false')
   with page.expect_download() as download:
    page.locator('[data-reading-action=share-photo]').click()
   assert download.value.suggested_filename.startswith('basho-2026-10-27')
   page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
-  expect(page.locator('[data-haiku-photo]')).to_have_count(0)
+  expect(page.locator('[data-haiku-photo]')).to_have_count(1)
 
   page.locator('.tabbar [data-nav=garden]').click()
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')

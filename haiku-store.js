@@ -47,3 +47,26 @@ export async function saveCard(card) {
     });
   } finally { db.close(); }
 }
+
+// Replace only image data in the existing record; never add a card or change its day/XP.
+export async function replaceCardPhoto(id, image) {
+  decodeImageData(image, MAX_AI_IMAGE_BYTES);
+  const db = await openDB();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('cards', 'readwrite');
+      const store = tx.objectStore('cards');
+      const request = store.get(id);
+      let updated, writeError;
+      request.onsuccess = () => {
+        try {
+          if (!request.result || request.result.creation !== 'photo-challenge') throw new Error('Photo card not found');
+          updated = { ...request.result, image, updatedAt: Date.now() };
+          store.put(updated);
+        } catch (error) { writeError = error; tx.abort(); }
+      };
+      tx.oncomplete = () => resolve(updated);
+      tx.onabort = tx.onerror = () => reject(writeError || tx.error || new Error('Photo update failed'));
+    });
+  } finally { db.close(); }
+}

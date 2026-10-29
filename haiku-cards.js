@@ -1,7 +1,7 @@
 import { dailyTopic } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { preparePhoto } from './haiku-service.js';
-import { makeCard, saveCard, loadCards } from './haiku-store.js';
+import { makeCard, saveCard, loadCards, replaceCardPhoto } from './haiku-store.js';
 const esc = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
 import { sharePhotoCard } from './photo-sharing.js';
@@ -12,6 +12,7 @@ class HaikuCards extends HTMLElement {
     this.onClick = event => {
       const action = event.target.closest('[data-haiku-action]')?.dataset.haikuAction;
       if (action === 'save') this.save();
+      if (action === 'cancel-photo' && !this.busy) { this.image = this.card.image; this.message = '写真の変更を取り消しました。'; this.error = ''; this.render(); }
       if (action === 'share') this.share();
       if (action === 'simulate') { this.message = '今日のお題が届きました！ 下のお題に合う景色を撮ってみよう。これはプレビュー内の通知体験です。'; this.render(); }
     };
@@ -32,7 +33,7 @@ class HaikuCards extends HTMLElement {
     } catch { this.error = '写真の保存領域を開けません。ブラウザの保存設定をご確認ください。'; this.render(); }
   }
   async selectPhoto(file) {
-    if (this.busy || this.saved || !file) return;
+    if (this.busy || !file) return;
     const revision = ++this.selection;
     this.busy = true; this.error = ''; this.render();
     try { const image = await preparePhoto(file); if (revision === this.selection) this.image = image; }
@@ -40,10 +41,17 @@ class HaikuCards extends HTMLElement {
     finally { this.busy = false; if (this.isConnected) this.render(); }
   }
   async save() {
-    if (this.busy || this.saved || !this.image) return;
+    if (this.busy || !this.image || (this.saved && this.image === this.card.image)) return;
     if (japanDay() !== this.day) { this.error = '日付が変わりました。今日のお題を開き直してください。'; this.render(); return; }
     this.busy = true; this.error = ''; this.render();
     try {
+      if (this.saved) {
+        this.card = await replaceCardPhoto(this.card.id, this.image);
+        this.image = this.card.image;
+        this.message = '写真を変更しました。カレンダーにも反映しました。育成のポイントは変わりません。';
+        window.dispatchEvent(new Event('basho-reading-updated'));
+        return;
+      }
       const draft = { id: `photo-challenge-${this.day}`, topicDay: this.day, topicId: this.topic.id, creation: 'photo-challenge', image: this.image };
       const card = makeCard(draft, this.topic.lines);
       const added = await saveCard(card);
@@ -57,19 +65,21 @@ class HaikuCards extends HTMLElement {
     finally { this.busy = false; if (this.isConnected) this.render(); }
   }
   async share() {
-    if (!this.card || this.busy) return;
+    if (!this.card || this.busy || this.image !== this.card.image) return;
     this.busy = true;
     try { this.message = await sharePhotoCard(this.card); this.error = ''; }
     catch (error) { if (error.name !== 'AbortError') this.error = '共有画面を開けませんでした。もう一度お試しください。'; }
     finally { this.busy = false; if (this.isConnected) this.render(); }
   }
   render() {
+    const pending = this.saved && this.image !== this.card.image;
     this.innerHTML = `<section class="haiku-create"><header class="reading-intro"><div><span class="reading-eyebrow">1日1枚 · 芭蕉フォト</span><h1>芭蕉のことばを、<br>今日の一枚に。</h1><p>一日のどこかで、ふいにお題が届く。友達は、同じことばから何を見つけるだろう。</p></div></header>
     <article class="reading-poem haiku-topic"><span class="reading-eyebrow">${esc(this.day)} · 今日の写真のお題</span><p class="photo-modern">${esc(this.topic.modern)}</p><small>芭蕉の俳句を、今のことばで意訳したお題です。</small><p class="haiku-hint">${esc(this.topic.photoHint)}</p><details><summary>もとの俳句を見る</summary><p class="reading-verse">${this.topic.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><small>${esc(this.topic.source)}</small></details></article>
     <p>30秒ほど周りを見渡して、お題に合う景色を一枚。俳句を書く必要はありません。</p>
-    <section class="haiku-photo-box">${!this.saved ? `<label class="haiku-file-label">お題に合う写真を撮る・選ぶ<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。撮影・選択だけでは誰にも送信されません。</small>` : '<strong>今日の一枚</strong>'}${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
-    <button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||this.saved?'disabled':''}>${this.saved?'今日の写真を保存済み':'今日の一枚を保存 ＋1ことば'}</button>
-    ${this.saved ? '<button type="button" class="main-button" data-haiku-action="share">写真とお題を友達に送る</button><button type="button" class="outline-button" data-nav="calendar">写真カレンダーを見る →</button><p class="reading-help">共有先は自分で選べます。LINEなど端末の共有機能を使います。アプリ内の友達限定フィードは準備中です。</p>' : ''}
+    <section class="haiku-photo-box"><label class="haiku-file-label">${this.saved?'写真を変更する':'お題に合う写真を撮る・選ぶ'}<input type="file" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy?'disabled':''}></label><small>JPEG・PNG・WebP／4MiBまで。${this.saved?'選び直したあと「この写真に変更」を押すと差し替わります。':'撮影・選択だけでは誰にも送信されません。'}</small>${this.image ? `<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">` : ''}</section>
+    <button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||(this.saved&&!pending)?'disabled':''}>${pending?'この写真に変更':this.saved?'今日の写真を保存済み':'今日の一枚を保存 ＋1ことば'}</button>
+    ${pending?'<button type="button" class="outline-button" data-haiku-action="cancel-photo">変更をやめる</button><p class="reading-help">まだ差し替えていません。変更後の写真を友達に送りたい場合は、保存してからもう一度共有してください。</p>':''}
+    ${this.saved ? `<button type="button" class="main-button" data-haiku-action="share" ${pending||this.busy?'disabled':''}>写真とお題を友達に送る</button><button type="button" class="outline-button" data-nav="calendar">写真カレンダーを見る →</button><p class="reading-help">共有先は自分で選べます。LINEなど端末の共有機能を使います。アプリ内の友達限定フィードは準備中です。</p>` : ''}
     <p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
     <p class="reading-help">同じ日のお題はみんな共通。保存は1日1枚、日本時間です。写真はこのブラウザに残り、共有ボタンを押すまで外部には送信しません。</p>
     ${window.BASHO_PHOTO_PREVIEW ? '<button type="button" class="outline-button" data-haiku-action="simulate">プレビューでお題の通知を体験する</button><p class="reading-help">プレビューでは実際のプッシュ通知は届きません。お題は今すぐ試せます。</p>' : ''}</section>`;
