@@ -282,7 +282,6 @@ function renderHome() {
     </header>
     <basho-reading mode="summary"></basho-reading>
     <basho-haiku></basho-haiku>
-    <details class="reading-library legacy-reading"><summary>これまでの短歌を読む</summary><basho-reading mode="library"></basho-reading></details>
   </div>`;
 }
 
