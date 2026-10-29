@@ -264,7 +264,6 @@ function render() {
     seeds: renderSeeds,
     calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>`,
     friends: () => `<div class="view"><basho-friends></basho-friends></div>`,
-    garden: () => `<div class="view"><basho-reading mode="garden"></basho-reading></div>`,
     entry: renderEntry,
     share: renderShare,
     book: renderBook,
@@ -901,7 +900,7 @@ function logStudyEvent(action, view = state.view) {
 }
 
 function navigate(view) {
-  if (view === "notebook") view = "calendar";
+  if (["notebook", "garden"].includes(view)) view = "calendar";
   if (view === "map") view = "calendar";
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
@@ -1303,8 +1302,8 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    if (["map", "notebook"].includes(state.view)) state.view = "calendar";
-    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "friends", "entry", "share", "book"];
+    if (["map", "notebook", "garden"].includes(state.view)) state.view = "calendar";
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "friends", "entry", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);

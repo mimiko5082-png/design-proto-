@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v55-simple-photo-capture";
+const CACHE_NAME = "basho-manazashi-v56-photo-calendar";
 const APP_SHELL = [
   "./",
   "./index.html",

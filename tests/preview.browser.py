@@ -38,8 +38,6 @@ try:
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
-  page.locator('.tabbar [data-nav=garden]').click()
-  expect(page.locator('.reading-xp')).to_have_text('1 ことば')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.saved-haiku')).to_contain_text(opening)
   page.reload(wait_until='networkidle')

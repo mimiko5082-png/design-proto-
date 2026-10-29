@@ -3453,7 +3453,7 @@ basho-reading { display: block; }
 .reading-stats p { font-size: 11px; }
 .reading-stats strong { display: block; font: 30px/1.6 Georgia, serif; }
 .reading-error { border: 1px solid #b77f63; padding: 14px; background: #fff0e6; font-size: 13px; line-height: 1.8; }
-.tabbar { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.tabbar { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .tabbar .tab { min-width: 0; padding-left: 2px; padding-right: 2px; }
 @media (max-width: 360px) { .reading-growth { padding: 16px 12px; } .reading-growth h2 { font-size: 18px; } .reading-verse { font-size: 21px; } .tabbar .tab { font-size: 10px; } }
 
@@ -3643,3 +3643,8 @@ basho-haiku { display: block; }
 .photo-capture-preview-note { font-size: 10px; line-height: 1.8; color: #768168; margin: 12px 0; }
 .photo-reflection-details { border-top: 1px solid #d9ddcd; padding-top: 14px; font-size: 12px; line-height: 1.8; }
 .photo-reflection-details > summary { cursor: pointer; }
+
+.reading-days button { position: relative; overflow: hidden; min-height: 55px; }
+.reading-days .calendar-day-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.reading-days .has-photo .calendar-day-number { position: relative; align-self: flex-start; z-index: 1; margin: 0 0 auto; padding: 2px 4px; border-radius: 5px; background: #263b2bd9; color: #fffdf4; font-size: 11px; }
+.reading-days .has-photo.selected { outline: 2px solid #49664b; outline-offset: 1px; }

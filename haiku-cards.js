@@ -96,7 +96,7 @@ class HaikuCards extends HTMLElement {
         const photoChanged = this.image !== this.card.image;
         this.card = updated;
         this.image = this.card.image; this.reflection = this.card.reflection || '';
-        this.message = photoChanged ? '写真を変更しました。カレンダーにも反映しました。育成のポイントは変わりません。' : '気づきを保存しました。カレンダーでも見返せます。';
+        this.message = photoChanged ? '写真を変更しました。カレンダーにも反映しました。' : '気づきを保存しました。カレンダーでも見返せます。';
         window.dispatchEvent(new Event('basho-reading-updated'));
         return;
       }
@@ -110,7 +110,7 @@ class HaikuCards extends HTMLElement {
       this.card = savedCard;
       if (!this.card) throw Error('Save failed');
       this.image = this.card.image; this.reflection = this.card.reflection || ''; this.saved = true;
-      this.message = added ? '今日の写真を保存しました。＋1ことば。カレンダーにも残りました。友達の写真の画面でも見返せます。' : '今日の写真は保存済みです。';
+      this.message = added ? '今日の写真を保存しました。カレンダーでも見返せます。' : '今日の写真は保存済みです。';
       window.dispatchEvent(new Event('basho-reading-updated'));
     } catch { if (revision === this.selection) this.error = '保存できませんでした。空き容量やブラウザの保存設定を確認してください。'; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
@@ -136,7 +136,6 @@ class HaikuCards extends HTMLElement {
     <article class="haiku-topic"><header><span class="reading-eyebrow">${esc(this.day)}</span><h1>今日のお題</h1></header><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button><details><summary>もとの俳句</summary><p class="reading-verse">${esc(this.topic.original || this.topic.lines.join(''))}</p></details></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
     <section class="haiku-photo-box photo-capture-box"><input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>${this.image?`<img class="haiku-photo" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<label for="basho-photo-file" class="photo-capture-empty"><span aria-hidden="true">📷</span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'写真を撮る'}</strong></label>`}</section>
     <div class="photo-capture-actions" ${this.image?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||(this.saved&&!pending)?'disabled':''}>${this.saveLabel()}</button></div>
-    ${this.image?`<p class="photo-capture-preview-note">プレビュー：送信するを押すと、この端末に保存します。友達への送信は未接続です。</p><details class="photo-reflection-details" data-photo-note ${this.noteOpen?'open':''}><summary>いつもは気づかなかったことを書く（任意）</summary><section class="photo-reflection"><label>いつもは気づかなかったこと <small>（任意）</small><textarea data-haiku-reflection rows="3" maxlength="280" placeholder="いつもの道なのに、葉っぱの影がこんなにきれいだと初めて気づいた。" ${this.busy?'disabled':''}>${esc(this.reflection)}</textarea></label><small>空欄でも大丈夫。280文字までの自分用メモです。</small></section></details>`:''}
     <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
     <p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
     </section>`;
