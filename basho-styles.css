@@ -3453,7 +3453,7 @@ basho-reading { display: block; }
 .reading-stats p { font-size: 11px; }
 .reading-stats strong { display: block; font: 30px/1.6 Georgia, serif; }
 .reading-error { border: 1px solid #b77f63; padding: 14px; background: #fff0e6; font-size: 13px; line-height: 1.8; }
-.tabbar { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.tabbar { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .tabbar .tab { min-width: 0; padding-left: 2px; padding-right: 2px; }
 @media (max-width: 360px) { .reading-growth { padding: 16px 12px; } .reading-growth h2 { font-size: 18px; } .reading-verse { font-size: 21px; } .tabbar .tab { font-size: 10px; } }
 
@@ -3501,3 +3501,44 @@ basho-haiku { display: block; }
 .photo-reflection label { display: block; line-height: 1.7; }
 .photo-reflection textarea { display: block; width: 100%; box-sizing: border-box; margin: 8px 0; padding: 12px; border: 1px solid #c9cbbb; border-radius: 12px; background: #fffdf7; color: inherit; font: inherit; resize: vertical; }
 .photo-reflection-saved p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+
+.friends-feature { padding: 8px 0 24px; }
+.friends-feature h1 { margin: 8px 0; font-size: 30px; }
+.friends-prompt { background: #f8f4e9; padding: 18px; border: 1px solid #d9d9c9; border-radius: 20px; margin: 20px 0; }
+.friends-prompt p { font-size: 19px; font-weight: 600; line-height: 1.8; margin-bottom: 0; }
+.friends-preview-note { background: #edf0e3; padding: 14px 16px; border-radius: 14px; font-size: 12px; line-height: 1.7; margin-bottom: 20px; }
+.friends-preview-note p { margin: 5px 0 0; }
+.friend-photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.friend-photo-tile, .friend-own-photo { border: 1px solid #d3d9c7; border-radius: 16px; overflow: hidden; background: #fffdf7; padding: 0; margin: 0; text-align: left; color: inherit; font: inherit; min-width: 0; }
+.friend-photo-tile { cursor: pointer; }
+.friend-photo-tile.selected { outline: 3px solid #6c8761; outline-offset: 2px; }
+.friend-photo-tile > img, .friend-own-photo > img { width: 100%; height: 155px; object-fit: cover; display: block; }
+.friend-photo-tile > span, .friend-own-photo > div { display: grid; padding: 11px; gap: 5px; }
+.friend-photo-tile small, .friend-own-photo small { font-size: 10px; color: #68705e; }
+.friend-tap-help { font-size: 13px; line-height: 1.8; text-align: center; margin: 24px 0; }
+.friend-detail { margin: 24px 0; padding: 16px; border: 1px solid #d3d9c7; border-radius: 22px; background: #fffdf7; scroll-margin-top: 86px; }
+.friend-detail header, .friend-detail header > div { display: flex; align-items: center; gap: 8px; }
+.friend-detail header { justify-content: space-between; margin-bottom: 14px; }
+.friend-detail header small { font-size: 10px; color: #6d7362; }
+.friend-avatar { border-radius: 50%; width: 32px; height: 32px; display: grid; place-items: center; }
+.friend-close { width: 36px; height: 36px; background: #eeeee4; color: inherit; border: 0; border-radius: 50%; font-size: 24px; }
+.friend-large-photo { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-radius: 12px; }
+.friend-sample-caption { font-size: 10px; color: #737866; }
+.friend-detail h3 { margin: 22px 0 12px; font-size: 16px; }
+.friend-stamps { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.friend-stamps button { border: 1px solid #d6dbca; border-radius: 13px; background: #f8f8f0; padding: 10px 4px; color: inherit; font: inherit; position: relative; cursor: pointer; }
+.friend-stamps button span { display: block; font-size: 24px; margin-bottom: 4px; }
+.friend-stamps button small { font-size: 10px; }
+.friend-stamps button.is-reacted { background: #e0ecd7; border-color: #5c7a52; }
+.friend-stamps b { position: absolute; right: 8px; top: 6px; font-size: 11px; }
+.friend-phrases { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.friend-phrases button { border: 1px solid #cbd5c0; border-radius: 20px; background: #f1f5e8; padding: 8px 10px; color: inherit; font: inherit; font-size: 11px; cursor: pointer; }
+.friend-detail form label { display: block; font-size: 12px; line-height: 1.8; }
+.friend-detail textarea { display: block; box-sizing: border-box; width: 100%; margin: 6px 0 12px; padding: 12px; border: 1px solid #cbd5c0; border-radius: 12px; font: inherit; color: inherit; background: #fff; resize: vertical; }
+.friend-detail form > small { display: block; margin-top: 8px; font-size: 10px; }
+.friend-comments { padding: 0; list-style: none; }
+.friend-comments li { border-top: 1px solid #e0e4d6; padding: 14px 0; }
+.friend-comment-author { font-size: 10px; color: #727a65; }
+.friend-comments p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; font-size: 13px; line-height: 1.7; }
+.friend-comments button { border: none; background: none; font-size: 10px; color: #66725a; cursor: pointer; padding: 5px 0; }
+.friend-status { font-size: 12px; line-height: 1.8; }

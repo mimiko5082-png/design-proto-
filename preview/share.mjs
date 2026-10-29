@@ -17,7 +17,7 @@ const bundle = await build({
 const embedAssets = value => value.replaceAll(/\.\/assets\/[a-z0-9-]+\.png/g, file => 'data:image/png;base64,'+readFileSync(join(dist, file)).toString('base64'));
 const javascript = embedAssets(bundle.outputFiles[0].text).replace(/<\/script/gi, '<\\/script');
 const stylesheet = embedAssets(readFileSync(join(dist, 'basho-styles.css'), 'utf8'));
-html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/^[ \t]+$/gm, '');
 html = html.replace(/<link\b[^>]*href="\.\/basho-styles\.css[^>]*>/, `<style>${stylesheet}</style>`);
 html = html.replace(/<link\b[^>]*rel="manifest"[^>]*>/gi, '');
 html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'">`);

@@ -40,23 +40,11 @@ try:
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
-  page.evaluate("""() => {
-    navigator.canShare = ({files}) => files.length === 1 && files[0].type.startsWith('image/');
-    navigator.share = async data => { window.shared = {text:data.text, name:data.files[0].name, size:data.files[0].size}; };
-  }""")
-  page.locator('[data-haiku-action=share]').click()
-  expect(page.locator('.haiku-status')).to_contain_text('共有画面を開きました')
-  assert opening in page.evaluate('window.shared.text')
-  assert page.evaluate('window.shared.size') > 0
   expect(page.locator('.reading-xp')).to_have_text('1 ことば')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.saved-haiku')).to_contain_text(opening)
   page.reload(wait_until='networkidle')
   expect(page.locator('.saved-haiku')).to_have_count(1)
-  page.evaluate('navigator.canShare = () => false')
-  with page.expect_download() as download:
-   page.locator('[data-reading-action=share-photo]').click()
-  assert download.value.suggested_filename.startswith('basho-2026-10-27')
   page.locator('.tabbar [data-nav=home]').click()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
@@ -65,6 +53,6 @@ try:
   assert not external,external
   assert not errors,errors
   browser.close()
-  print('PASS: built preview, modern prompt, photo, native sharing, download fallback, daily limit, save, calendar, reload; zero external requests and no service worker')
+  print('PASS: built preview, modern prompt, photo, daily limit, save, calendar, reload; zero external requests and no service worker')
 finally:
  server.shutdown()

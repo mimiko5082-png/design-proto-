@@ -263,6 +263,7 @@ function render() {
     receive: renderReceive,
     seeds: renderSeeds,
     calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>`,
+    friends: () => `<div class="view"><basho-friends></basho-friends></div>`,
     garden: () => `<div class="view"><basho-reading mode="garden"></basho-reading></div>`,
     entry: renderEntry,
     share: renderShare,
@@ -1310,7 +1311,7 @@ function loadState() {
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
     if (["map", "notebook"].includes(state.view)) state.view = "calendar";
-    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "entry", "share", "book"];
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "friends", "entry", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);

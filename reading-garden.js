@@ -1,5 +1,4 @@
 import { loadCards } from './haiku-store.js';
-import { sharePhotoCard } from './photo-sharing.js';
 import { topicById } from './haiku-catalog.js';
 import { TANKA, poemById } from './tanka-catalog.js';
 import { japanDay, loadReads, markRead, growth, growthForCount, monthCells, shiftMonth } from './reading-store.js';
@@ -29,11 +28,6 @@ class ReadingGarden extends HTMLElement {
     const button = event.target.closest('[data-reading-action]');
     if (!button) return;
     const action = button.dataset.readingAction;
-    if (action === 'share-photo') {
-      const card = this.cards?.find(card => card.id === button.dataset.card);
-      if (card) sharePhotoCard(card).then(message => { this.error = message; this.render(); }).catch(error => { if (error.name !== 'AbortError') { this.error = '共有できませんでした。もう一度お試しください。'; this.render(); } });
-      return;
-    }
     if (action === 'poem') { this.poemId = button.dataset.poem; this.message = ''; }
     if (action === 'day') this.selectedDay = button.dataset.day;
     if (action === 'month') { this.month = shiftMonth(this.month, Number(button.dataset.delta)); this.selectedDay = `${this.month}-01`; }
@@ -92,7 +86,7 @@ class ReadingGarden extends HTMLElement {
   }
   haikuCard(card) {
     const topic = topicById(card.topicId);
-    if (card.creation === 'photo-challenge') return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">今日の芭蕉フォト · ${esc(card.day)}</span><p class="photo-modern">${esc(card.modern || topic?.modern || '')}</p><img class="haiku-photo" src="${esc(card.image)}" alt="お題に合わせて保存した写真">${card.reflection ? `<section class="photo-reflection-saved"><small>いつもは気づかなかったこと</small><p>${esc(card.reflection)}</p></section>` : ''}<small>原句：${esc(card.original || card.lines.join(' ／ '))} · 松尾芭蕉</small><button type="button" class="outline-button" data-reading-action="share-photo" data-card="${esc(card.id)}">写真とお題を友達に送る</button></article>`;
+    if (card.creation === 'photo-challenge') return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">今日の芭蕉フォト · ${esc(card.day)}</span><p class="photo-modern">${esc(card.modern || topic?.modern || '')}</p><img class="haiku-photo" src="${esc(card.image)}" alt="お題に合わせて保存した写真">${card.reflection ? `<section class="photo-reflection-saved"><small>いつもは気づかなかったこと</small><p>${esc(card.reflection)}</p></section>` : ''}<small>原句：${esc(card.original || card.lines.join(' ／ '))} · 松尾芭蕉</small></article>`;
     return `<article class="reading-poem saved-haiku"><span class="reading-eyebrow">あなたの読み札 · ${card.creation === 'user' ? 'あなたが詠んだ一句' : card.edited ? 'AI案をあなたが編集' : 'AIとつくった一句'}</span><img class="haiku-photo" src="${esc(card.image)}" alt="この読み札に保存した写真"><p class="reading-verse">${card.lines.map(line=>`<span>${esc(line)}</span>`).join('')}</p><details class="reading-hint"><summary>お題とAIの提案を見る</summary><p>お題：${esc(topic?.lines.join(' ／ ') || '')}</p><p>${esc(topic?.source || '')} · ${esc(card.topicDay)}</p>${card.aiLines ? `<p>AIの元の案：${card.aiLines.map(esc).join(' ／ ')}</p>` : ''}${card.observed ? `<p>写真で見えること（AIの認識）：${esc(card.observed)}</p>` : ''}<small>新しい一句は創作です。芭蕉の実作ではありません。</small></details></article>`;
   }
   poemCard(poem, full) {
