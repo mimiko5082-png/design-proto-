@@ -51,11 +51,26 @@ try:
         expect(page.locator('[data-haiku-photo]')).to_have_count(1)
         expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
         page.screenshot(path=str(OUT/'photo-challenge.png'),full_page=True)
-        # A new Japanese date gets a different prompt and an empty camera input.
-        page.clock.fast_forward(86400000)
-        page.reload(wait_until='networkidle')
+        # The Japanese midnight changes the prompt while the page stays open.
+        page.clock.pause_at(datetime(2026,10,26,14,59,58,tzinfo=timezone.utc))
+        page.clock.run_for(1000)
+        expect(page.locator('.photo-modern')).to_have_text(prompt)
+        page.clock.run_for(2000)
+        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-27')
         expect(page.locator('[data-haiku-photo]')).to_have_count(1)
         assert page.locator('.photo-modern').inner_text()!=prompt
+        expect(page.locator('basho-haiku .haiku-photo')).to_have_count(0)
+        expect(page.locator('.haiku-status')).to_contain_text('今日のお題に切り替わりました')
+        next_prompt = page.locator('.photo-modern').inner_text()
+        page.clock.fast_forward(3600000)
+        expect(page.locator('.photo-modern')).to_have_text(next_prompt)
+        # Simulate returning after background timers were suspended for two days.
+        page.clock.set_system_time(datetime(2026,10,29,3,0,tzinfo=timezone.utc))
+        page.evaluate("window.dispatchEvent(new Event('focus'))")
+        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-29')
+        assert page.locator('.photo-modern').inner_text() != next_prompt
+        page.reload(wait_until='networkidle')
+        expect(page.locator('.haiku-topic')).to_contain_text('2026-10-29')
         page.locator('[data-haiku-photo]').set_input_files({'name':'bad.png','mimeType':'image/png','buffer':b'not an image'})
         expect(page.locator('.reading-error')).to_be_visible()
         expect(page.locator('[data-haiku-action=save]')).to_be_disabled()

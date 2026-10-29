@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v46-replace-photo";
+const CACHE_NAME = "basho-manazashi-v47-daily-topic-rollover";
 const APP_SHELL = [
   "./",
   "./index.html",

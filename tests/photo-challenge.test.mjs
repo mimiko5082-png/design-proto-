@@ -23,3 +23,15 @@ test('sharing includes the actual saved photo bytes, not a local-only or invente
   assert.deepEqual(new Uint8Array(await file.arrayBuffer()),Uint8Array.from(atob(image.split(',')[1]),c=>c.charCodeAt(0)));
   assert.throws(()=>photoShareFile({image:'data:text/html;base64,PGgxPg==',day:'2026-10-29'}));
 });
+
+test('daily prompt is stable all day and differs from yesterday through month/year boundaries and leap day', () => {
+  let previous;
+  for (let i = 0; i < 800; i++) {
+    const day = new Date(Date.UTC(2023,11,1) + i * 86400000).toISOString().slice(0,10);
+    const topic = dailyTopic(day);
+    assert.ok(topic);
+    assert.equal(dailyTopic(day), topic);
+    if (previous) assert.notEqual(topic.id, previous.id);
+    previous = topic;
+  }
+});
