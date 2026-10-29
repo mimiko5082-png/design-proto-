@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v44-photo-challenge";
+const CACHE_NAME = "basho-manazashi-v45-without-notebook";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -265,7 +265,6 @@ function render() {
     calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>`,
     garden: () => `<div class="view"><basho-reading mode="garden"></basho-reading></div>`,
     entry: renderEntry,
-    notebook: renderNotebook,
     share: renderShare,
     book: renderBook,
   };
@@ -478,8 +477,8 @@ function renderEncounter() {
       </article>
       ${renderObservationTrace(entry)}
       ${renderCompletedStudyReflection(entry)}
-      <button class="outline-button" type="button" data-nav="notebook">句帳でまなざしを見る</button>
-      <button class="main-button encounter-next-button" type="button" data-nav="notebook">句帳を見る</button>
+      <button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>
+      <button class="main-button encounter-next-button" type="button" data-nav="calendar">カレンダーを見る</button>
     </section>
   </div>`;
 }
@@ -537,72 +536,7 @@ function renderSeeds() {
 
 function renderEntry() {
   const entry = activeEntry();
-  return `<div class="view entry-view"><header class="simple-head"><button class="back-button" type="button" data-nav="notebook" aria-label="句帳に戻る">←</button><span>まなざしの記録</span></header><section class="reflection-card quiet-card"><small>${escapeHtml(entry.date || entry.source || "")}</small><h1>${lineBreak(entry.title)}</h1><p>${escapeHtml(entry.body || entry.task || "")}</p>${renderObservationTrace(entry)}<button class="main-button" type="button" data-action="borrow-gaze">このまなざしで観察する</button></section></div>`;
-}
-
-function renderNotebook() {
-  const entries = allEntries().slice(0, 8);
-  const todaySavedEntries = entries.filter(isTodaySavedEntry);
-  const selectedIds = new Set(state.selectedEntryIds || []);
-  const editLabel = state.notebookEditing ? "完了" : "☰";
-  const syncCard = renderSyncCard();
-  const rows = entries.length
-    ? entries.map((entry) => {
-        const selected = selectedIds.has(entry.id);
-        const savedToday = isTodaySavedEntry(entry);
-        return `<article class="journal-row ${selected ? "selected" : ""} ${savedToday ? "today-entry" : ""}">
-          <button class="journal-open" type="button" data-action="open-entry" data-entry-id="${escapeAttr(entry.id)}">
-            <img src="${escapeAttr(entry.image || "./assets/kotoba-mist.png")}" alt="" />
-            <div>
-              <strong>${lineBreak(entry.title)}</strong>
-              <p>${escapeHtml(entry.body)}</p>
-              <small>${escapeHtml(entry.date)}${savedToday ? "　今日保存" : ""}</small>
-            </div>
-            <span>${escapeHtml(entry.category)}</span>
-          </button>
-          <button class="journal-select" type="button" data-action="toggle-entry-select" data-entry-id="${escapeAttr(entry.id)}" aria-pressed="${selected ? "true" : "false"}" aria-label="削除する句を選ぶ">
-            <span>${selected ? "✓" : ""}</span>
-          </button>
-        </article>`;
-      }).join("")
-    : `<div class="journal-empty">まだ句帳にまなざしはありません。</div>`;
-  const deleteBar = state.notebookEditing
-    ? `<div class="journal-delete-bar"><span>${selectedIds.size}件選択中</span><button type="button" data-action="delete-selected-entries" ${selectedIds.size ? "" : "disabled"}>選んだ句を削除</button></div>`
-    : "";
-  const todaySavedCard = todaySavedEntries.length
-    ? `<section class="today-saved-card">
-        <span>今日保存した句</span>
-        <strong>${lineBreak(todaySavedEntries[0].title)}</strong>
-        <small>句帳の先頭に反映されています。</small>
-      </section>`
-    : "";
-  return `<div class="view notebook-view ${state.notebookEditing ? "editing" : ""}">
-    <header class="journal-head">
-      <button class="back-button" type="button" data-nav="home" aria-label="戻る">←</button>
-      <div>
-        <span>08　わたしの句帳</span>
-        <h1>わたしの句帳</h1>
-      </div>
-      <button class="menu-dots" type="button" data-action="toggle-notebook-edit" aria-label="句帳を編集">${editLabel}</button>
-    </header>
-    <nav class="journal-filter-row" aria-label="句帳の分類">
-      <button class="active" type="button">すべて</button><button type="button">気づき</button><button type="button">俳句風</button><button type="button">原典とつなぐ</button>
-    </nav>
-    ${syncCard}
-    ${todaySavedCard}
-    <section class="notebook-actions">
-      <button type="button" data-nav="share">友達に渡す</button>
-      <button type="button" data-nav="book">まなざし帖にする</button>
-    </section>
-    <section class="inheritance-card" aria-label="まなざしが受け継がれる例">
-      <span>受け継ぎの例</span>
-      <p><b>Aさん</b> 電車が通ったあと、一瞬だけ町が静かになる。</p>
-      <strong>↓</strong>
-      <p><b>Bさん</b> 同じ場所で、窓の反射が消えた瞬間の音に気づく。</p>
-    </section>
-    ${deleteBar}
-    <section class="journal-list">${rows}</section>
-  </div>`;
+  return `<div class="view entry-view"><header class="simple-head"><button class="back-button" type="button" data-nav="calendar" aria-label="カレンダーに戻る">←</button><span>まなざしの記録</span></header><section class="reflection-card quiet-card"><small>${escapeHtml(entry.date || entry.source || "")}</small><h1>${lineBreak(entry.title)}</h1><p>${escapeHtml(entry.body || entry.task || "")}</p>${renderObservationTrace(entry)}<button class="main-button" type="button" data-action="borrow-gaze">このまなざしで観察する</button></section></div>`;
 }
 
 function renderSettings() {
@@ -631,7 +565,7 @@ function renderShare() {
   const entry = activeEntry();
   return `<div class="view share-view">
     <header class="simple-head">
-      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">←</button>
+      <button class="back-button" type="button" data-nav="calendar" aria-label="戻る">←</button>
       <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
     <section class="share-card quiet-card">
@@ -663,7 +597,7 @@ function renderBook() {
   ];
   return `<div class="view book-view">
     <header class="simple-head">
-      <button class="back-button" type="button" data-nav="notebook" aria-label="戻る">←</button>
+      <button class="back-button" type="button" data-nav="calendar" aria-label="戻る">←</button>
       <button class="menu-dots" type="button" aria-label="メニュー">☰</button>
     </header>
     <section class="book-panel">
@@ -973,6 +907,7 @@ function logStudyEvent(action, view = state.view) {
 }
 
 function navigate(view) {
+  if (view === "notebook") view = "calendar";
   if (view === "map") view = "calendar";
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
@@ -1374,8 +1309,8 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    if (state.view === "map") state.view = "calendar";
-    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "entry", "notebook", "share", "book"];
+    if (["map", "notebook"].includes(state.view)) state.view = "calendar";
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "garden", "entry", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);
