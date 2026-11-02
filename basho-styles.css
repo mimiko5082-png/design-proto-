@@ -3765,3 +3765,33 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .friend-detail .friend-large-photo { display: none; }
 .neo-capture .photo-capture-actions .outline-button { border: 1px solid var(--neo-green); background: #07120b66; }
 .friends-feature .photo-postcard { aspect-ratio: 9/12; }
+
+/* A quiet photographic frame: editorial type, fine keylines and clear image space. */
+.neo-capture .capture-stage { border-left-width: 4px; }
+.capture-stage::before { content: ''; position: absolute; z-index: 1; inset: 12px 12px 77px; border: 1px solid #ffffff30; pointer-events: none; }
+.capture-stage::after { background: linear-gradient(180deg,#050a07cf 0%,#050a0759 32%,transparent 53%,#050a0799 73%,#050a07f5 100%); }
+.neo-capture .capture-prompt { inset: 28px 32px auto 25px; }
+.photo-edition, .postcard-edition { display: flex; align-items: center; gap: 9px; color: #32b96e; font: 600 9px/1.5 monospace; letter-spacing: .19em; }
+.photo-edition { margin-bottom: 20px; }
+.photo-edition i { height: 1px; width: 22px; background: currentColor; opacity: .6; }
+.capture-prompt > small { color: #e4ebd8; opacity: .75; font-size: 9px; letter-spacing: .04em; }
+.neo-capture .photo-modern { font-size: clamp(25px,7vw,31px); line-height: 1.48; letter-spacing: -.035em; text-shadow: 0 2px 20px #0005; text-wrap: pretty; margin-top: 12px; }
+.capture-prompt .photo-topic-options > button { border: 1px solid #c4e5ce55; border-radius: 20px; padding: 5px 11px; text-decoration: none; font-size: 9px; background: #08160d55; }
+.neo-capture .photo-caption-field { left: 25px; right: 43px; }
+.neo-capture .photo-caption-field > small { color: #a6b9a8; font-size: 9px; letter-spacing: .1em; }
+.neo-capture .photo-caption-field textarea { color: #f3f5ed; font-size: 18px; line-height: 1.6; font-weight: 650; font-style: normal; border-bottom-color: #d4e8d52e; }
+.neo-capture .photo-caption-field textarea::placeholder { color: #c5d2c6; opacity: .65; }
+.capture-date { font-size: 9px; opacity: .85; right: 17px; }
+.camera-shutter { box-shadow: inset 0 0 0 5px #0c1c12,0 0 0 5px #32b96e1a; transition: transform .2s,box-shadow .2s; }
+.photo-capture-empty:hover .camera-shutter { transform: scale(1.05); box-shadow: inset 0 0 0 5px #0c1c12,0 0 0 9px #32b96e22; }
+.photo-postcard { border-width: 4px; }
+.photo-postcard::before { content: ''; position: absolute; z-index: 2; inset: 8px; border: 1px solid #ffffff30; pointer-events: none; }
+.photo-postcard::after { background: linear-gradient(180deg,#050a07c4, #050a0740 35%,transparent 58%,#050a07aa); }
+.postcard-edition { position: absolute; top: 21px; left: 21px; z-index: 2; font-size: 8px; }
+.postcard-prompt { top: 47px; left: 21px; right: 29px; font-size: 25px; line-height: 1.48; text-shadow: 0 2px 20px #0005; text-wrap: pretty; }
+.postcard-caption, .friend-own-photo .friend-own-caption { padding: 32px 21px 23px; color: #f3f5ed; background: linear-gradient(transparent,#090d09e8); font-size: 16px; line-height: 1.65; font-weight: 650; font-style: normal; }
+.postcard-date { right: 14px; font-size: 8px; bottom: 100px; opacity: .85; }
+.feed-post-author { padding-top: 15px; padding-bottom: 15px; }
+.friend-own-photo, .feed-post { margin-bottom: 28px; }
+@media(max-width:360px) { .neo-capture .capture-prompt { left: 21px; right: 25px; } .photo-edition { margin-bottom: 14px; } .postcard-prompt { font-size: 22px; } }
+@media(prefers-reduced-motion:reduce) { .camera-shutter { transition: none; } }
