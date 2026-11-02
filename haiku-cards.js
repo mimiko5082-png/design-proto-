@@ -132,9 +132,39 @@ class HaikuCards extends HTMLElement {
   cameraFailure(error) {
     if(error?.name === 'OverconstrainedError') return `${this.cameraFacing==='user'?'内カメ':'外カメ'}を使えませんでした。もう一方のカメラか、端末の写真選択をお試しください。`;
     if(error?.name === 'NotAllowedError' || error?.name === 'SecurityError') return 'カメラを使うには、ブラウザでカメラへのアクセスを許可してください。';
-    if(error?.name === 'NotFoundError') return 'カメラが見つかりませんでした。カメラのある端末で開いてください。';
+    if(error?.name === 'NotFoundError') return '指定したカメラが見つかりませんでした。外カメのあるスマートフォンで、SafariまたはChromeから開いてください。';
     if(error?.name === 'NotReadableError') return 'カメラを開けませんでした。他のアプリで使用中でないか確認してください。';
     return 'カメラを開けませんでした。ブラウザのカメラ設定を確認してください。';
+  }
+  async requestCamera(session, explicitFacing) {
+    const media=navigator.mediaDevices;
+    const dimensions={width:{ideal:1280},height:{ideal:960}};
+    const request=video=>media.getUserMedia({video:{...dimensions,...video},audio:false});
+    const current=()=>session===this.cameraSession && this.isConnected;
+    let stream;
+    try { stream=await request({facingMode:explicitFacing?{exact:this.cameraFacing}:{ideal:this.cameraFacing}}); }
+    catch(error) {
+      if(!current() || !['OverconstrainedError','NotFoundError'].includes(error.name)) throw error;
+      // Some mobile browsers reject facingMode.exact even though both cameras exist.
+      let devices=[];
+      try { devices=await media.enumerateDevices(); } catch { /* Preference request still works without enumeration. */ }
+      if(!current()) throw new DOMException('Camera closed','AbortError');
+      const pattern=this.cameraFacing==='environment'?/back|rear|environment|背面|外側|後面/i:/front|user|facetime|前面|内側/i;
+      const device=devices.find(device=>device.kind==='videoinput' && pattern.test(device.label));
+      stream=await request(device?{deviceId:{exact:device.deviceId}}:{facingMode:{ideal:this.cameraFacing}});
+    }
+    if(!current()) { stream.getTracks().forEach(track=>track.stop()); throw new DOMException('Camera closed','AbortError'); }
+    const track=stream.getVideoTracks()[0];
+    const settings=track?.getSettings?.() || {};
+    const label=track?.label || '';
+    const facing=settings.facingMode || (/back|rear|environment|背面|外側|後面/i.test(label)?'environment':/front|user|facetime|前面|内側/i.test(label)?'user':null);
+    if(explicitFacing && facing && facing!==this.cameraFacing) {
+      stream.getTracks().forEach(track=>track.stop());
+      throw new DOMException('Requested camera unavailable','OverconstrainedError');
+    }
+    this.cameraFacingKnown=!!facing;
+    if(facing) this.cameraFacing=facing;
+    return stream;
   }
   async openCamera(explicitFacing=false) {
     if(this.busy || this.restoring || this.cameraOpening || this.cameraStream) return;
@@ -146,7 +176,7 @@ class HaikuCards extends HTMLElement {
     const session=++this.cameraSession;
     this.cameraOpening=true; this.render();
     try {
-      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:explicitFacing?{exact:this.cameraFacing}:{ideal:this.cameraFacing},width:{ideal:1280},height:{ideal:960}},audio:false});
+      const stream=await this.requestCamera(session,explicitFacing);
       if(session!==this.cameraSession || !this.isConnected) { stream.getTracks().forEach(track=>track.stop()); return; }
       this.cameraStream=stream; this.cameraOpening=false;
       for(const track of stream.getVideoTracks()) track.addEventListener('ended',()=>{
@@ -162,7 +192,7 @@ class HaikuCards extends HTMLElement {
       video.classList.toggle('is-front-camera',this.cameraFacing==='user');
       for(const button of this.querySelectorAll('[data-camera-facing]')) {button.disabled=false;button.setAttribute('aria-pressed',String(button.dataset.cameraFacing===this.cameraFacing));}
       const shutter=this.querySelector('[data-haiku-action="camera-shoot"]'); if(shutter) shutter.disabled=false;
-      const status=this.querySelector('[data-camera-status]'); if(status) status.textContent=`${this.cameraFacing==='user'?'内カメ':'外カメ'}で撮影中 · 撮影するを押してください。`;
+      const status=this.querySelector('[data-camera-status]'); if(status) status.textContent=this.cameraFacingKnown?`${this.cameraFacing==='user'?'内カメ':'外カメ'}で撮影中 · 撮影するを押してください。`:'カメラ映像を表示しています。外カメがない端末や切替に非対応のブラウザでは、外カメを使えない場合があります。';
     } catch(error) {
       if(session!==this.cameraSession || !this.isConnected) return;
       this.stopCamera(); this.cameraError=this.cameraFailure(error); this.render();

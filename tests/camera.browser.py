@@ -28,7 +28,7 @@ try:
   page.on('request',lambda req:external.append(req.url) if req.url.startswith(('http://','https://')) and not req.url.startswith(origin+'/') else None)
   page.add_init_script("""window.cameraCalls=0;window.cameraTracks=[];
    const native=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-   window.realGetCamera=async constraints=>{window.cameraCalls++;window.cameraConstraints=constraints;const fakeConstraints=structuredClone(constraints);if(fakeConstraints.video.facingMode?.exact)delete fakeConstraints.video.facingMode;const stream=await native(fakeConstraints);window.cameraTracks.push(...stream.getTracks());return stream;};
+   window.realGetCamera=async constraints=>{window.cameraCalls++;window.cameraConstraints=constraints;const fakeConstraints=structuredClone(constraints);if(fakeConstraints.video.facingMode?.exact)delete fakeConstraints.video.facingMode;const stream=await native(fakeConstraints);for(const track of stream.getVideoTracks()){const settings=track.getSettings.bind(track);track.getSettings=()=>({...settings(),facingMode:constraints.video.facingMode?.exact || constraints.video.facingMode?.ideal || 'environment'});}window.cameraTracks.push(...stream.getTracks());return stream;};
    navigator.mediaDevices.getUserMedia=window.realGetCamera;""")
   page.clock.install(time=datetime(2026,10,29,3,0,tzinfo=timezone.utc))
   page.goto(origin+('/share.html' if SHARE else '/'),wait_until='networkidle')
@@ -54,6 +54,16 @@ try:
   expect(page.locator('[data-camera-facing=environment]')).to_have_attribute('aria-pressed','true')
   expect(page.locator('[data-camera-video]')).not_to_have_class('is-front-camera')
   expect(page.locator('[data-camera-status]')).to_contain_text('外カメ')
+  # A browser rejecting strict facingMode can still open that lens by preference.
+  page.evaluate("""() => { window.nativeEnumerate=navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);navigator.mediaDevices.enumerateDevices=async()=>[];window.strictFailures=0;navigator.mediaDevices.getUserMedia=async constraints=>{if(constraints.video.facingMode?.exact){window.strictFailures++;throw new DOMException('unsupported constraint','OverconstrainedError');}return window.realGetCamera(constraints);}; }""")
+  page.locator('[data-camera-facing=user]').click()
+  expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
+  assert page.evaluate('window.strictFailures')==1
+  assert page.evaluate('window.cameraConstraints.video.facingMode.ideal')=='user'
+  expect(page.locator('[data-camera-status]')).to_contain_text('内カメ')
+  page.evaluate('() => { navigator.mediaDevices.getUserMedia=window.realGetCamera;navigator.mediaDevices.enumerateDevices=window.nativeEnumerate; }')
+  page.locator('[data-camera-facing=environment]').click()
+  expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   page.screenshot(path='/tmp/basho-direct-camera.png',full_page=True)
   page.locator('[data-haiku-action=camera-shoot]').click()
   expect(page.locator('.photo-camera-dialog')).to_have_count(0)
