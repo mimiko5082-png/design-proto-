@@ -5,6 +5,36 @@ import { preparePhoto } from './haiku-service.js';
 import { makeCard, saveCard, loadCards, replaceCardPhoto } from './haiku-store.js';
 const esc = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
+
+// Decorative city scene only: never used as a captured or saved photograph.
+const CITY_BACKGROUND = `<svg class="ambient-city" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<defs>
+ <linearGradient id="city-sky" x2="0" y2="1"><stop stop-color="#061015"/><stop offset=".6" stop-color="#183c3a"/><stop offset="1" stop-color="#5d7863"/></linearGradient>
+ <linearGradient id="city-road" x2="0" y2="1"><stop stop-color="#263c34"/><stop offset="1" stop-color="#060f13"/></linearGradient>
+ <linearGradient id="city-glow" x2="0" y2="1"><stop stop-color="#ebc68a" stop-opacity=".5"/><stop offset="1" stop-color="#ebc68a" stop-opacity="0"/></linearGradient>
+ <radialGradient id="city-haze"><stop stop-color="#a6c3a0" stop-opacity=".3"/><stop offset="1" stop-color="#a6c3a0" stop-opacity="0"/></radialGradient>
+ <pattern id="city-windows" width="29" height="37" patternUnits="userSpaceOnUse"><path d="M9 11h10v15H9z" fill="#5a7969" opacity=".24"/><path d="M14 11v15" stroke="#172e2b"/></pattern>
+</defs>
+<path fill="url(#city-sky)" d="M0 0h400v800H0z"/>
+<ellipse cx="239" cy="543" rx="183" ry="201" fill="url(#city-haze)"/>
+<g fill="#253f3a"><path d="M132 458h35v157h-35zM174 485h26v130h-26zM202 468h34v147h-34zM242 493h22v122h-22zM271 444h35v171h-35z"/></g>
+<g fill="#8da58b" opacity=".3"><path d="M181 507h5v9h-5zM214 488h5v10h-5zM248 529h5v8h-5zM284 478h6v11h-6z"/></g>
+<path d="M0 345l92 33v230L0 691z" fill="#0a1b20"/><path d="M0 345l92 33v230L0 691z" fill="url(#city-windows)"/>
+<path d="M92 412l49 21v167l-49 20z" fill="#152d2d"/><path d="M99 440l32 9v149l-32 13z" fill="url(#city-windows)"/>
+<path d="M400 300l-88 64v251l88 85z" fill="#0c2023"/><path d="M400 300l-88 64v251l88 85z" fill="url(#city-windows)"/>
+<path d="M312 424l-45 21v165l45 17z" fill="#1b3230"/><path d="M307 447l-34 14v145l34 13z" fill="url(#city-windows)"/>
+<path d="M0 690l205-82h52l143 91v101H0z" fill="url(#city-road)"/>
+<path d="M0 684l205-76M400 695l-143-87" stroke="#839e8555" stroke-width="2"/>
+<path d="M226 616l-9 83h27l-8-83zM210 724l-12 76h63l-14-76z" fill="url(#city-glow)" opacity=".35"/>
+<path d="M110 729l-50 71M302 743l36 57" stroke="#80998a" opacity=".14"/>
+<g stroke="#061518" fill="none"><path d="M37 304v390M353 271v432" stroke-width="5"/><path d="M25 341h28M340 315h29" stroke-width="3"/><path d="M37 328Q189 428 353 302M37 345Q215 457 353 321" stroke-width="1.6"/><path d="M37 315L0 293M353 291l47-31"/></g>
+<path d="M282 510h19v39h-19z" fill="#c8aa78" opacity=".85"/><path d="M291 511v37M283 530h17" stroke="#34483b" stroke-width="2"/>
+<path d="M111 491h15v24h-15z" fill="#859779" opacity=".65"/>
+<path d="M290 551l-23 182h46z" fill="url(#city-glow)" opacity=".15"/>
+<g fill="#d7c18e"><circle cx="229" cy="588" r="2.4"/><circle cx="258" cy="579" r="1.7"/></g>
+<path d="M206 625h36M189 644h40M165 677h31M271 686h24M146 755h30M265 781h45" stroke="#729384" stroke-width="1.5" opacity=".22"/>
+</svg>`;
+
 class HaikuCards extends HTMLElement {
   connectedCallback() {
     this.day = japanDay(); this.topic = dailyTopic(this.day);
@@ -207,7 +237,7 @@ class HaikuCards extends HTMLElement {
     this.innerHTML = `<section class="haiku-create photo-capture-home neo-capture">
     <input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>
     <div class="capture-stage ${this.image?'has-photo':'no-photo'}">
-    ${this.image?`<img class="haiku-photo capture-full-image" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:'<div class="capture-full-image capture-ambient" role="img" aria-label="深い緑の光が差し込む撮影前の背景"><span class="ambient-orbit" aria-hidden="true"></span><span class="ambient-grain" aria-hidden="true"></span></div>'}
+    ${this.image?`<img class="haiku-photo capture-full-image" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<div class="capture-full-image capture-ambient city-backdrop" role="img" aria-label="窓の明かりと雨上がりの路地を描いた撮影前の街の背景">${CITY_BACKGROUND}<span class="ambient-grain" aria-hidden="true"></span></div>`}
     <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><span class="photo-edition" aria-hidden="true">BASHO <i></i> DAILY FRAME</span><small>${esc(this.topic.original || this.topic.lines.join(''))}</small><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
     <time class="capture-date">${esc(this.saved?postDate(this.card):postDate({day:this.day,createdAt:Date.now()}))}</time>
     ${this.image?`<label class="photo-caption-field"><small>もう一言だけ</small><textarea data-photo-caption rows="2" maxlength="120" aria-label="写真にひとこと（任意）" placeholder="見つけたことを、ひとこと。" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>${esc(this.caption)}</textarea></label>`:`<button type="button" data-haiku-action="camera" class="photo-capture-empty" ${this.busy||this.restoring?'disabled':''}><span class="camera-shutter" aria-hidden="true"></span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'タップしてカメラを開く'}</strong></button>`}
