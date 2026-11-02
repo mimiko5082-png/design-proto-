@@ -3795,3 +3795,11 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .friend-own-photo, .feed-post { margin-bottom: 28px; }
 @media(max-width:360px) { .neo-capture .capture-prompt { left: 21px; right: 25px; } .photo-edition { margin-bottom: 14px; } .postcard-prompt { font-size: 22px; } }
 @media(prefers-reduced-motion:reduce) { .camera-shutter { transition: none; } }
+
+/* The empty camera has its own abstract atmosphere; actual photographs stay untouched. */
+.capture-ambient { isolation: isolate; background: radial-gradient(ellipse at 86% 62%,#25483d 0%,transparent 36%),radial-gradient(ellipse at 18% 84%,#14584666,transparent 45%),linear-gradient(155deg,#060d10 8%,#0a1919 52%,#101d16 100%); overflow: hidden; }
+.capture-ambient::before { content: ''; position: absolute; width: 135%; height: 54%; left: -22%; top: 34%; border-radius: 50%; background: linear-gradient(164deg,transparent 30%,#397c63aa 48%,#b9e3b755 51%,#153d2d88 56%,transparent 72%); transform: rotate(-31deg); filter: blur(20px); opacity: .85; }
+.capture-ambient::after { content: ''; position: absolute; width: 104%; height: 74%; left: 21%; top: 27%; border-radius: 50%; border: 1px solid #b1dab128; box-shadow: -20px 10px 100px #7ecc9c0e,inset 0 0 80px #9fdbaa08; transform: rotate(-29deg); }
+.ambient-orbit { position: absolute; width: 110%; aspect-ratio: 1; left: 15%; top: 46%; border-radius: 50%; background: radial-gradient(circle at 31% 13%,#80ae8270, #16382dd9 18%,#0b1714 54%,#060e0c 75%); box-shadow: -1px -1px 0 #b3e3b546,-18px -15px 70px #7bcb9a18; transform: rotate(-22deg); }
+.ambient-grain { position: absolute; inset: 0; z-index: 1; opacity: .17; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23g)' opacity='.6' d='M0 0h180v180H0z'/%3E%3C/svg%3E"); pointer-events: none; }
+.capture-stage.no-photo::after { background: linear-gradient(180deg,#03090c66,transparent 38%,#03090c22 69%,#03090cd9); }
