@@ -3808,3 +3808,9 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .city-backdrop::before, .city-backdrop::after { display: none; }
 .ambient-city { display: block; width: 100%; height: 100%; }
 .capture-stage.no-photo::after { background: linear-gradient(180deg,#03090c66 0%,#03090c33 37%,transparent 63%,#03090cbb 100%); }
+
+.camera-facing-options { display: flex; gap: 6px; padding: 4px; margin: 0 0 12px; border: 1px solid #2a5139; background: #07110b; border-radius: 24px; }
+.camera-facing-options button { flex: 1; min-height: 40px; border-radius: 20px; background: transparent; color: #b5d3bf; font-size: 13px; font-weight: 700; }
+.camera-facing-options button[aria-pressed=true] { background: var(--neo-green); color: #07160c; }
+.camera-facing-options button:disabled { opacity: .45; }
+.photo-camera-view video.is-front-camera { transform: scaleX(-1); }

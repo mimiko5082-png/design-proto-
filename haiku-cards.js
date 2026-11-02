@@ -61,7 +61,9 @@ class HaikuCards extends HTMLElement {
         this.querySelector('[data-photo-hint]').hidden = !this.showHint;
       }
       if (action === 'retake' || action === 'camera') this.openCamera();
-      if (action === 'camera-flip' && !this.cameraOpening) { this.cameraFacing=this.cameraFacing==='environment'?'user':'environment'; this.stopCamera(); this.openCamera(); }
+      if (action === 'camera-flip') this.switchCamera(this.cameraFacing==='environment'?'user':'environment');
+      if (action === 'camera-user') this.switchCamera('user');
+      if (action === 'camera-environment') this.switchCamera('environment');
       if (action === 'camera-close') this.closeCamera();
       if (action === 'camera-shoot') this.capturePhoto();
       if (action === 'pick-file' && !this.busy && !this.restoring) { const input=this.querySelector('[data-haiku-photo]'); input.value=''; input.click(); }
@@ -122,13 +124,19 @@ class HaikuCards extends HTMLElement {
     this.cameraStream=null; this.cameraOpening=false; this.cameraReady=false; this.cameraCapturing=false;
   }
   closeCamera() { this.stopCamera(); if(this.isConnected) this.render(); }
+  switchCamera(facing) {
+    if(this.busy || this.restoring || this.cameraOpening || this.cameraCapturing) return;
+    if(this.cameraStream && facing===this.cameraFacing) return;
+    this.stopCamera(); this.cameraFacing=facing; this.openCamera(true);
+  }
   cameraFailure(error) {
+    if(error?.name === 'OverconstrainedError') return `${this.cameraFacing==='user'?'内カメ':'外カメ'}を使えませんでした。もう一方のカメラか、端末の写真選択をお試しください。`;
     if(error?.name === 'NotAllowedError' || error?.name === 'SecurityError') return 'カメラを使うには、ブラウザでカメラへのアクセスを許可してください。';
     if(error?.name === 'NotFoundError') return 'カメラが見つかりませんでした。カメラのある端末で開いてください。';
     if(error?.name === 'NotReadableError') return 'カメラを開けませんでした。他のアプリで使用中でないか確認してください。';
     return 'カメラを開けませんでした。ブラウザのカメラ設定を確認してください。';
   }
-  async openCamera() {
+  async openCamera(explicitFacing=false) {
     if(this.busy || this.restoring || this.cameraOpening || this.cameraStream) return;
     this.cameraError=''; this.error='';
     if(!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
@@ -138,7 +146,7 @@ class HaikuCards extends HTMLElement {
     const session=++this.cameraSession;
     this.cameraOpening=true; this.render();
     try {
-      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:this.cameraFacing},width:{ideal:1280},height:{ideal:960}},audio:false});
+      const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:explicitFacing?{exact:this.cameraFacing}:{ideal:this.cameraFacing},width:{ideal:1280},height:{ideal:960}},audio:false});
       if(session!==this.cameraSession || !this.isConnected) { stream.getTracks().forEach(track=>track.stop()); return; }
       this.cameraStream=stream; this.cameraOpening=false;
       for(const track of stream.getVideoTracks()) track.addEventListener('ended',()=>{
@@ -149,8 +157,12 @@ class HaikuCards extends HTMLElement {
       video.srcObject=stream; await video.play();
       if(session!==this.cameraSession || !this.isConnected) return;
       this.cameraReady=true;
+      const actualFacing=stream.getVideoTracks()[0]?.getSettings?.().facingMode;
+      if(actualFacing==='user' || actualFacing==='environment') this.cameraFacing=actualFacing;
+      video.classList.toggle('is-front-camera',this.cameraFacing==='user');
+      for(const button of this.querySelectorAll('[data-camera-facing]')) {button.disabled=false;button.setAttribute('aria-pressed',String(button.dataset.cameraFacing===this.cameraFacing));}
       const shutter=this.querySelector('[data-haiku-action="camera-shoot"]'); if(shutter) shutter.disabled=false;
-      const status=this.querySelector('[data-camera-status]'); if(status) status.textContent='景色を確かめて、撮影するを押してください。';
+      const status=this.querySelector('[data-camera-status]'); if(status) status.textContent=`${this.cameraFacing==='user'?'内カメ':'外カメ'}で撮影中 · 撮影するを押してください。`;
     } catch(error) {
       if(session!==this.cameraSession || !this.isConnected) return;
       this.stopCamera(); this.cameraError=this.cameraFailure(error); this.render();
@@ -235,7 +247,7 @@ class HaikuCards extends HTMLElement {
   render() {
     const pending = this.hasPendingChanges();
     this.innerHTML = `<section class="haiku-create photo-capture-home neo-capture">
-    <input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="environment" ${this.busy||this.restoring?'disabled':''}>
+    <input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="${this.cameraFacing}" ${this.busy||this.restoring?'disabled':''}>
     <div class="capture-stage ${this.image?'has-photo':'no-photo'}">
     ${this.image?`<img class="haiku-photo capture-full-image" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<div class="capture-full-image capture-ambient city-backdrop" role="img" aria-label="窓の明かりと雨上がりの路地を描いた撮影前の街の背景">${CITY_BACKGROUND}<span class="ambient-grain" aria-hidden="true"></span></div>`}
     <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><span class="photo-edition" aria-hidden="true">BASHO <i></i> DAILY FRAME</span><small>${esc(this.topic.original || this.topic.lines.join(''))}</small><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
@@ -245,9 +257,9 @@ class HaikuCards extends HTMLElement {
     <div class="capture-extra-actions"><button type="button" data-nav="calendar" aria-label="自分の記録を開く">▦</button><button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える">↻</button></div>
     </div>
     <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
-    ${this.cameraError?`<p class="reading-error" role="alert">${esc(this.cameraError)}</p><button type="button" class="outline-button" data-haiku-action="pick-file">端末のカメラ・写真選択を使う</button>`:''}
+    ${this.cameraError?`<p class="reading-error" role="alert">${esc(this.cameraError)}</p><div class="camera-facing-options" role="group" aria-label="カメラを選んで再試行"><button type="button" data-haiku-action="camera-environment">外カメを開く</button><button type="button" data-haiku-action="camera-user">内カメを開く</button></div><button type="button" class="outline-button" data-haiku-action="pick-file">端末のカメラ・写真選択を使う</button>`:''}
     <p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
-    ${(this.cameraOpening||this.cameraStream)?`<dialog class="photo-camera-dialog" aria-label="写真を撮影"><header><strong>今日の一枚を撮る</strong><button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える">↻</button><button type="button" data-haiku-action="camera-close" aria-label="カメラを閉じる">×</button></header><div class="photo-camera-view"><video data-camera-video autoplay muted playsinline></video></div><p data-camera-status role="status">${this.cameraOpening?'カメラを開いています…':'カメラの準備をしています…'}</p><div class="photo-camera-controls"><button type="button" class="outline-button" data-haiku-action="camera-close">やめる</button><button type="button" class="main-button" data-haiku-action="camera-shoot" disabled>撮影する</button></div></dialog>`:''}
+    ${(this.cameraOpening||this.cameraStream)?`<dialog class="photo-camera-dialog" aria-label="写真を撮影"><header><strong>今日の一枚を撮る</strong><button type="button" data-haiku-action="camera-close" aria-label="カメラを閉じる">×</button></header><div class="camera-facing-options" role="group" aria-label="使うカメラ"><button type="button" data-camera-facing="environment" data-haiku-action="camera-environment" aria-pressed="${this.cameraFacing==='environment'}" disabled>外カメ</button><button type="button" data-camera-facing="user" data-haiku-action="camera-user" aria-pressed="${this.cameraFacing==='user'}" disabled>内カメ</button></div><div class="photo-camera-view"><video data-camera-video autoplay muted playsinline></video></div><p data-camera-status role="status">${this.cameraOpening?'カメラを開いています…':'カメラの準備をしています…'}</p><div class="photo-camera-controls"><button type="button" class="outline-button" data-haiku-action="camera-close">やめる</button><button type="button" class="main-button" data-haiku-action="camera-shoot" disabled>撮影する</button></div></dialog>`:''}
     </section>`;
     const dialog=this.querySelector('.photo-camera-dialog');
     if(dialog) { dialog.addEventListener('cancel',event=>{event.preventDefault();this.closeCamera();}); if(dialog.showModal) dialog.showModal(); else dialog.setAttribute('open',''); }

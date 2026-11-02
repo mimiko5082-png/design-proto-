@@ -28,7 +28,7 @@ try:
   page.on('request',lambda req:external.append(req.url) if req.url.startswith(('http://','https://')) and not req.url.startswith(origin+'/') else None)
   page.add_init_script("""window.cameraCalls=0;window.cameraTracks=[];
    const native=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-   window.realGetCamera=async constraints=>{window.cameraCalls++;window.cameraConstraints=constraints;const stream=await native(constraints);window.cameraTracks.push(...stream.getTracks());return stream;};
+   window.realGetCamera=async constraints=>{window.cameraCalls++;window.cameraConstraints=constraints;const fakeConstraints=structuredClone(constraints);if(fakeConstraints.video.facingMode?.exact)delete fakeConstraints.video.facingMode;const stream=await native(fakeConstraints);window.cameraTracks.push(...stream.getTracks());return stream;};
    navigator.mediaDevices.getUserMedia=window.realGetCamera;""")
   page.clock.install(time=datetime(2026,10,29,3,0,tzinfo=timezone.utc))
   page.goto(origin+('/share.html' if SHARE else '/'),wait_until='networkidle')
@@ -40,6 +40,20 @@ try:
   assert page.evaluate('window.cameraCalls')==1
   assert page.evaluate('window.cameraConstraints.audio')==False
   assert page.evaluate('window.cameraConstraints.video.facingMode.ideal')=='environment'
+  # Both explicit lens choices request the selected side and release the old stream.
+  page.locator('[data-camera-facing=user]').click()
+  expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
+  assert page.evaluate('window.cameraConstraints.video.facingMode.exact')=='user'
+  expect(page.locator('[data-camera-facing=user]')).to_have_attribute('aria-pressed','true')
+  expect(page.locator('[data-camera-video]')).to_have_class('is-front-camera')
+  expect(page.locator('[data-camera-status]')).to_contain_text('内カメ')
+  assert page.evaluate('window.cameraTracks.slice(0,-1).every(t=>t.readyState==="ended")')
+  page.locator('[data-camera-facing=environment]').click()
+  expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
+  assert page.evaluate('window.cameraConstraints.video.facingMode.exact')=='environment'
+  expect(page.locator('[data-camera-facing=environment]')).to_have_attribute('aria-pressed','true')
+  expect(page.locator('[data-camera-video]')).not_to_have_class('is-front-camera')
+  expect(page.locator('[data-camera-status]')).to_contain_text('外カメ')
   page.screenshot(path='/tmp/basho-direct-camera.png',full_page=True)
   page.locator('[data-haiku-action=camera-shoot]').click()
   expect(page.locator('.photo-camera-dialog')).to_have_count(0)
@@ -70,6 +84,12 @@ try:
   expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
   assert page.locator('basho-haiku').evaluate('(node)=>node.card.caption')=='いつもの道の光がきれい。'
   saved=page.locator('basho-haiku .haiku-photo').get_attribute('src')
+  # A missing requested lens reports failure instead of silently using the other lens.
+  page.evaluate("() => { navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('unavailable','OverconstrainedError')}; }")
+  page.locator('[data-haiku-action=retake]').click()
+  expect(page.locator('.reading-error')).to_contain_text('外カメを使えませんでした')
+  expect(page.locator('basho-haiku .haiku-photo')).to_have_attribute('src',saved)
+  expect(page.locator('[data-haiku-action=camera-user]')).to_be_visible()
   # A denied permission has a clear recovery and keeps the saved photograph.
   page.evaluate("() => { navigator.mediaDevices.getUserMedia=async()=>{throw new DOMException('denied','NotAllowedError')}; }")
   page.locator('[data-haiku-action=retake]').click()
