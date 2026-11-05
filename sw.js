@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v64-readable-camera-labels";
+const CACHE_NAME = "basho-manazashi-v65-haiku-type-balance";
 const APP_SHELL = [
   "./",
   "./index.html",
