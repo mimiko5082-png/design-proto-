@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v67-person-feed-icon";
+const CACHE_NAME = "basho-manazashi-v68-readable-feed-haiku";
 const APP_SHELL = [
   "./",
   "./index.html",
