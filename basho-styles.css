@@ -3699,7 +3699,7 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .neo-capture .photo-caption-field textarea::placeholder { color: #79b68e; opacity: .8; }
 .neo-capture .photo-capture-empty { position: absolute; z-index: 3; width: 90px; min-height: 0; aspect-ratio: auto; left: calc(50% - 45px); bottom: 92px; padding: 0; color: var(--neo-green); gap: 8px; }
 .camera-shutter { width: 64px; height: 64px; border: 2px solid var(--neo-green); box-shadow: inset 0 0 0 5px #183321; border-radius: 50%; background: var(--neo-green); display: block; }
-.neo-capture .photo-capture-empty strong { white-space: nowrap; font-size: 9px; }
+.neo-capture .photo-capture-empty strong { white-space: nowrap; font-size: 13px; line-height: 1.6; text-shadow: 0 1px 6px #000; }
 .neo-capture .photo-capture-actions { position: absolute; z-index: 3; left: 70px; right: 22px; bottom: 91px; gap: 8px; }
 .neo-capture .photo-capture-actions > button { min-height: 40px; border-radius: 25px; padding: 9px 5px; font-size: 12px; }
 .capture-extra-actions { position: absolute; z-index: 3; left: 16px; right: 18px; bottom: 91px; display: flex; justify-content: space-between; pointer-events: none; }
@@ -3774,7 +3774,7 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .photo-edition, .postcard-edition { display: flex; align-items: center; gap: 9px; color: #32b96e; font: 600 9px/1.5 monospace; letter-spacing: .19em; }
 .photo-edition { margin-bottom: 20px; }
 .photo-edition i { height: 1px; width: 22px; background: currentColor; opacity: .6; }
-.capture-prompt > small { color: #e4ebd8; opacity: .75; font-size: 9px; letter-spacing: .04em; }
+.capture-prompt > small { color: #e4ebd8; opacity: .9; font-size: 14px; letter-spacing: .04em; }
 .neo-capture .photo-modern { font-size: clamp(25px,7vw,31px); line-height: 1.48; letter-spacing: -.035em; text-shadow: 0 2px 20px #0005; text-wrap: pretty; margin-top: 12px; }
 .capture-prompt .photo-topic-options > button { border: 1px solid #c4e5ce55; border-radius: 20px; padding: 5px 11px; text-decoration: none; font-size: 9px; background: #08160d55; }
 .neo-capture .photo-caption-field { left: 25px; right: 43px; }
