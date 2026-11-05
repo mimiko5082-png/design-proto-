@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v65-haiku-type-balance";
+const CACHE_NAME = "basho-manazashi-v66-readable-hint-button";
 const APP_SHELL = [
   "./",
   "./index.html",
