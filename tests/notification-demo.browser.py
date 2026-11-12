@@ -40,9 +40,22 @@ try:
    assert page.locator('.notification-demo-dialog').evaluate('(el)=>el.scrollWidth<=el.clientWidth')
    page.keyboard.press('Escape')
    expect(page.locator('.notification-demo-dialog')).to_have_count(0)
+  page.goto(origin+'/share.html?notification=night',wait_until='networkidle')
+  expect(page.locator('.notification-demo-clock')).to_have_text('23:50')
+  expect(page.locator('.notification-demo-card strong')).to_have_text('今日の景色、1枚残してみない？')
+  expect(page.locator('.notification-demo-body')).to_contain_text('今日の発見を振り返ってみよう')
+  page.screenshot(path='/tmp/basho-night-notification.png',full_page=True)
+  page.locator('[data-demo-switch]').click()
+  expect(page.locator('.notification-demo-clock')).to_have_text('8:00')
+  page.locator('[data-demo-switch]').click()
+  expect(page.locator('.notification-demo-clock')).to_have_text('23:50')
+  expect(page.locator('.notification-demo-dialog')).to_have_count(1)
+  page.locator('[data-demo-open]').click()
+  expect(page.locator('.notification-demo-dialog')).to_have_count(0)
+  expect(page.locator('[data-haiku-action=camera]')).to_be_visible()
   assert page.evaluate('permissionRequests')==0
   assert not errors,errors
   assert not external,external
   browser.close()
-  print('PASS: 08:00 preview auto-opens, matches notification copy, taps through to today, reopens and closes; no real push or external calls')
+  print('PASS: 08:00 and 23:50 previews auto-open and switch, matches notification copy, taps through to today, reopens and closes; no real push or external calls')
 finally:server.shutdown()

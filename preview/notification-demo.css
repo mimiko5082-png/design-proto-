@@ -16,3 +16,8 @@
 .notification-demo-tap { display: block; margin-top: 12px; font-size: 11px; color: #3f6851; }
 .notification-demo-footnote { font-size: 10px; line-height: 1.8; color: #aec4b7; margin: 28px 0 0; }
 @media(max-height:650px) { .notification-demo-lockscreen { padding-top: 18px; } .notification-demo-caption { margin-bottom: 20px; } }
+
+.notification-demo-night .notification-demo-lockscreen { background: radial-gradient(ellipse at 80% 15%,#63799633,transparent 55%),linear-gradient(155deg,#101e30,#172d32 55%,#070f1e); }
+.notification-demo-night .notification-demo-clock { font-size: clamp(66px,20vw,90px); }
+.notification-demo-switch { display: block; margin: 24px auto 0; border: 1px solid #9cbea97a; border-radius: 24px; padding: 9px 16px; background: #09251d66; color: #d8eadf; font: 12px/1.5 sans-serif; }
+.notification-demo-night .notification-demo-switch { background: #11233699; }

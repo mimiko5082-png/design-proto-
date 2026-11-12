@@ -42,7 +42,7 @@ if (html.includes('serviceWorker.register')) throw Error('Service worker registr
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
-html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内<button type="button" data-notification-demo>朝8時の通知を試す</button></aside>');
+html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内<button type="button" data-notification-demo>通知を試す</button></aside>');
 html = html.replace('</body>', '<script type="module" src="./notification-demo.js"></script></body>');
 html = html.replace('</head>', `<style>
 ${readFileSync(join(here, 'notification-demo.css'), 'utf8')}
