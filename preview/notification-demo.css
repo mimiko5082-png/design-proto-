@@ -1,0 +1,18 @@
+.preview-banner [data-notification-demo] { margin-left: 8px; border: 1px solid #61b582; border-radius: 16px; background: #173d26; color: #e1f4e5; padding: 4px 9px; font: 600 11px/1.4 sans-serif; cursor: pointer; }
+.notification-demo-dialog { width: min(390px,calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-sizing: border-box; padding: 0; overflow: auto; border: 1px solid #52695f; border-radius: 30px; color: #f5f8f4; background: #081817; box-shadow: 0 30px 100px #0009; }
+.notification-demo-dialog::backdrop { background: #020807df; }
+.notification-demo-heading { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; font: 12px/1.5 sans-serif; color: #bed6c5; background: #07110fe6; }
+.notification-demo-heading button { border: 1px solid #4c6655; width: 32px; height: 32px; border-radius: 50%; background: transparent; color: #e8f1e9; font: 23px/1 sans-serif; }
+.notification-demo-lockscreen { min-height: min(610px,calc(100dvh - 110px)); padding: 38px 16px 30px; box-sizing: border-box; text-align: center; background: radial-gradient(ellipse at 75% 35%,#698f7755,transparent 60%),linear-gradient(155deg,#123e3c,#213d37 55%,#081c20); font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.notification-demo-date { color: #d5e3db; font-size: 16px; font-weight: 500; }
+.notification-demo-clock { color: #dfede4; font-size: clamp(76px,22vw,100px); font-weight: 300; letter-spacing: -.07em; line-height: 1.2; margin: 2px 0 10px; }
+.notification-demo-caption { display: block; font-size: 11px; color: #bdcfc5; margin-bottom: 52px; }
+.notification-demo-card { display: block; text-align: left; width: 100%; box-sizing: border-box; background: #e7ede5ee; border: 1px solid #ffffff77; color: #15251b; padding: 15px 17px; border-radius: 21px; box-shadow: 0 12px 40px #0003; cursor: pointer; }
+.notification-demo-app { display: flex; align-items: center; gap: 7px; color: #526157; font-size: 11px; margin-bottom: 9px; }
+.notification-demo-app img { width: 22px; height: 22px; border-radius: 6px; }
+.notification-demo-app time { margin-left: auto; font-size: 10px; }
+.notification-demo-card strong { display: block; color: #14271a; font-size: 16px; line-height: 1.65; font-weight: 700; }
+.notification-demo-body { display: block; font-size: 14px; line-height: 1.7; margin-top: 4px; overflow-wrap: anywhere; }
+.notification-demo-tap { display: block; margin-top: 12px; font-size: 11px; color: #3f6851; }
+.notification-demo-footnote { font-size: 10px; line-height: 1.8; color: #aec4b7; margin: 28px 0 0; }
+@media(max-height:650px) { .notification-demo-lockscreen { padding-top: 18px; } .notification-demo-caption { margin-bottom: 20px; } }

@@ -28,6 +28,7 @@ for (const file of files) {
 }
 cpSync(join(root, 'assets'), join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'runtime.js'), join(out, 'preview-runtime.js'));
+cpSync(join(here, 'notification-demo.js'), join(out, 'notification-demo.js'));
 writeFileSync(join(out, 'firebase-preview.js'), ['initializeApp','getDatabase','ref','onValue','set','update','get'].map(name => `export function ${name}(){ throw Error('Shared Firebase is disabled in preview'); }`).join('\n'));
 for (const [file, name] of [
   ['firebase-config.js', 'BASHO_FIREBASE'],
@@ -41,8 +42,10 @@ if (html.includes('serviceWorker.register')) throw Error('Service worker registr
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
-html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内</aside>');
+html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内<button type="button" data-notification-demo>朝8時の通知を試す</button></aside>');
+html = html.replace('</body>', '<script type="module" src="./notification-demo.js"></script></body>');
 html = html.replace('</head>', `<style>
+${readFileSync(join(here, 'notification-demo.css'), 'utf8')}
 .preview-banner { position:fixed; top:0; left:0; right:0; z-index:100; padding:6px 8px; background:#102418; color:#b9d8c1; font:10px/1.6 sans-serif; text-align:center; }
 .app-shell { padding-top:42px; }
 .phone { height:calc(100svh - 56px); min-height:calc(100svh - 56px); }

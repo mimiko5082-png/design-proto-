@@ -91,3 +91,7 @@ python3 tests/share.browser.py
 ```
 
 変更時は `share.html` もプレビュー専用ブランチにコミットします。本番のmainは変更しません。
+
+### 朝8時の通知を画面内で試す
+
+単一HTMLのURLに `?notification=morning` を付けると、8:00のロック画面と朝の通知カードを模したダイアログを開きます。通知カードのタップで今日のお題へ進み、バナーの「朝8時の通知を試す」から再度開けます。実際の通知許可・Web Push・時刻変更・写真保存は行いません。OSそのものの通知表示ではありません。`python3 tests/notification-demo.browser.py` で確認できます。
