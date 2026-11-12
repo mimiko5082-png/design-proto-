@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import vm from "node:vm";
-import { notificationRequest, sendDailyNotifications, japanTime, notificationWindow } from "../ai-service/notifications.mjs";
+import { notificationRequest, sendDailyNotifications, japanTime, notificationSchedule } from "../ai-service/notifications.mjs";
 import { allowedPushEndpoint, base64url, unbase64, vapidAuthorization, hash } from "../ai-service/web-push.mjs";
 import { notificationSupport, pushAPI } from "../notification-service.js";
 import { handleRequest } from "../ai-service/worker.mjs";
@@ -36,7 +36,7 @@ const api = (action, data, env, fetcher) => notificationRequest(new Request(`htt
   method: data ? "POST" : "GET", headers: { "Content-Type": "application/json" }, body: data ? JSON.stringify(data) : undefined,
 }), env, headers, fetcher);
 const registration = { id, token, endpoint };
-const today = Date.parse("2026-10-20T03:00:00Z"); // Noon in Japan.
+const today = Date.parse("2026-10-19T23:00:00Z"); // 08:00 in Japan.
 async function ready(env, day = "2026-10-20") {
   assert.equal((await api("subscribe", registration, env)).status, 200);
   // Registration must predate the fixed simulated schedule, independent of the wall clock.
@@ -99,21 +99,43 @@ test("oversized, malformed, off-origin and rate-limited requests never send a pu
   assert.equal((await handleRequest(denied, env)).status, 403); assert.equal(sends, 0);
 });
 
-test("daily schedule is random within 9-21 JST and persists across repeated Cron calls", async () => {
-  const env = environment();
-  const morning = Date.parse("2026-10-20T23:00:00Z"); // 08:00 on the next local day.
-  assert.equal((await sendDailyNotifications(env, morning)).attempted, 0);
-  const day = japanTime(morning).day;
-  assert.equal(day, "2026-10-21");
-  const first = await env.NOTIFICATIONS_DB.prepare("SELECT minute FROM notification_days WHERE day = ?").bind(day).first();
-  assert.ok(first.minute >= 540 && first.minute < 1260);
-  await sendDailyNotifications(env, morning);
-  const second = await env.NOTIFICATIONS_DB.prepare("SELECT minute FROM notification_days WHERE day = ?").bind(day).first();
-  assert.equal(first.minute, second.minute);
-  assert.throws(() => notificationWindow({ NOTIFY_START_HOUR: "21", NOTIFY_END_HOUR: "9" }));
+test("fixed schedule is 08:00 and 23:50 JST, including the UTC date boundary", async () => {
+  assert.deepEqual(notificationSchedule().map(slot => slot.time), ["08:00", "23:50"]);
+  assert.deepEqual(japanTime(today), { day: "2026-10-20", minute: 480 });
+  assert.deepEqual(japanTime(Date.parse("2026-10-20T14:50:00Z")), { day: "2026-10-20", minute: 1430 });
+  const env = environment(); await ready(env);
+  let count = 0;
+  const fetcher = async () => { count++; return new Response(null, { status: 201 }); };
+  await sendDailyNotifications(env, today - 60000, fetcher);
+  assert.equal(count, 0);
+  await Promise.all([sendDailyNotifications(env, today, fetcher), sendDailyNotifications(env, today, fetcher)]);
+  await sendDailyNotifications(env, today + 60000, fetcher);
+  assert.equal(count, 1);
+  const night = Date.parse("2026-10-20T14:50:00Z");
+  await sendDailyNotifications(env, night - 60000, fetcher);
+  assert.equal(count, 1);
+  await Promise.all([sendDailyNotifications(env, night, fetcher), sendDailyNotifications(env, night, fetcher)]);
+  await sendDailyNotifications(env, night + 60000, fetcher);
+  assert.equal(count, 2);
+  const records = await env.NOTIFICATIONS_DB.prepare("SELECT day FROM notification_deliveries ORDER BY day").all();
+  assert.deepEqual(records.results.map(row=>row.day), ["2026-10-20:morning", "2026-10-20:night"]);
 });
 
-test("overlapping Cron calls send at most once per endpoint per Japanese day", async () => {
+test("missed slots do not catch up later; legacy daily claims cannot block new slots", async () => {
+  const env = environment(); await ready(env);
+  await env.NOTIFICATIONS_DB.prepare("INSERT INTO notification_deliveries VALUES (?, ?, ?)").bind("2026-10-20", id, today - 1000).run();
+  let count = 0;
+  const fetcher = async () => { count++; return new Response(null, { status: 201 }); };
+  await sendDailyNotifications(env, today + 10*60000, fetcher);
+  await sendDailyNotifications(env, Date.parse("2026-10-20T14:49:00Z"), fetcher);
+  assert.equal(count, 0);
+  await sendDailyNotifications(env, Date.parse("2026-10-20T14:59:00Z"), fetcher);
+  assert.equal(count, 1);
+  await sendDailyNotifications(env, Date.parse("2026-10-20T15:00:00Z"), fetcher);
+  assert.equal(count, 1);
+});
+
+test("overlapping Cron calls send at most once per endpoint per daily slot", async () => {
   const env = environment(); await ready(env);
   let count = 0;
   const fetcher = async (url, options) => {
@@ -129,7 +151,7 @@ test("overlapping Cron calls send at most once per endpoint per Japanese day", a
   assert.equal(count, 2);
 });
 
-test("before target, after 21:00, unsubscribe and expired endpoints do not receive daily retries", async () => {
+test("outside slots, unsubscribe and expired endpoints do not receive retries", async () => {
   const env = environment(); await ready(env);
   let count = 0;
   const fetcher = async () => { count++; return new Response(null, { status: 410 }); };
@@ -151,21 +173,23 @@ test("uncertain failed transmission is not retried that day", async () => {
   assert.equal(count, 1);
 });
 
-test("late registrations wait until tomorrow and fan-out continues in bounded batches", async () => {
+test("late registrations wait for the next slot and fan-out continues in bounded batches", async () => {
   const env = environment(); await ready(env);
-  await env.NOTIFICATIONS_DB.prepare("UPDATE push_subscriptions SET created_at = ? WHERE id = ?").bind(today, id).run();
+  await env.NOTIFICATIONS_DB.prepare("UPDATE push_subscriptions SET created_at = ? WHERE id = ?").bind(today + 1, id).run();
   let sends = 0;
   const fetcher = async () => { sends++; return new Response(null, { status: 201 }); };
   await sendDailyNotifications(env, today, fetcher);
-  assert.equal(sends, 0); // Created at noon, after the 10:00 target.
-  for (let i = 0; i < 11; i++) {
+  assert.equal(sends, 0); // Created just after the morning target.
+  for (let i = 0; i < 51; i++) {
     const address = endpoint + i;
     await env.NOTIFICATIONS_DB.prepare("INSERT INTO push_subscriptions (id, endpoint, token_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
       .bind(await hash(address), address, await hash(token), 1, 1).run();
   }
-  assert.equal((await sendDailyNotifications(env, today, fetcher)).attempted, 10);
+  assert.equal((await sendDailyNotifications(env, today, fetcher)).attempted, 50);
   assert.equal((await sendDailyNotifications(env, today + 60000, fetcher)).attempted, 1);
-  assert.equal(sends, 11);
+  assert.equal(sends, 51);
+  await sendDailyNotifications(env, Date.parse("2026-10-20T14:50:00Z"), fetcher);
+  assert.equal(sends, 101); // The later morning registration is now eligible too.
 });
 
 test("manual test requires a registered token and does not mark daily delivery", async () => {
@@ -183,7 +207,9 @@ test("iPhone needs home-screen installation and unsupported browsers do not requ
 test("client hides raw errors and service-worker notification ignores payload URLs", async () => {
   await assert.rejects(pushAPI("https://worker.test", "config", null, async () => new Response("private account details", { status: 503 })), /準備中/);
   const listeners = {}, notifications = [], opened = [];
-  const context = vm.createContext({ URL, Date, self: {
+  let clock = today;
+  class PushDate extends Date { static now() { return clock; } }
+  const context = vm.createContext({ URL, Date: PushDate, self: {
     addEventListener(name, callback) { listeners[name] = callback; },
     registration: { scope: "https://example.test/design-proto-/", showNotification: async (title, options) => notifications.push({ title, options }) },
     clients: { matchAll: async () => [], openWindow: async url => opened.push(url) },
@@ -192,6 +218,13 @@ test("client hides raw errors and service-worker notification ignores payload UR
   let pending;
   listeners.push({ data: { url: "https://evil.test" }, waitUntil(value) { pending = value; } }); await pending;
   assert.equal(notifications.length, 1); assert.match(notifications[0].options.tag, /^basho-daily-/);
+  assert.equal(notifications[0].title, "今日のお題、のぞいてみよう。");
+  assert.match(notifications[0].options.body, /まだ気づいていない一枚/);
+  clock = Date.parse("2026-10-20T14:50:00Z");
+  listeners.push({ waitUntil(value) { pending = value; } }); await pending;
+  assert.equal(notifications[1].title, "今日の景色、1枚残してみない？");
+  assert.notEqual(notifications[0].options.tag, notifications[1].options.tag);
+  assert.match(notifications[1].options.tag, /-night$/);
   listeners.notificationclick({ notification: { close() {} }, waitUntil(value) { pending = value; } }); await pending;
   assert.deepEqual(opened, ["https://example.test/design-proto-/index.html"]);
 });

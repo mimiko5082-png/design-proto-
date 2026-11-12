@@ -264,7 +264,7 @@ function render() {
     update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
-    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>`,
+    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-notifications></basho-notifications></details>'}</div>`,
     friends: () => `<div class="view"><basho-friends></basho-friends></div>`,
     entry: renderEntry,
     share: renderShare,

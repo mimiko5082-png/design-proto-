@@ -6,10 +6,11 @@ export function japanTime(timestamp) {
   return { day: date.toISOString().slice(0, 10), minute: date.getUTCHours() * 60 + date.getUTCMinutes() };
 }
 
-export function notificationWindow(env) {
-  const start = Number(env.NOTIFY_START_HOUR ?? 9), end = Number(env.NOTIFY_END_HOUR ?? 21);
-  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end > 24 || start >= end) throw new Error("Invalid window");
-  return { start, end };
+export function notificationSchedule() {
+  return [
+    { id: "morning", time: "08:00", minute: 480 },
+    { id: "night", time: "23:50", minute: 1430 },
+  ];
 }
 
 function validManagement(input) {
@@ -21,9 +22,9 @@ export async function notificationRequest(request, env, headers, fetcher = fetch
   const action = new URL(request.url).pathname.slice("/api/notifications/".length);
   if (action === "config" && request.method === "GET") {
     try {
-      const window = notificationWindow(env);
+      const schedule = notificationSchedule();
       if (!pushConfigured(env)) return reply({ error: "通知サーバーは準備中です。" }, 503);
-      return reply({ publicKey: env.VAPID_PUBLIC_KEY, startHour: window.start, endHour: window.end, timeZone: "Asia/Tokyo" });
+      return reply({ publicKey: env.VAPID_PUBLIC_KEY, schedule, timeZone: "Asia/Tokyo" });
     } catch { return reply({ error: "通知サーバーは準備中です。" }, 503); }
   }
   if (!["subscribe", "unsubscribe", "test"].includes(action)) return reply({ error: "APIが見つかりません。" }, 404);
@@ -73,37 +74,34 @@ export async function notificationRequest(request, env, headers, fetcher = fetch
 export async function sendDailyNotifications(env, timestamp = Date.now(), fetcher = fetch) {
   if (!pushConfigured(env)) return { configured: false, attempted: 0 };
   const { day, minute } = japanTime(timestamp);
-  const { start, end } = notificationWindow(env);
+  const slot = notificationSchedule().find(slot => minute >= slot.minute && minute < slot.minute + 10);
+  if (!slot) return { attempted: 0 };
   const db = env.NOTIFICATIONS_DB;
-  let schedule = await db.prepare("SELECT minute FROM notification_days WHERE day = ?").bind(day).first();
-  if (!schedule) {
-    const random = crypto.getRandomValues(new Uint32Array(1))[0];
-    const target = start * 60 + random % ((end - start) * 60);
-    await db.prepare("INSERT OR IGNORE INTO notification_days (day, minute) VALUES (?, ?)").bind(day, target).run();
-    schedule = await db.prepare("SELECT minute FROM notification_days WHERE day = ?").bind(day).first();
-    const cutoff = japanTime(timestamp - 14 * 86400000).day;
-    await db.prepare("DELETE FROM notification_deliveries WHERE day < ?").bind(cutoff).run();
-    await db.prepare("DELETE FROM notification_days WHERE day < ?").bind(cutoff).run();
-  }
-  if (minute < Math.max(schedule.minute, start * 60) || minute >= end * 60) return { attempted: 0 };
-  const targetTime = Date.parse(day + "T00:00:00+09:00") + schedule.minute * 60000;
+  // Reuse the existing schema. A namespaced day is unique for each daily slot;
+  // old YYYY-MM-DD random-delivery records cannot suppress either new slot.
+  const deliveryDay = `${day}:${slot.id}`;
+  const cutoff = japanTime(timestamp - 14 * 86400000).day;
+  await db.prepare("DELETE FROM notification_deliveries WHERE day < ?").bind(cutoff).run();
+  await db.prepare("DELETE FROM notification_days WHERE day < ?").bind(cutoff).run();
+  const targetTime = Date.parse(day + "T00:00:00+09:00") + slot.minute * 60000;
   const { results } = await db.prepare(`SELECT s.id, s.endpoint FROM push_subscriptions s
     LEFT JOIN notification_deliveries d ON d.subscription_id = s.id AND d.day = ?
-    WHERE d.subscription_id IS NULL AND s.created_at <= ? ORDER BY s.id LIMIT 10`).bind(day, targetTime).all();
+    WHERE d.subscription_id IS NULL AND s.created_at <= ? ORDER BY s.id LIMIT 50`).bind(deliveryDay, targetTime).all();
   let attempted = 0;
   const authorizations = new Map();
-  for (const row of results) {
-    // Claim before sending: overlapping Cron runs and later retries cannot send
-    // a second daily message. Failed/uncertain deliveries are not retried.
-    const claim = await db.prepare("INSERT OR IGNORE INTO notification_deliveries (day, subscription_id, claimed_at) VALUES (?, ?, ?)").bind(day, row.id, timestamp).run();
-    if (!claim.meta.changes) continue;
+  const deliver = async row => {
+    // Claim before transmission: a retry or overlapping Cron cannot duplicate a slot.
+    const claim = await db.prepare("INSERT OR IGNORE INTO notification_deliveries (day, subscription_id, claimed_at) VALUES (?, ?, ?)").bind(deliveryDay, row.id, timestamp).run();
+    if (!claim.meta.changes) return;
     attempted++;
     try {
       const origin = new URL(row.endpoint).origin;
-      if (!authorizations.has(origin)) authorizations.set(origin, await vapidAuthorization(env, row.endpoint, timestamp));
-      const status = await sendPush(env, row.endpoint, { now: timestamp, ttl: Math.max(1, (end * 60 - minute) * 60), fetcher, authorization: authorizations.get(origin) });
+      if (!authorizations.has(origin)) authorizations.set(origin, vapidAuthorization(env, row.endpoint, timestamp));
+      const status = await sendPush(env, row.endpoint, { now: timestamp, ttl: (slot.minute + 10 - minute) * 60, fetcher, authorization: await authorizations.get(origin) });
       if ([404, 410].includes(status)) await db.prepare("DELETE FROM push_subscriptions WHERE id = ?").bind(row.id).run();
-    } catch { /* At most once: do not retry an uncertain push transmission. */ }
-  }
+    } catch { /* Do not retry an uncertain transmission within this slot. */ }
+  };
+  // 50 per tick allows the 500-subscription cap to fit in the ten-minute window.
+  for (let index = 0; index < results.length; index += 10) await Promise.all(results.slice(index, index + 10).map(deliver));
   return { attempted };
 }

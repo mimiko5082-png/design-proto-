@@ -39,12 +39,14 @@ try:
         def api(route):
             action=route.request.url.split('/')[-1]
             if action=='config':
-                route.fulfill(content_type="application/json",body=json.dumps({"publicKey":"B"+"A"*86,"startHour":9,"endHour":21,"timeZone":"Asia/Tokyo"}))
+                route.fulfill(content_type="application/json",body=json.dumps({"publicKey":"B"+"A"*86,"schedule":[{"id":"morning","time":"08:00","minute":480},{"id":"night","time":"23:50","minute":1430}],"timeZone":"Asia/Tokyo"}))
             else:
                 actions.append((action,route.request.post_data_json))
                 route.fulfill(content_type="application/json",body=json.dumps({"accepted":True,"registered":action=='subscribe'}))
         page.route("**/api/notifications/**",api)
         page.goto(origin+'/',wait_until='networkidle')
+        page.locator('.tabbar [data-nav=calendar]').click()
+        page.locator('details.place-attach > summary').click()
         expect(page.locator('[data-notification-enable]')).to_be_enabled()
         assert page.evaluate('permissionRequests')==0
         page.locator('[data-notification-enable]').click()
@@ -54,6 +56,7 @@ try:
         page.locator('[data-notification-test]').click()
         expect(page.locator('[data-notification-status]')).to_contain_text('送信を依頼')
         page.reload(wait_until='networkidle')
+        page.locator('details.place-attach > summary').click()
         assert page.evaluate('permissionRequests')==0  # Reload never asks permission.
         # The fake platform starts without a subscription after reload; it can re-enable.
         page.locator('[data-notification-enable]').click()
@@ -62,6 +65,13 @@ try:
         expect(page.locator('[data-notification-status]')).to_contain_text('停止しました')
         assert actions[-1][0]=='unsubscribe'
         assert page.evaluate('!Object.keys(localStorage).some(k=>k.startsWith("basho_push_registration:"))')
+        # An old random-schedule server must not be presented as the new schedule.
+        page.route("**/api/notifications/config",lambda route:route.fulfill(content_type="application/json",body=json.dumps({"publicKey":"B"+"A"*86,"startHour":9,"endHour":21})))
+        page.reload(wait_until='networkidle')
+        page.locator('details.place-attach > summary').click()
+        expect(page.locator('[data-notification-status]')).to_contain_text('更新待ち')
+        expect(page.locator('[data-notification-enable]')).to_be_disabled()
+        assert page.evaluate('permissionRequests')==0
         # Key setup never sends private material or writes it to browser storage.
         page.goto(origin+'/push-setup.html',wait_until='networkidle')
         page.locator('#generate').click()

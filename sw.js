@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v68-readable-feed-haiku";
+const CACHE_NAME = "basho-manazashi-v69-twice-daily-notifications";
 const APP_SHELL = [
   "./",
   "./index.html",

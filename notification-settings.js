@@ -2,12 +2,12 @@ import { notificationSupport, pushAPI, applicationKey, newPushToken, endpointID 
 
 class BashoNotifications extends HTMLElement {
   connectedCallback() {
-    this.innerHTML = `<section class="place-attach daily-notifications" aria-label="1日1回の通知">
+    this.innerHTML = `<section class="place-attach daily-notifications" aria-label="1日2回の通知">
       <h2>今日の写真のお題を通知</h2>
-      <p data-notification-window>毎日、日本時間9〜21時のランダムなタイミングで1回。みんなに同じタイミングで、写真のお題を届けます。</p>
+      <p data-notification-window>毎日、日本時間の朝8時と23時50分に1回ずつ通知します。</p>
       <p>通知は任意です。端末の設定や通信状態によって、遅れたり届かない場合があります。</p>
       <p data-notification-status role="status" aria-live="polite">通知の設定を確認しています…</p>
-      <button class="outline-button" type="button" data-notification-enable disabled>1日1回の通知を受け取る</button>
+      <button class="outline-button" type="button" data-notification-enable disabled>1日2回の通知を受け取る</button>
       <button class="outline-button" type="button" data-notification-disable hidden>通知を停止する</button>
       <button class="outline-button" type="button" data-notification-test hidden>テスト通知を送る（任意・通常通知とは別）</button>
       <button class="outline-button" type="button" data-notification-retry hidden>設定を再確認する</button>
@@ -48,8 +48,12 @@ class BashoNotifications extends HTMLElement {
       this.config = await pushAPI(this.endpoint, "config");
       applicationKey(this.config.publicKey);
       if (!this.isConnected) return;
-      this.querySelector("[data-notification-window]").textContent = `毎日、日本時間${this.config.startHour}〜${this.config.endHour}時のランダムなタイミングで1回。みんなに同じタイミングで、写真のお題を届けます。`;
-      this.message(this.enabled ? "この端末で1日1回の通知を受け取ります。" : Notification.permission === "denied" ? "通知がブロックされています。端末・ブラウザの設定から通知を許可してください。" : "通知を受け取りたい場合だけ、下のボタンから許可してください。");
+      if (!Array.isArray(this.config.schedule) || !this.config.schedule.some(slot => slot.time === "08:00") || !this.config.schedule.some(slot => slot.time === "23:50")) {
+        this.querySelector("[data-notification-window]").textContent = "朝8時・23時50分の通知は、通知サーバーへの反映待ちです。";
+        throw new Error("通知サーバーの時刻設定は更新待ちです。");
+      }
+      this.querySelector("[data-notification-window]").textContent = "毎日、日本時間の朝8時と23時50分に1回ずつ通知します。";
+      this.message(this.enabled ? "この端末で1日2回の通知を受け取ります。" : Notification.permission === "denied" ? "通知がブロックされています。端末・ブラウザの設定から通知を許可してください。" : "通知を受け取りたい場合だけ、下のボタンから許可してください。");
     } catch (error) {
       this.config = null;
       this.message(error.message || "通知の設定を確認できませんでした。");
@@ -76,7 +80,7 @@ class BashoNotifications extends HTMLElement {
       this.record.confirmed = true;
       localStorage.setItem(this.storageKey, JSON.stringify(this.record));
       this.enabled = true;
-      this.message("登録しました。日本時間の通知時間帯に、1日1回の通知を受け取ります。");
+      this.message("登録しました。日本時間の朝8時と23時50分に、1日2回の通知を受け取ります。");
     } catch { this.message("通知を登録できませんでした。通信状態と端末の通知設定を確認し、もう一度お試しください。"); }
     finally { this.busy = false; this.paint(); }
   }
