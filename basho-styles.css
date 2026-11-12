@@ -3814,3 +3814,22 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .camera-facing-options button[aria-pressed=true] { background: var(--neo-green); color: #07160c; }
 .camera-facing-options button:disabled { opacity: .45; }
 .photo-camera-view video.is-front-camera { transform: scaleX(-1); }
+
+/* Actual public photo sharing and its device-owned identity. */
+.public-feed .outline-button { width: auto; margin: 12px 18px; font-size: 12px; }
+.public-feed .feed-heading .outline-button { margin: 0; padding: 8px 15px; }
+.public-audience, .public-identity, .public-empty, .public-local, .public-retention { display: block; margin: 12px 18px; font-size: 12px; line-height: 1.8; color: #c1d6c7; }
+.public-local { padding: 12px; border: 1px solid #2b4e37; border-radius: 12px; }
+.public-local p { margin: 0; }
+.public-feed .public-local button { margin: 10px 0 0; }
+.public-reaction-count { padding: 10px 18px; color: #8bc8a2; background: transparent; font-size: 12px; }
+.public-feed .reading-error, .public-feed .friend-status { margin: 12px 18px; }
+.public-feed .feed-post-author button { margin-left: auto; border: 1px solid #49634f; border-radius: 16px; padding: 5px 12px; background: transparent; color: #c7ddce; font-size: 11px; }
+.sharing-profile-dialog { box-sizing: border-box; width: min(390px,calc(100vw - 30px)); max-height: calc(100dvh - 30px); overflow-y: auto; border: 1px solid #3d9561; border-radius: 24px; padding: 24px; color: #ecf4ea; background: #0b1b12; }
+.sharing-profile-dialog::backdrop { background: #000b; }
+.sharing-profile-dialog h2 { color: #32b96e; font-size: 21px; }
+.sharing-profile-dialog p { font-size: 13px; line-height: 1.8; }
+.sharing-profile-dialog label { display: block; font-size: 13px; margin: 20px 0; }
+.sharing-profile-dialog input { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 12px; border: 1px solid #4e7659; border-radius: 10px; background: #08110b; color: #fff; font: inherit; }
+.sharing-profile-dialog button { display: block; width: 100%; margin: 12px 0 0; }
+.public-feed .friend-detail form textarea { box-sizing: border-box; width: 100%; margin: 8px 0 12px; padding: 12px; border-radius: 10px; font: inherit; }

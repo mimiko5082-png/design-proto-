@@ -1,3 +1,4 @@
+import { sharingRequest, expirePublicPhotos } from './sharing.mjs';
 import { normalizePerspective } from "../perspective.js";
 import { handleImageRequest } from "./image-handlers.mjs";
 import { TEXT_MODEL, runAI, aiFailure } from "./free-ai.mjs";
@@ -29,13 +30,15 @@ export async function handleRequest(request, env) {
   const allowedOrigin = env.ALLOWED_ORIGIN || "https://mimiko5082-png.github.io";
   const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Vary": "Origin" };
   const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
-  if (origin !== allowedOrigin) return reply({ error: "Origin not allowed" }, 403);
+  const publicConfig = request.method === "GET" && ["/api/sharing/config", "/api/notifications/config"].includes(path);
+  if (origin !== allowedOrigin && !(origin === null && publicConfig)) return reply({ error: "Origin not allowed" }, 403);
   headers["Access-Control-Allow-Origin"] = allowedOrigin;
   if (request.method === "OPTIONS") {
-    headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+    headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
     headers["Access-Control-Allow-Headers"] = "Content-Type";
     return new Response(null, { status: 204, headers });
   }
+  if (path.startsWith("/api/sharing/")) return sharingRequest(request, env, headers);
   if (path.startsWith("/api/notifications/")) return notificationRequest(request, env, headers);
   if (request.method !== "POST") return reply({ error: "POST required" }, 405);
   if (new URL(request.url).pathname.startsWith("/api/images/")) return handleImageRequest(request, env, headers);
@@ -70,6 +73,7 @@ export async function handleRequest(request, env) {
 export default {
   fetch(request, env) { return handleRequest(request, env); },
   scheduled(controller, env, context) {
+    if (new Date(controller.scheduledTime).getUTCMinutes() === 0) context.waitUntil(expirePublicPhotos(env, controller.scheduledTime).catch(() => console.warn("Photo cleanup unavailable; check sharing migration.")));
     context.waitUntil(sendDailyNotifications(env, controller.scheduledTime).catch(() => {
       console.warn("Notification scheduling failed. Check notification bindings and database migration.");
     }));

@@ -36,9 +36,10 @@ export async function createPostcardFile(card) {
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Image export failed')),'image/png'));
   return new File([blob],`basho-post-${card.day}.png`,{type:'image/png'});
 }
-export function openPostCompletion(card) {
+export function openPostCompletion(card, {published=false}={}) {
   const dialog=document.createElement('dialog');dialog.className='post-complete-dialog';
   dialog.innerHTML='<h2>今日の投稿を保存しました！</h2><strong>SNSでシェアしませんか？</strong><p>写真・お題・ひとことが入った一枚を、そのまま共有できます。</p><button type="button" class="main-button" data-post-share>シェアする</button><button type="button" class="post-later">あとで</button><p role="status" class="post-share-status"></p>';
+  if(published) dialog.querySelector('h2').textContent='写真をみんなに公開しました！';
   document.body.append(dialog);dialog.showModal();
   const close=()=>{dialog.close();dialog.remove();window.dispatchEvent(new Event('basho-show-posts'));};
   dialog.querySelector('.post-later').addEventListener('click',close);

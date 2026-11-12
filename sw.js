@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v69-twice-daily-notifications";
+const CACHE_NAME = "basho-manazashi-v70-public-photo-sharing";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,6 +18,8 @@ const APP_SHELL = [
   "./haiku-cards.js",
   "./photo-postcard.js",
   "./friends-feed.js",
+  "./public-feed.js",
+  "./sharing-client.js",
   "./friend-reactions.js",
   "./photo-sharing.js",
   "./observation-timer.js",

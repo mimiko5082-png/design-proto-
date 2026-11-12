@@ -21,6 +21,8 @@ try:
         browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),args=['--no-sandbox'])
         context=browser.new_context(viewport={'width':390,'height':844},service_workers='block')
         page=context.new_page(); errors=[]; calls=[]; held=[]
+        # This suite covers isolated local history; real publication is verified in public-sharing.browser.py.
+        page.add_init_script('window.BASHO_PHOTO_PREVIEW=true;')
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.route('**/api/notifications/config',lambda route:route.fulfill(status=503,content_type='application/json',body='{}'))
         page.route('**/firebase-config.js*',lambda route:route.fulfill(content_type='application/javascript',body='window.BASHO_FIREBASE={};'))

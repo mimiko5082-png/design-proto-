@@ -1,3 +1,4 @@
+import './public-feed.js';
 import { postcardMarkup } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
@@ -11,6 +12,7 @@ const SAMPLES = [
 ];
 class FriendsFeed extends HTMLElement {
   connectedCallback() {
+    if (!window.BASHO_FRIENDS_PREVIEW) { this.live=true; this.innerHTML='<basho-public-feed></basho-public-feed>'; return; }
     this.day = japanDay(); this.topic = dailyTopic(this.day);
     this.selected = null; this.commentDrafts = {}; this.status = ''; this.error = ''; this.revision = 0;
     this.onClick = event => this.handleClick(event);
@@ -25,6 +27,7 @@ class FriendsFeed extends HTMLElement {
     this.refresh();
   }
   disconnectedCallback() {
+    if(this.live)return;
     this.revision++; clearInterval(this.timer);
     this.removeEventListener('click', this.onClick); this.removeEventListener('input', this.onInput); this.removeEventListener('submit', this.onSubmit);
     window.removeEventListener('basho-reading-updated', this.onRefresh); window.removeEventListener('storage', this.onRefresh);
