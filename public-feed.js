@@ -47,9 +47,13 @@ class PublicFeed extends HTMLElement {
     }
     if(action==='report')return this.mutate('report',{},'通報を受け付けました。運営による確認待ちです。');
   }
+  updateCounts() {
+    const post=this.posts.find(post=>post.id===this.selected);
+    if(post && this.details){post.stampCount=this.details.stamps.reduce((sum,item)=>sum+item.count,0);post.commentCount=this.details.comments.length;}
+  }
   async loadDetail(quiet=false) {
     const id=this.selected;this.busy=true;this.error='';if(!quiet)this.render();
-    try{const detail=await sharingAPI('detail',{photoId:id});if(this.isConnected && id===this.selected)this.details=detail;}catch(error){this.error=error.message;}
+    try{const detail=await sharingAPI('detail',{photoId:id});if(this.isConnected && id===this.selected){this.details=detail;this.updateCounts();}}catch(error){this.error=error.message;}
     finally{this.busy=false;if(this.isConnected){this.render();if(!quiet)this.querySelector('.friend-detail')?.scrollIntoView({block:'start',behavior:'smooth'});}}
   }
   async mutate(action,data,message) {
@@ -59,7 +63,7 @@ class PublicFeed extends HTMLElement {
       await sharingAPI(action,{photoId:this.selected,...data});this.status=message;
       if(action==='comment'){this.draft='';this.commentId=null;}
       if(action==='delete'){this.selected=null;this.details=null;await this.load();}
-      else this.details=await sharingAPI('detail',{photoId:this.selected});
+      else {this.details=await sharingAPI('detail',{photoId:this.selected});this.updateCounts();}
     }catch(error){this.error=error.message;}
     finally{this.busy=false;if(this.isConnected)this.render();}
   }

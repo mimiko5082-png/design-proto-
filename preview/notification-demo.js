@@ -30,3 +30,5 @@ export function showNotificationDemo(mode = 'morning') {
 document.querySelector('[data-notification-demo]')?.addEventListener('click', () => showNotificationDemo());
 const initialMode = new URL(location.href).searchParams.get('notification');
 if (initialMode === 'morning' || initialMode === 'night') showNotificationDemo(initialMode);
+
+if (window.BASHO_SHARING_DEMO) document.querySelector('.tabbar [data-nav="friends"]')?.click();
