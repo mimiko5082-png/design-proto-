@@ -3836,3 +3836,5 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 
 .public-feed .reading-error { color: #692d1e; }
 .friends-access input[readonly] { display: block; width: 100%; box-sizing: border-box; padding: 12px; color: #102418; background: #f2f8ef; }
+
+.friends-release { display:block; font-size:11px; opacity:.65; margin:0 12px 0 0; }

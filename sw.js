@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v74-firebase-info-listener";
+const CACHE_NAME = "basho-manazashi-v75-fresh-sharing-assets";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -47,14 +47,14 @@ const APP_SHELL = [
   "./assets/apple-touch-icon.png"
 ];
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL.map(url => new Request(url, { cache: "reload" })))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith("basho-manazashi-") && key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
-  event.respondWith(fetch(event.request).then((response) => {
+  event.respondWith(fetch(event.request, { cache: "no-store" }).then((response) => {
     const copy = response.clone();
     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
     return response;
