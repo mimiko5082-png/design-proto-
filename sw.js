@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v73-firebase-membership";
+const CACHE_NAME = "basho-manazashi-v74-firebase-info-listener";
 const APP_SHELL = [
   "./",
   "./index.html",

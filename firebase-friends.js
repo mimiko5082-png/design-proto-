@@ -35,7 +35,13 @@ export async function createFriendsGroup(){
   localStorage.setItem(`${GROUP_KEY}:${currentUser.uid}`,id);changed();return id;
 }
 export async function friendsServerNow(session, clock=Date.now){
-  const snapshot=await session.dbSDK.get(session.dbSDK.ref(session.db,'.info/serverTimeOffset'));
+  // .info values live in the SDK's local information tree, not normal database data.
+  const snapshot=await new Promise((resolve,reject)=>{
+    let stop=()=>{};
+    const timer=setTimeout(()=>{stop();reject(new FriendsError('サーバーの時刻を取得できませんでした。接続を確認してもう一度お試しください。'));},10000);
+    try{stop=session.dbSDK.onValue(session.dbSDK.ref(session.db,'.info/serverTimeOffset'),value=>{clearTimeout(timer);resolve(value);},error=>{clearTimeout(timer);reject(error);},{onlyOnce:true});}
+    catch(error){clearTimeout(timer);reject(error);}
+  });
   const offset=snapshot.val();
   if(typeof offset!=='number' || !Number.isFinite(offset))throw new FriendsError('サーバーの時刻を確認できませんでした。接続を確認してもう一度お試しください。');
   return clock()+offset;
@@ -84,7 +90,8 @@ export function friendlyError(error){
   if(/popup.blocked/i.test(code))return new FriendsError('ログイン画面を開けませんでした。ポップアップを許可してもう一度お試しください。');
   if(/popup.closed|cancelled.popup/i.test(code))return new FriendsError('Googleログインをキャンセルしました。');
   if(/unauthorized.domain/i.test(code))return new FriendsError('このプレビューのドメインをFirebaseの承認済みドメインに追加してください。');
-  return new FriendsError('Firebaseへ接続できませんでした。通信環境と設定を確認して、もう一度お試しください。');
+  const detail=String(error?.message||error?.code||'原因不明').replace(/https?:\/\/\S+/g,'[URL]').replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,'[メールアドレス]').replace(/[A-Za-z0-9_-]{24,}/g,'[ID]').slice(0,160);
+  return new FriendsError(`Firebaseの処理に失敗しました。詳細：${detail}`);
 }
 export async function firebaseSharingAPI(action,data={}){
   try{

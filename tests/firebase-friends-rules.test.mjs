@@ -8,7 +8,7 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
   const deps=process.env.FIREBASE_TEST_DEPS;
   const load=async name=>deps?import(pathToFileURL(`${deps}/node_modules/${name}`).href):import(name);
   const {initializeTestEnvironment,assertSucceeds,assertFails}=await load('@firebase/rules-unit-testing/dist/esm/index.esm.js');
-  const {ref,get,set,update,remove,query,orderByChild,equalTo}=await load('firebase/database/dist/esm/index.esm.js');
+  const {ref,get,set,update,remove,query,orderByChild,equalTo,onValue}=await load('firebase/database/dist/esm/index.esm.js');
   const [host,port]=process.env.FIREBASE_DATABASE_EMULATOR_HOST.split(':');
   const env=await initializeTestEnvironment({projectId:'demo-basho-friends',database:{host,port:Number(port),rules:await readFile(new URL('../firebase/database.rules.json',import.meta.url),'utf8')}});
   try{
@@ -22,6 +22,13 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertSucceeds(set(ref(alice,'groups/friends'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()}}}));
     await assertFails(get(ref(bob,'groups/friends')));
     await assertFails(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time()}));
+    // .info belongs to the SDK-local tree: verify the actual SDK listener path.
+    const { friendsServerNow, readFriendsMembership }=await import('../firebase-friends.js');
+    assert.equal(await readFriendsMembership({db:alice,dbSDK:{ref,get}},'friends','alice'),true);
+    assert.equal(await readFriendsMembership({db:alice,dbSDK:{ref,get}},'missing-group','alice'),false);
+    const serverNow=await friendsServerNow({db:alice,dbSDK:{ref,onValue}});
+    assert.ok(Math.abs(serverNow-Date.now())<10000);
+    await assertSucceeds(set(ref(alice,`invites/${'9'.repeat(64)}`),{groupId:'friends',owner:'alice',expiresAt:serverNow+7*86400000-60000}));
     const token='a'.repeat(64),other='b'.repeat(64),expired='c'.repeat(64);
     await assertSucceeds(set(ref(alice,`invites/${token}`),{groupId:'friends',owner:'alice',expiresAt:time()+86400000}));
     await assertFails(get(ref(anon,`invites/${token}`)));

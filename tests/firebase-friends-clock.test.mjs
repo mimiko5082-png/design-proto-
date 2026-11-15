@@ -4,7 +4,7 @@ import { friendsServerNow } from '../firebase-friends.js';
 const serverTime=Date.parse('2026-11-16T00:00:00Z');
 function session(offset){
   const db={};
-  return {db,dbSDK:{ref(actual,path){assert.equal(actual,db);assert.equal(path,'.info/serverTimeOffset');return path;},async get(){return {val:()=>offset};}}};
+  return {db,dbSDK:{ref(actual,path){assert.equal(actual,db);assert.equal(path,'.info/serverTimeOffset');return path;},onValue(path,next,error,options){assert.deepEqual(options,{onlyOnce:true});queueMicrotask(()=>next({val:()=>offset}));return ()=>{};},get(){throw new Error('Do not issue a remote get for SDK-local .info metadata');}}};
 }
 test('invitation time uses Firebase time even when the device clock is ahead or behind',async()=>{
   for(const skew of [600000,-600000,0]){
