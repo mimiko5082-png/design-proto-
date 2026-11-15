@@ -20,7 +20,7 @@ const stylesheet = embedAssets(readFileSync(join(dist, 'basho-styles.css'), 'utf
 html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/^[ \t]+$/gm, '');
 html = html.replace(/<link\b[^>]*href="\.\/basho-styles\.css[^>]*>/, `<style>${stylesheet}</style>`);
 html = html.replace(/<link\b[^>]*rel="manifest"[^>]*>/gi, '');
-html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'">`);
+html = html.replace('<head>', `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://basho-friends.firebaseapp.com https://*.asia-southeast1.firebasedatabase.app wss://*.asia-southeast1.firebasedatabase.app; frame-src https://basho-friends.firebaseapp.com https://accounts.google.com; worker-src 'none'; object-src 'none'; base-uri 'none'">`);
 html = html.replace('</body>', `<script>${javascript}</script></body>`);
 html = embedAssets(html);
 if (/<script\b[^>]*src=/i.test(html) || /<link\b[^>]*href="\.\//i.test(html)) throw Error('The shared preview must be self-contained');

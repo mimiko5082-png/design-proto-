@@ -1,3 +1,4 @@
+import { friendsSession, friendsGroup, pendingInvite, createFriendsGroup, createFriendsInvite, joinFriendsGroup, friendsSignOut, friendlyError } from './firebase-friends.js';
 import { postcardMarkup, escapeText as esc } from './photo-postcard.js';
 import { REACTIONS } from './friend-reactions.js';
 import { dailyTopic } from './haiku-catalog.js';
@@ -13,8 +14,11 @@ class PublicFeed extends HTMLElement {
     this.refresh=()=>{if(!document.hidden && !this.busy && !this.loading){if(japanDay()!==this.day){this.selected=null;this.details=null;this.draft='';this.load();}else if(this.selected){if(!this.querySelector('[data-public-comment]:focus'))this.loadDetail(true);}else this.load();}};
     window.addEventListener('focus',this.refresh);window.addEventListener('basho-reading-updated',this.refresh);window.addEventListener('basho-sharing-updated',this.refresh);
     this.timer=setInterval(this.refresh,30000);this.load();
+    if(!window.BASHO_SHARING_DEMO) friendsSession().then(()=>this.load()).catch(()=>{});
+    this.authReset=()=>{++this.revision;this.loading=false;this.busy=false;this.posts=[];this.selected=null;this.details=null;this.inviteURL='';this.local=null;this.render();};
+    window.addEventListener('basho-auth-changed',this.authReset);
   }
-  disconnectedCallback(){this.revision++;clearInterval(this.timer);window.removeEventListener('focus',this.refresh);window.removeEventListener('basho-reading-updated',this.refresh);window.removeEventListener('basho-sharing-updated',this.refresh);}
+  disconnectedCallback(){window.removeEventListener('basho-auth-changed',this.authReset);this.revision++;clearInterval(this.timer);window.removeEventListener('focus',this.refresh);window.removeEventListener('basho-reading-updated',this.refresh);window.removeEventListener('basho-sharing-updated',this.refresh);}
   async load(more=false) {
     const revision=++this.revision;this.loading=true;this.error='';this.render();
     try {
@@ -23,17 +27,29 @@ class PublicFeed extends HTMLElement {
       if(this.day!==result.day){this.selected=null;this.details=null;this.draft='';more=false;}
       this.day=result.day;this.posts=more?[...this.posts,...result.posts.filter(post=>!this.posts.some(item=>item.id===post.id))]:result.posts;this.cursor=result.nextCursor;
       this.local=(await loadCards()).find(card=>card.day===this.day&&card.creation==='photo-challenge')||null;
-    }catch(error){if(revision===this.revision)this.error=error.message;}
+    }catch(error){if(revision===this.revision){this.error=error.message;this.posts=[];this.selected=null;this.details=null;this.local=null;}}
     finally{if(revision===this.revision&&this.isConnected){this.loading=false;this.render();}}
   }
   async handle(event) {
     const button=event.target.closest('[data-public-action]');if(!button || this.busy)return;
     const action=button.dataset.publicAction;
+    if(['create-group','invite','join','signout'].includes(action)){
+      this.busy=true;this.error='';this.render();
+      try{
+        if(action==='signout'){await friendsSignOut();this.posts=[];this.details=null;this.selected=null;this.inviteURL='';this.local=null;}
+        else if(await ensureSharingProfile()){
+          if(action==='create-group')await createFriendsGroup();
+          if(action==='join')await joinFriendsGroup();
+          if(action==='invite'){this.inviteURL=await createFriendsInvite();this.status='招待リンクを作成しました。有効期限は7日間です。';}
+        }
+      }catch(error){this.error=friendlyError(error).message;}
+      finally{this.busy=false;const failure=this.error;await this.load();if(failure){this.error=failure;this.render();}}return;
+    }
     if(action==='refresh')return this.load();if(action==='more')return this.load(true);
     if(action==='profile'){try{if(await ensureSharingProfile())await this.load();}catch(error){this.error=error.message;this.render();}return;}
     if(action==='publish-local') {
       this.busy=true;this.error='';this.render();
-      try{const result=await publishCard(this.local);if(result)this.status='写真を全員に公開しました。';}catch(error){this.error=error.message;}
+      try{const result=await publishCard(this.local);if(result)this.status='参加している友達に写真を共有しました。';}catch(error){this.error=error.message;}
       finally{this.busy=false;const failure=this.error;await this.load();if(failure){this.error=failure;this.render();}}return;
     }
     if(action==='open'){this.selected=button.dataset.photo;this.details=null;this.draft='';this.commentId=null;await this.loadDetail();return;}
@@ -42,7 +58,7 @@ class PublicFeed extends HTMLElement {
     if(action==='stamp')return this.mutate('stamp',{stamp:button.dataset.stamp,active:!this.details?.mine.includes(button.dataset.stamp)},'リアクションを送りました。');
     if(action==='delete-comment')return this.mutate('delete-comment',{commentId:button.dataset.comment},'ひとことを削除しました。');
     if(action==='delete-photo') {
-      if(!confirm('この写真を全員の投稿から削除しますか？端末のカレンダーには残ります。'))return;
+      if(!confirm('この写真を友達の投稿から削除しますか？端末のカレンダーには残ります。'))return;
       this.selected=button.dataset.photo;await this.mutate('delete',{},'公開した写真を削除しました。');return;
     }
     if(action==='report')return this.mutate('report',{},'通報を受け付けました。運営による確認待ちです。');
@@ -69,11 +85,13 @@ class PublicFeed extends HTMLElement {
   }
   detail(post) {
     const detail=this.details;if(!detail)return '<p class="reading-help">リアクションを読み込んでいます…</p>';
-    return `<section class="friend-detail"><header><h3>${esc(post.name)}の写真</h3><button class="friend-close" data-public-action="close" aria-label="閉じる">×</button></header><h3>どんなふうに感じた？</h3><div class="friend-stamps">${REACTIONS.map(stamp=>`<button data-public-action="stamp" data-stamp="${stamp.id}" aria-pressed="${detail.mine.includes(stamp.id)}" ${this.busy?'disabled':''}><span>${stamp.emoji}</span><small>${stamp.label}</small><b>${detail.stamps.find(item=>item.stamp===stamp.id)?.count||0}</b></button>`).join('')}</div><div class="friend-phrases">${['その見方すき','同じの見つけた','なるほど！'].map(text=>`<button data-public-action="phrase" data-text="${text}">${text}</button>`).join('')}</div><form data-public-form><label>ひとこと<textarea data-public-comment maxlength="120" rows="2" required>${esc(this.draft)}</textarea></label><button class="main-button" ${this.busy?'disabled':''}>ひとことを送る</button></form><ul class="friend-comments">${detail.comments.map(comment=>`<li><strong>${esc(comment.name)}${comment.own?' · あなた':''}</strong><p>${esc(comment.text)}</p>${comment.own?`<button data-public-action="delete-comment" data-comment="${comment.id}">削除</button>`:''}</li>`).join('')}</ul>${!post.own?'<button class="outline-button" data-public-action="report">この投稿を通報する</button>':''}</section>`;
+    return `<section class="friend-detail"><header><h3>${esc(post.name)}の写真</h3><button class="friend-close" data-public-action="close" aria-label="閉じる">×</button></header><h3>どんなふうに感じた？</h3><div class="friend-stamps">${REACTIONS.map(stamp=>`<button data-public-action="stamp" data-stamp="${stamp.id}" aria-pressed="${detail.mine.includes(stamp.id)}" ${this.busy?'disabled':''}><span>${stamp.emoji}</span><small>${stamp.label}</small><b>${detail.stamps.find(item=>item.stamp===stamp.id)?.count||0}</b></button>`).join('')}</div><div class="friend-phrases">${['その見方すき','同じの見つけた','なるほど！'].map(text=>`<button data-public-action="phrase" data-text="${text}">${text}</button>`).join('')}</div><form data-public-form><label>ひとこと<textarea data-public-comment maxlength="120" rows="2" required>${esc(this.draft)}</textarea></label><button class="main-button" ${this.busy?'disabled':''}>ひとことを送る</button></form><ul class="friend-comments">${detail.comments.map(comment=>`<li><strong>${esc(comment.name)}${comment.own?' · あなた':''}</strong><p>${esc(comment.text)}</p>${comment.own?`<button data-public-action="delete-comment" data-comment="${comment.id}">削除</button>`:''}</li>`).join('')}</ul>${window.BASHO_SHARING_DEMO&&!post.own?'<button class="outline-button" data-public-action="report">この投稿を通報する</button>':''}</section>`;
   }
   render() {
     let profile=null;try{profile=sharingProfile();}catch(error){this.error=error.message;}
-    this.innerHTML=`<section class="friends-feature public-feed"><header class="feed-heading"><h1>みんなの投稿</h1><button class="outline-button" data-public-action="refresh" ${this.loading?'disabled':''}>更新</button></header><article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article><p class="public-audience">アプリを使う全員に公開される写真です。</p>${profile?.confirmed?`<p class="public-identity">投稿者：${esc(profile.name)}</p>`:'<button class="outline-button" data-public-action="profile">表示名を登録して参加する</button>'}${this.local?`<div class="public-local"><p>今日の写真を、この端末のカレンダーに保存しています。</p><button class="outline-button" data-public-action="publish-local" ${this.busy?'disabled':''}>${this.posts.some(post=>post.own)?'保存した写真で公開を更新する':'保存した写真を全員に公開する'}</button></div>`:''}<p class="friend-status" role="status">${esc(this.status)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!this.posts.length?'<p class="public-empty">今日の投稿はまだありません。最初の一枚を撮ってみよう。</p>':''}<div class="friend-photo-grid">${this.posts.map(post=>`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount}</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}<small class="public-retention">公開した写真は約30日後にサーバーから削除されます。端末に保存した写真はカレンダーに残ります。</small></section>`;
+    const demo=window.BASHO_SHARING_DEMO;
+    const controls=demo?'':`<div class="friends-access">${profile?.confirmed?`<button class="outline-button" data-public-action="signout">ログアウト</button>${pendingInvite()?'<p>招待されたグループに参加します。参加後、友達の写真を閲覧できます。</p><button class="main-button" data-public-action="join">この招待で参加する</button>':friendsGroup()?'<button class="outline-button" data-public-action="invite">友達の招待リンクを作る</button>':'<button class="outline-button" data-public-action="create-group">友達のグループを作る</button><p>招待された方は、招待リンクから開いてください。</p>'}`:'<p>Googleでログイン後、招待リンクから参加してください。最初の一人はグループを作成できます。</p>'}${this.inviteURL?`<label>招待リンク（7日間有効）<input aria-label="招待リンク" readonly value="${esc(this.inviteURL)}" onclick="this.select()"></label><p>このリンクを渡した人が参加できます。信頼する友達にだけ送ってください。</p>`:''}</div>`;
+    this.innerHTML=`<section class="friends-feature public-feed"><header class="feed-heading"><h1>${demo?'みんなの投稿':'友達の投稿'}</h1><button class="outline-button" data-public-action="refresh" ${this.loading?'disabled':''}>更新</button></header><article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article><p class="public-audience">${demo?'共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。':'Googleでログインし、招待リンクから参加した友達だけに共有されます。'}</p>${profile?.confirmed?`<p class="public-identity">投稿者：${esc(profile.name)}</p>`:`<button class="outline-button" data-public-action="profile">${demo?'表示名を登録して参加する':'Googleでログインする'}</button>`}${controls}${this.local?`<div class="public-local"><p>今日の写真を、この端末のカレンダーに保存しています。</p><button class="outline-button" data-public-action="publish-local" ${this.busy?'disabled':''}>${this.posts.some(post=>post.own)?'保存した写真で共有を更新する':'保存した写真を友達に共有する'}</button></div>`:''}<p class="friend-status" role="status">${esc(this.status)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!this.posts.length?'<p class="public-empty">今日の投稿はまだありません。最初の一枚を撮ってみよう。</p>':''}<div class="friend-photo-grid">${this.posts.map(post=>`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount}</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}<small class="public-retention">${demo?'プレビューでは実際のサーバーへの公開・送信は行いません。':'共有した写真は削除するまでグループに残ります。端末に保存した写真はカレンダーに残ります。'}</small></section>`;
   }
 }
 customElements.define('basho-public-feed',PublicFeed);

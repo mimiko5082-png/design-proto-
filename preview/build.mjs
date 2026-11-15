@@ -12,7 +12,7 @@ const files = [
   'image-tools.js', 'image-service.js', 'image-validation.js',
   'reading-garden.js', 'photo-albums.js', 'garden-colors.js', 'photo-postcard.js', 'reading-store.js', 'tanka-catalog.js',
   'haiku-cards.js', 'haiku-catalog.js', 'haiku-service.js', 'haiku-store.js',
-  'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js', 'public-feed.js', 'sharing-client.js',
+  'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js', 'public-feed.js', 'sharing-client.js', 'legacy-sharing-client.js', 'firebase-friends.js',
 ];
 for (const file of files) {
   let content = readFileSync(join(root, file), 'utf8');
@@ -25,15 +25,16 @@ for (const file of files) {
     content = content.replace("'basho-haiku-cards'", "'basho-haiku-preview-only'");
   }
   if(file==='friends-feed.js') content=content.replace('if (!window.BASHO_FRIENDS_PREVIEW)', 'if (!window.BASHO_FRIENDS_PREVIEW || window.BASHO_SHARING_DEMO)');
-  if(file==='sharing-client.js') {
+  if(file==='legacy-sharing-client.js') {
     content=content.replace('  if(window.BASHO_PHOTO_PREVIEW) throw', "  if(window.BASHO_PHOTO_PREVIEW && window.BASHO_SHARING_DEMO) return (await import('./sharing-demo.js')).demoAPI(action,{...data,identity:sharingProfile()});\n  if(window.BASHO_PHOTO_PREVIEW) throw");
     content=content.replace('みんなに写真を公開する','プレビューで投稿を試す').replace('投稿すると、写真・ひとこと・表示名がアプリを使う全員に公開されます。','このプレビューでは投稿・ひとこと・スタンプをこの端末内だけに保存します。実際の利用者には公開されません。').replace('この表示名で公開を始める','この表示名で試す').replace('写真は約30日間サーバーに保存されます。','プレビューの写真と登録情報はこの端末内だけに保存します。');
   }
   if(file==='haiku-cards.js') content=content.replace('if(window.BASHO_PHOTO_PREVIEW) return false;', 'if(window.BASHO_PHOTO_PREVIEW && !window.BASHO_SHARING_DEMO) return false;').replace('写真を全員に公開しました。','プレビューに投稿しました。実際には公開されません。');
-  if(file==='photo-postcard.js') content=content.replace('写真をみんなに公開しました！','プレビューに投稿しました！');
+  if(file==='photo-postcard.js') content=content.replace('写真を友達に共有しました！','プレビューに投稿しました！');
   if(file==='public-feed.js') content=content.replace('アプリを使う全員に公開される写真です。','共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。').replace('公開した写真は約30日後にサーバーから削除されます。端末に保存した写真はカレンダーに残ります。','プレビューでは実際のサーバーへの公開・送信は行いません。').replace('通報を受け付けました。運営による確認待ちです。','プレビューで通報操作を試しました。実際には送信されません。').replace('写真を全員に公開しました。','プレビューに投稿しました。実際には公開されません。');
   writeFileSync(join(out, file), content);
 }
+cpSync(join(root, 'firebase-friends-config.js'), join(out, 'firebase-friends-config.js'));
 cpSync(join(root, 'assets'), join(out, 'assets'), { recursive: true });
 cpSync(join(here, 'runtime.js'), join(out, 'preview-runtime.js'));
 cpSync(join(here, 'notification-demo.js'), join(out, 'notification-demo.js'));
@@ -51,7 +52,8 @@ if (html.includes('serviceWorker.register')) throw Error('Service worker registr
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
-html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · 写真や反応はこの端末内<button type="button" data-notification-demo>通知を試す</button></aside>');
+html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · AIはサンプル · 友達共有はFirebase<button type="button" data-notification-demo>通知を試す</button></aside>');
+html = html.replace('</head>', '<script src="./firebase-friends-config.js"></script></head>');
 html = html.replace('</body>', '<script type="module" src="./notification-demo.js"></script></body>');
 html = html.replace('</head>', `<style>
 ${readFileSync(join(here, 'notification-demo.css'), 'utf8')}
@@ -66,6 +68,6 @@ writeFileSync(join(out, '_headers'), `/*
   X-Robots-Tag: noindex, nofollow
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'none'; worker-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://basho-friends.firebaseapp.com https://*.asia-southeast1.firebasedatabase.app wss://*.asia-southeast1.firebasedatabase.app; frame-src https://basho-friends.firebaseapp.com https://accounts.google.com; worker-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
 `);
-console.log('Static preview built in preview/dist. Shared database, live AI, notifications and service worker disabled.');
+console.log('Static preview built in preview/dist. Friends-only Firebase sharing enabled when configured; live AI, notifications and legacy database disabled.');

@@ -7,3 +7,6 @@ node_modules/
 .wrangler/
 VAPID_PRIVATE_KEY*
 preview/dist/
+
+firebase-debug.log
+database-debug.log

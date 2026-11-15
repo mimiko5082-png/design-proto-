@@ -24,11 +24,14 @@ test('all emitted relative JS module dependencies exist',()=>{
   for(const match of matches) assert.ok(existsSync(resolve(dir,match[1].split('?')[0])),`${file}: ${match[1]}`);
  }
 });
-test('static preview targets only the preview worker and prevents caching/external connections',()=>{
+test('static preview targets only the preview worker and prevents caching and permits only Firebase sharing services',()=>{
  const config=JSON.parse(readFileSync(resolve(root,'preview/wrangler.jsonc'),'utf8'));
  assert.equal(config.name,'basho-preview'); assert.equal(config.assets.directory,'./dist');
  assert.equal(config.ai,undefined);assert.equal(config.d1_databases,undefined);assert.equal(config.triggers,undefined);
  assert.match(text('_headers'),/Cache-Control: no-store/);
- assert.match(text('_headers'),/connect-src 'none'/);
+ assert.match(text('_headers'),/connect-src 'self' https:\/\/identitytoolkit.googleapis.com/);
+ assert.doesNotMatch(text('_headers'),/basho-kucho|basho-ai/);
+ assert.match(text('firebase-friends-config.js'),/BASHO_FRIENDS_FIREBASE/);
+ assert.match(text('preview-runtime.js'),/BASHO_FRIENDS_PREVIEW = false/);
  assert.match(text('_headers'),/worker-src 'none'/);
 });

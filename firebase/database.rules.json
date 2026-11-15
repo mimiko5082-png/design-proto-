@@ -1,0 +1,130 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "groups": {
+      "$group": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists()",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && !data.exists() && newData.child('owner').val() == auth.uid && newData.child('members').child(auth.uid).exists() && !newData.child('photos').exists()",
+        ".validate": "newData.hasChildren(['owner','createdAt','members'])",
+        "owner": {
+          ".validate": "newData.isString() && (!data.exists() || newData.val() == data.val())"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+        },
+        "members": {
+          "$uid": {
+            ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && $uid == auth.uid",
+            ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && $uid == auth.uid && !data.exists() && root.child('invites').child(newData.child('invite').val()).child('groupId').val() == $group && root.child('invites').child(newData.child('invite').val()).child('expiresAt').val() > now",
+            ".validate": "newData.hasChildren(['name','joinedAt']) && $uid == auth.uid",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "joinedAt": {
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "invite": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-f0-9]{64}$/)"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "photos": {
+          ".indexOn": [
+            "day"
+          ],
+          "$photo": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && ((!data.exists() && newData.child('author').val() == auth.uid && !newData.child('comments').exists() && !newData.child('stamps').exists()) || (!newData.exists() && data.child('author').val() == auth.uid))",
+            ".validate": "newData.hasChildren(['author','name','day','topicId','image','caption','createdAt'])",
+            "author": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val() == auth.uid && (!data.exists() || newData.val() == data.val())"
+            },
+            "name": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "day": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val().matches(/^\\d{4}-\\d{2}-\\d{2}$/) && (!data.exists() || newData.val() == data.val())"
+            },
+            "topicId": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val().length <= 80"
+            },
+            "image": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val().length <= 1100000 && newData.val().matches(/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+\\/=]+$/)"
+            },
+            "caption": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isString() && newData.val().length <= 120"
+            },
+            "createdAt": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && data.parent().child('author').val() == auth.uid && newData.exists()",
+              ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+            },
+            "comments": {
+              "$comment": {
+                ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && root.child('groups').child($group).child('photos').child($photo).child('author').exists() && ((!data.exists() && newData.child('author').val() == auth.uid) || data.child('author').val() == auth.uid)",
+                ".validate": "newData.hasChildren(['author','name','text','createdAt'])",
+                "author": {
+                  ".validate": "newData.isString() && newData.val() == auth.uid && (!data.exists() || newData.val() == data.val())"
+                },
+                "name": {
+                  ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+                },
+                "text": {
+                  ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+                },
+                "createdAt": {
+                  ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "stamps": {
+              "$stamp": {
+                ".validate": "$stamp.matches(/^(view|same|aha|heart|clap|sparkle|smile|flower)$/)",
+                "$uid": {
+                  ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && root.child('groups').child($group).child('members').child(auth.uid).exists() && $uid == auth.uid && root.child('groups').child($group).child('photos').child($photo).child('author').exists()",
+                  ".validate": "newData.val() == true"
+                }
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "invites": {
+      "$token": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && data.child('expiresAt').val() > now",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((!data.exists() && newData.child('owner').val() == auth.uid && root.child('groups').child(newData.child('groupId').val()).child('members').child(auth.uid).exists()) || (!newData.exists() && data.child('owner').val() == auth.uid))",
+        ".validate": "$token.matches(/^[a-f0-9]{64}$/) && newData.hasChildren(['groupId','owner','expiresAt'])",
+        "groupId": {
+          ".validate": "newData.isString()"
+        },
+        "owner": {
+          ".validate": "newData.val() == auth.uid"
+        },
+        "expiresAt": {
+          ".validate": "newData.isNumber() && newData.val() > now && newData.val() <= now + 604800000"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
