@@ -40,10 +40,32 @@ export async function friendsServerNow(session, clock=Date.now){
   if(typeof offset!=='number' || !Number.isFinite(offset))throw new FriendsError('サーバーの時刻を確認できませんでした。接続を確認してもう一度お試しください。');
   return clock()+offset;
 }
+export async function readFriendsMembership(session, group, uid){
+  return (await session.dbSDK.get(session.dbSDK.ref(session.db,`groups/${group}/members/${uid}`))).exists();
+}
+async function requireFriendsMembership(session){
+  const group=friendsGroup();
+  if(!group)throw new FriendsError('招待リンクで参加するか、友達のグループを作成してください。');
+  let member;
+  try{member=await readFriendsMembership(session,group,currentUser.uid);}
+  catch(error){
+    if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('参加情報の読み取りがFirebaseに拒否されました。basho-friendsの公開済みルールを確認してください。');
+    throw error;
+  }
+  if(!member){
+    localStorage.removeItem(`${GROUP_KEY}:${currentUser.uid}`);
+    throw new FriendsError('この端末に保存されていたグループの参加情報が見つかりません。グループを作成し直すか、友達の招待リンクから参加してください。');
+  }
+  return group;
+}
 export async function createFriendsInvite(){
-  const s=await authorized(),id=friendsGroup();if(!id)throw new FriendsError('先にグループを作成してください。');
+  const s=await authorized(),id=await requireFriendsMembership(s);
   const token=key()+key(),expiresAt=await friendsServerNow(s)+7*86400000-60000;
-  await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});
+  try{await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});}
+  catch(error){
+    if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('グループへの参加は確認できましたが、招待リンクの保存が拒否されました。basho-friendsの公開済みルールのinvites部分を確認してください。');
+    throw error;
+  }
   const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
 }
 export async function joinFriendsGroup(){
@@ -71,6 +93,7 @@ export async function firebaseSharingAPI(action,data={}){
     const photoPath=`${base}/photos/${data.photoId}`;
     const decorate=post=>({...post,own:post.author===uid,original:dailyTopic(post.day).original,modern:dailyTopic(post.day).modern,lines:dailyTopic(post.day).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
     if(action==='feed'){
+      await requireFriendsMembership(s);
       const snap=await get(query(ref(s.db,`${base}/photos`),orderByChild('day'),equalTo(day)));
       return {day,posts:Object.entries(snap.val()||{}).map(([id,p])=>decorate({...p,id})).sort((a,b)=>b.createdAt-a.createdAt),nextCursor:null};
     }

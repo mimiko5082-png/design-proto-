@@ -3833,3 +3833,6 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .sharing-profile-dialog input { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 12px; border: 1px solid #4e7659; border-radius: 10px; background: #08110b; color: #fff; font: inherit; }
 .sharing-profile-dialog button { display: block; width: 100%; margin: 12px 0 0; }
 .public-feed .friend-detail form textarea { box-sizing: border-box; width: 100%; margin: 8px 0 12px; padding: 12px; border-radius: 10px; font: inherit; }
+
+.public-feed .reading-error { color: #692d1e; }
+.friends-access input[readonly] { display: block; width: 100%; box-sizing: border-box; padding: 12px; color: #102418; background: #f2f8ef; }
