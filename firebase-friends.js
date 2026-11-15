@@ -63,7 +63,7 @@ export async function firebaseSharingAPI(action,data={}){
     const s=await authorized(),group=friendsGroup();if(!group)throw new FriendsError('招待リンクで参加するか、友達のグループを作成してください。');
     const {ref,get,set,remove,query,orderByChild,equalTo}=s.dbSDK,base=`groups/${group}`,uid=currentUser.uid,day=japanDay();
     const photoPath=`${base}/photos/${data.photoId}`;
-    const decorate=post=>({...post,own:post.author===uid,original:dailyTopic(post.day).original,modern:dailyTopic(post.day).modern,lines:dailyTopic(post.day).original.split(' '),stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
+    const decorate=post=>({...post,own:post.author===uid,original:dailyTopic(post.day).original,modern:dailyTopic(post.day).modern,lines:dailyTopic(post.day).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
     if(action==='feed'){
       const snap=await get(query(ref(s.db,`${base}/photos`),orderByChild('day'),equalTo(day)));
       return {day,posts:Object.entries(snap.val()||{}).map(([id,p])=>decorate({...p,id})).sort((a,b)=>b.createdAt-a.createdAt),nextCursor:null};

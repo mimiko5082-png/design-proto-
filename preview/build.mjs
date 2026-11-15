@@ -29,8 +29,8 @@ for (const file of files) {
     content=content.replace('  if(window.BASHO_PHOTO_PREVIEW) throw', "  if(window.BASHO_PHOTO_PREVIEW && window.BASHO_SHARING_DEMO) return (await import('./sharing-demo.js')).demoAPI(action,{...data,identity:sharingProfile()});\n  if(window.BASHO_PHOTO_PREVIEW) throw");
     content=content.replace('みんなに写真を公開する','プレビューで投稿を試す').replace('投稿すると、写真・ひとこと・表示名がアプリを使う全員に公開されます。','このプレビューでは投稿・ひとこと・スタンプをこの端末内だけに保存します。実際の利用者には公開されません。').replace('この表示名で公開を始める','この表示名で試す').replace('写真は約30日間サーバーに保存されます。','プレビューの写真と登録情報はこの端末内だけに保存します。');
   }
-  if(file==='haiku-cards.js') content=content.replace('if(window.BASHO_PHOTO_PREVIEW) return false;', 'if(window.BASHO_PHOTO_PREVIEW && !window.BASHO_SHARING_DEMO) return false;').replace('写真を全員に公開しました。','プレビューに投稿しました。実際には公開されません。');
-  if(file==='photo-postcard.js') content=content.replace('写真を友達に共有しました！','プレビューに投稿しました！');
+  if(file==='haiku-cards.js') content=content.replace("this.message='参加している友達に写真を共有しました。'", "this.message=window.BASHO_SHARING_DEMO?'プレビューに投稿しました。実際には公開されません。':'参加している友達に写真を共有しました。'");
+  if(file==='photo-postcard.js') content=content.replace(".textContent='写真を友達に共有しました！'", ".textContent=window.BASHO_SHARING_DEMO?'プレビューに投稿しました！':'写真を友達に共有しました！'");
   if(file==='public-feed.js') content=content.replace('アプリを使う全員に公開される写真です。','共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。').replace('公開した写真は約30日後にサーバーから削除されます。端末に保存した写真はカレンダーに残ります。','プレビューでは実際のサーバーへの公開・送信は行いません。').replace('通報を受け付けました。運営による確認待ちです。','プレビューで通報操作を試しました。実際には送信されません。').replace('写真を全員に公開しました。','プレビューに投稿しました。実際には公開されません。');
   writeFileSync(join(out, file), content);
 }
@@ -51,6 +51,7 @@ html = html.replace(/<script>\s*if \("serviceWorker" in navigator\) \{[\s\S]*?<\
 if (html.includes('serviceWorker.register')) throw Error('Service worker registration must be disabled in preview');
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
+html = html.replace('みんなの投稿</button>', '友達の投稿</button>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
 html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · AIはサンプル · 友達共有はFirebase<button type="button" data-notification-demo>通知を試す</button></aside>');
 html = html.replace('</head>', '<script src="./firebase-friends-config.js"></script></head>');
