@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v71-firebase-friends";
+const CACHE_NAME = "basho-manazashi-v72-firebase-invites";
 const APP_SHELL = [
   "./",
   "./index.html",

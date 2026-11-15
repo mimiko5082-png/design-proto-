@@ -34,16 +34,22 @@ export async function createFriendsGroup(){
   await s.dbSDK.set(s.dbSDK.ref(s.db,`groups/${id}`),{owner:currentUser.uid,createdAt:s.dbSDK.serverTimestamp(),members:{[currentUser.uid]:{name:currentUser.displayName||'友達',joinedAt:s.dbSDK.serverTimestamp()}}});
   localStorage.setItem(`${GROUP_KEY}:${currentUser.uid}`,id);changed();return id;
 }
+export async function friendsServerNow(session, clock=Date.now){
+  const snapshot=await session.dbSDK.get(session.dbSDK.ref(session.db,'.info/serverTimeOffset'));
+  const offset=snapshot.val();
+  if(typeof offset!=='number' || !Number.isFinite(offset))throw new FriendsError('サーバーの時刻を確認できませんでした。接続を確認してもう一度お試しください。');
+  return clock()+offset;
+}
 export async function createFriendsInvite(){
   const s=await authorized(),id=friendsGroup();if(!id)throw new FriendsError('先にグループを作成してください。');
-  const token=key()+key();
-  await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt:Date.now()+7*86400000});
+  const token=key()+key(),expiresAt=await friendsServerNow(s)+7*86400000-60000;
+  await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});
   const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
 }
 export async function joinFriendsGroup(){
   const s=await authorized(),token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');
   const snap=await s.dbSDK.get(s.dbSDK.ref(s.db,`invites/${token}`)),invite=snap.val();
-  if(!invite || invite.expiresAt<=Date.now())throw new FriendsError('招待リンクの期限が切れています。新しいリンクを送ってもらってください。');
+  if(!invite || invite.expiresAt<=await friendsServerNow(s))throw new FriendsError('招待リンクの期限が切れています。新しいリンクを送ってもらってください。');
   const member=s.dbSDK.ref(s.db,`groups/${invite.groupId}/members/${currentUser.uid}`);
   const existing=await s.dbSDK.get(member);
   if(!existing.exists())await s.dbSDK.set(member,{name:currentUser.displayName||'友達',joinedAt:s.dbSDK.serverTimestamp(),invite:token});
