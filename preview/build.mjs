@@ -12,7 +12,7 @@ const files = [
   'image-tools.js', 'image-service.js', 'image-validation.js',
   'reading-garden.js', 'photo-albums.js', 'garden-colors.js', 'photo-postcard.js', 'reading-store.js', 'tanka-catalog.js',
   'haiku-cards.js', 'haiku-catalog.js', 'haiku-service.js', 'haiku-store.js',
-  'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js', 'public-feed.js', 'sharing-client.js', 'legacy-sharing-client.js', 'firebase-friends.js',
+  'observation-timer.js', 'photo-sharing.js', 'friends-feed.js', 'friend-reactions.js', 'public-feed.js', 'sharing-client.js', 'legacy-sharing-client.js', 'firebase-friends.js', 'friends-bootstrap.js',
 ];
 for (const file of files) {
   let content = readFileSync(join(root, file), 'utf8');
@@ -54,7 +54,6 @@ html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofo
 html = html.replace('みんなの投稿</button>', '友達の投稿</button>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');
 html = html.replace('<body>', '<body><aside class="preview-banner"><strong>本番とは別のプレビュー</strong> · AIはサンプル · 友達共有はFirebase<button type="button" data-notification-demo>通知を試す</button></aside>');
-html = html.replace('</head>', '<script src="./firebase-friends-config.js"></script></head>');
 html = html.replace('</body>', '<script type="module" src="./notification-demo.js"></script></body>');
 html = html.replace('</head>', `<style>
 ${readFileSync(join(here, 'notification-demo.css'), 'utf8')}

@@ -28,5 +28,3 @@ window.BASHO_PHOTO_PREVIEW = true;
     connectedCallback() { this.innerHTML = '<p class="reading-help">プレビューでは実際の通知・共有・AI接続は無効です。</p>'; }
   });
 })();
-
-window.addEventListener('load',()=>{if(new URLSearchParams(location.hash.slice(1)).has('invite'))window.dispatchEvent(new Event('basho-show-posts'));});

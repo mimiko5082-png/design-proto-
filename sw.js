@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v70-public-photo-sharing";
+const CACHE_NAME = "basho-manazashi-v71-firebase-friends";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -20,6 +20,10 @@ const APP_SHELL = [
   "./friends-feed.js",
   "./public-feed.js",
   "./sharing-client.js",
+  "./firebase-friends-config.js",
+  "./firebase-friends.js",
+  "./friends-bootstrap.js",
+  "./legacy-sharing-client.js",
   "./friend-reactions.js",
   "./photo-sharing.js",
   "./observation-timer.js",
