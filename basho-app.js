@@ -250,6 +250,7 @@ tabbar.addEventListener("click", (event) => {
 });
 
 window.addEventListener('basho-show-posts',()=>navigate('friends'));
+window.addEventListener('basho-show-calendar',()=>navigate('calendar'));
 
 function render() {
   const views = {

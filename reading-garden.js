@@ -1,3 +1,5 @@
+import { publishCard } from './sharing-client.js?v=76';
+import './public-feed.js?v=76';
 import { postcardMarkup } from './photo-postcard.js';
 import { FLOWER_COLORS, colorFromPhoto, flowerSvg } from './garden-colors.js';
 import { buildPhotoAlbums, makeAlbumImage } from './photo-albums.js';
@@ -14,7 +16,7 @@ class ReadingGarden extends HTMLElement {
   connectedCallback() {
     this.poemId = TANKA[0].id;
     this.selectedDay = japanDay(); this.month = this.selectedDay.slice(0,7);
-    this.message = ''; this.error = ''; this.albumId = null; this.albumPage = 0; this.exportBusy = false; this.selectedColor = null;
+    this.calendarAudience=typeof location!=='undefined'&&location.search.includes('calendar=shared')?'friends':'local';this.message = ''; this.error = ''; this.albumId = null; this.albumPage = 0; this.exportBusy = false; this.selectedColor = null;
     this.onClick = event => this.handleClick(event);
     this.onUpdate = () => this.render();
     this.addEventListener('click', this.onClick);
@@ -31,6 +33,17 @@ class ReadingGarden extends HTMLElement {
     const button = event.target.closest('[data-reading-action]');
     if (!button) return;
     const action = button.dataset.readingAction;
+    if(action==='share-card'){
+      const card=this.cards.find(item=>item.id===button.dataset.card);
+      if(card&&!this.shareBusy&&confirm(`${card.day}の写真とひとことを、参加している友達に共有しますか？`)){
+        this.shareBusy=true;this.error='';this.message='共有しています…';this.render();
+        publishCard(card).then(result=>{this.message=result?'この日の写真を友達に共有しました。':'共有をキャンセルしました。';})
+          .catch(error=>{this.error=error.message;this.message='';})
+          .finally(()=>{this.shareBusy=false;this.render();});
+      }
+      return;
+    }
+    if(action==='calendar-audience'){this.calendarAudience=button.dataset.audience;this.render();return;}
     if (action === 'color') this.selectedColor = this.selectedColor === button.dataset.color ? null : button.dataset.color;
     if (action === 'album-open') { this.albumId = button.dataset.album; this.albumPage = 0; this.error = ''; this.message = ''; }
     if (action === 'album-close') { this.albumId = null; this.message = ''; }
@@ -86,15 +99,19 @@ class ReadingGarden extends HTMLElement {
     let content;
     if (mode === 'summary') content = garden;
     else if (mode === 'calendar') {
+      const switcher=`<nav class="calendar-audience" aria-label="カレンダーの表示"><button class="outline-button" data-reading-action="calendar-audience" data-audience="local" aria-pressed="${this.calendarAudience!=='friends'}">自分の記録</button><button class="outline-button" data-reading-action="calendar-audience" data-audience="friends" aria-pressed="${this.calendarAudience==='friends'}">友達と共有</button></nav>`;
+      if(this.calendarAudience==='friends'){
+        this.innerHTML=`<div class="reading-feature reading-mode-calendar">${switcher}<basho-public-feed calendar day="${esc(this.selectedDay)}"></basho-public-feed></div>`;return;
+      }
       const days = monthCells(this.month);
       const selected = reads.filter(read => read.day === this.selectedDay);
       const selectedCards = cards.filter(card => card.day === this.selectedDay);
-      content = `<header class="reading-heading"><h1>自分の記録</h1><button type="button" class="records-close" data-nav="friends" aria-label="みんなの投稿に戻る">×</button></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
+      content = `${switcher}<header class="reading-heading"><h1>自分の記録</h1><button type="button" class="records-close" data-nav="friends" aria-label="みんなの投稿に戻る">×</button></header><section class="reading-calendar"><div class="reading-month"><button type="button" data-reading-action="month" data-delta="-1" aria-label="前の月">←</button><h2>${Number(this.month.slice(0,4))}年 ${Number(this.month.slice(5))}月</h2><button type="button" data-reading-action="month" data-delta="1" aria-label="次の月">→</button></div><button class="reading-today" type="button" data-reading-action="today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(day=>`<span>${day}</span>`).join('')}</div><div class="reading-days">${days.map(day => {
         if (!day) return '<span></span>';
         const photo = cards.find(card=>card.day===day);
         const count = reads.filter(read=>read.day===day).length + cards.filter(card=>card.day===day).length;
         return `<button type="button" class="${photo ? 'has-photo' : ''} ${day === this.selectedDay ? 'selected' : ''} ${day === today ? 'is-today' : ''}" data-reading-action="day" data-day="${day}" aria-pressed="${day===this.selectedDay}" aria-label="${day}、${count}件${day===today?'、今日':''}">${photo ? `<img class="calendar-day-photo" src="${esc(photo.image)}" alt="">` : ''}<span class="calendar-day-number">${Number(day.slice(8))}</span>${photo ? '' : `<small>${count ? `${count}件` : '·'}</small>`}</button>`;
-      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length + selectedCards.length}件</small></h2>${selectedCards.map(card=>this.haikuCard(card)).join('')}${selected.length ? selected.map(read=>this.poemCard(poemById(read.poemId),false)).join('') : selectedCards.length ? '' : '<p class="reading-empty">この日の読み札はまだありません。<br>お題に合う写真を保存すると、この日に残ります。</p>'}<button class="outline-button" type="button" data-nav="home">今日の写真を撮る</button></section>${help}`;
+      }).join('')}</div></section><section class="reading-date-records"><h2>${esc(this.selectedDay.replaceAll('-',' / '))} <small> · ${selected.length + selectedCards.length}件</small></h2>${selectedCards.map(card=>this.haikuCard(card)+`<button class="outline-button" data-reading-action="share-card" data-card="${esc(card.id)}" ${this.shareBusy?'disabled':''}>この写真を友達に共有する</button>`).join('')}${selected.length ? selected.map(read=>this.poemCard(poemById(read.poemId),false)).join('') : selectedCards.length ? '' : '<p class="reading-empty">この日の読み札はまだありません。<br>お題に合う写真を保存すると、この日に残ります。</p>'}<button class="outline-button" type="button" data-nav="home">今日の写真を撮る</button></section>${help}<p role="status" class="friend-status">${esc(this.message)}</p>`;
     } else if (mode === 'garden') {
       content = `<header class="reading-heading"><span class="reading-eyebrow">あなたと育つ、ことばの庭</span><h1>まなざしを育てる</h1></header>${garden}<div class="reading-stats"><p><strong>${new Set([...reads,...cards].map(read=>read.day)).size}</strong>記録した日</p><p><strong>${cards.length}</strong>集めた読み札</p><p><strong>${todayReads.length + cards.filter(card=>card.day===today).length}</strong>今日のことば</p></div><button class="main-button" type="button" data-nav="home">${todayPhotoSaved ? '今日の写真を保存済み' : '今日の一枚を撮ろう'}</button>${this.colorCollection()}${this.albumShelf()}<button class="outline-button" type="button" data-nav="calendar">カレンダーを見る</button>${help}`;
     } else {

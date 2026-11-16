@@ -1,6 +1,6 @@
-import * as demo from './legacy-sharing-client.js?v=75';
-import { firebaseSharingAPI, friendsProfile, friendsSignIn, friendlyError } from './firebase-friends.js?v=75';
-export { FriendsError as SharingError } from './firebase-friends.js?v=75';
+import * as demo from './legacy-sharing-client.js?v=76';
+import { firebaseSharingAPI, friendsProfile, friendsSignIn, friendlyError } from './firebase-friends.js?v=76';
+export { FriendsError as SharingError } from './firebase-friends.js?v=76';
 export function sharingProfile(){return window.BASHO_SHARING_DEMO?demo.sharingProfile():friendsProfile();}
 export async function sharingAPI(action,data={}){return window.BASHO_SHARING_DEMO?demo.sharingAPI(action,data):firebaseSharingAPI(action,data);}
 export async function registerSharingProfile(name){return window.BASHO_SHARING_DEMO?demo.registerSharingProfile(name):friendsSignIn();}

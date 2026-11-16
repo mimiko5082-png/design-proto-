@@ -50,6 +50,11 @@ jobs:
           export FIREBASE_TEST_DEPS="$RUNNER_TEMP/firebase-tests"
           npm install --prefix "$FIREBASE_TEST_DEPS" --ignore-scripts --no-audit --no-fund firebase-tools@15.36.0 @firebase/rules-unit-testing@6.0.0 firebase@13.3.0
           "$FIREBASE_TEST_DEPS/node_modules/.bin/firebase" emulators:exec --only database --project demo-basho-friends --config firebase.json "node --test tests/firebase-friends-rules.test.mjs"
+      - name: Verify shared calendar in a browser with isolated sample data
+        run: |
+          python3 -m pip install playwright
+          python3 -m playwright install --with-deps chromium
+          python3 tests/shared-calendar.browser.py
       - name: Initial setup is still needed
         if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
         run: echo '::notice::Preview deployment is waiting for CLOUDFLARE_PREVIEW_API_TOKEN and CLOUDFLARE_PREVIEW_ACCOUNT_ID repository secrets. No deployment was attempted.'

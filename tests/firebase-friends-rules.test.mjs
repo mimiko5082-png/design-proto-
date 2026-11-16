@@ -8,7 +8,7 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
   const deps=process.env.FIREBASE_TEST_DEPS;
   const load=async name=>deps?import(pathToFileURL(`${deps}/node_modules/${name}`).href):import(name);
   const {initializeTestEnvironment,assertSucceeds,assertFails}=await load('@firebase/rules-unit-testing/dist/esm/index.esm.js');
-  const {ref,get,set,update,remove,query,orderByChild,equalTo,onValue}=await load('firebase/database/dist/esm/index.esm.js');
+  const {ref,get,set,update,remove,query,orderByChild,equalTo,onValue,startAt,endAt,limitToFirst}=await load('firebase/database/dist/esm/index.esm.js');
   const [host,port]=process.env.FIREBASE_DATABASE_EMULATOR_HOST.split(':');
   const env=await initializeTestEnvironment({projectId:'demo-basho-friends',database:{host,port:Number(port),rules:await readFile(new URL('../firebase/database.rules.json',import.meta.url),'utf8')}});
   try{
@@ -67,6 +67,22 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertFails(set(ref(alice,'groups/friends/photos/url'),{...photo,image:'https://example.com/photo.png'}));
     await assertSucceeds(remove(ref(bob,comment)));
     await assertSucceeds(remove(ref(bob,`${path}/stamps/heart/bob`)));
+    // Historical calendar pages include both friends and retain same-day cursors.
+    const {readSharedCalendar}=await import('../sharing-calendar.js');
+    const pastDay='2026-10-12';
+    for(let n=0;n<63;n++)await assertSucceeds(set(ref(alice,`groups/friends/photos/old_${String(n).padStart(3,'0')}`),{...photo,day:pastDay,createdAt:time()}));
+    await assertSucceeds(set(ref(bob,'groups/friends/photos/bob_old'),{...photo,author:'bob',name:'Bob',day:'2026-10-20',createdAt:time()}));
+    const sdk={ref,get,query,orderByChild,startAt,endAt,limitToFirst};
+    const first=await readSharedCalendar({db:bob,dbSDK:sdk},'friends','2026-10');
+    assert.equal(first.posts.length,60);assert.ok(first.nextCursor);assert.ok(first.posts.every(p=>p.day.startsWith('2026-10')));
+    const rest=await readSharedCalendar({db:bob,dbSDK:sdk},'friends','2026-10',first.nextCursor);
+    assert.equal(rest.posts.length,4);assert.equal(rest.nextCursor,null);
+    assert.equal(new Set([...first.posts,...rest.posts].map(p=>p.id)).size,64);
+    assert.ok(rest.posts.some(p=>p.author==='bob'));
+    await assertFails(readSharedCalendar({db:eve,dbSDK:sdk},'friends','2026-10'));
+    await assertFails(readSharedCalendar({db:anon,dbSDK:sdk},'friends','2026-10'));
+    await assertFails(readSharedCalendar({db:bob,dbSDK:sdk},'other','2026-10'));
+    await assertSucceeds(update(ref(alice,'groups/friends/photos/old_000'),{caption:'過去写真を更新',createdAt:time()}));
     await assertSucceeds(remove(ref(alice,path)));
     await assertFails(set(ref(bob,`${path}/stamps/heart/bob`),true));
     await assertFails(set(ref(alice,'groups/smuggled'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()},eve:{name:'Eve',joinedAt:time()}}}));

@@ -1,17 +1,19 @@
-import { friendsSession, friendsGroup, pendingInvite, createFriendsGroup, createFriendsInvite, joinFriendsGroup, friendsSignOut, friendlyError } from './firebase-friends.js?v=75';
+import { monthCells, shiftMonth, validDay } from './reading-store.js';
+import { unsharedMonthCards } from './sharing-calendar.js?v=76';
+import { friendsSession, friendsGroup, pendingInvite, createFriendsGroup, createFriendsInvite, joinFriendsGroup, friendsSignOut, friendlyError } from './firebase-friends.js?v=76';
 import { postcardMarkup, escapeText as esc } from './photo-postcard.js';
 import { REACTIONS } from './friend-reactions.js';
 import { dailyTopic } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { loadCards } from './haiku-store.js';
-import { sharingAPI, sharingProfile, ensureSharingProfile, publishCard } from './sharing-client.js?v=75';
+import { sharingAPI, sharingProfile, ensureSharingProfile, publishCard } from './sharing-client.js?v=76';
 class PublicFeed extends HTMLElement {
   connectedCallback() {
-    this.posts=[];this.day=japanDay();this.selected=null;this.details=null;this.error='';this.status='';this.loading=false;this.busy=false;this.draft='';this.revision=0;
+    this.calendar=this.hasAttribute('calendar');this.day=validDay(this.getAttribute('day'))?this.getAttribute('day'):japanDay();this.month=this.day.slice(0,7);this.localCards=[];this.posts=[];this.selected=null;this.details=null;this.error='';this.status='';this.loading=false;this.busy=false;this.draft='';this.revision=0;
     this.addEventListener('click',this.click=e=>this.handle(e));
     this.addEventListener('input',this.input=e=>{if(e.target.matches('[data-public-comment]')){this.draft=e.target.value;this.commentId=null;}});
     this.addEventListener('submit',this.submit=e=>{if(e.target.matches('[data-public-form]')){e.preventDefault();this.mutate('comment',{commentId:this.commentId || (this.commentId=crypto.randomUUID().replaceAll('-','')),text:this.draft},'ひとことを送りました。');}});
-    this.refresh=()=>{if(!document.hidden && !this.busy && !this.loading){if(japanDay()!==this.day){this.selected=null;this.details=null;this.draft='';this.load();}else if(this.selected){if(!this.querySelector('[data-public-comment]:focus'))this.loadDetail(true);}else this.load();}};
+    this.refresh=()=>{if(!document.hidden && !this.busy && !this.loading){if(!this.calendar && japanDay()!==this.day){this.selected=null;this.details=null;this.draft='';this.load();}else if(this.selected){if(!this.querySelector('[data-public-comment]:focus'))this.loadDetail(true);}else this.load();}};
     window.addEventListener('focus',this.refresh);window.addEventListener('basho-reading-updated',this.refresh);window.addEventListener('basho-sharing-updated',this.refresh);
     this.timer=setInterval(this.refresh,30000);this.load();
     if(!window.BASHO_SHARING_DEMO) friendsSession().then(()=>this.load()).catch(()=>{});
@@ -22,17 +24,34 @@ class PublicFeed extends HTMLElement {
   async load(more=false) {
     const revision=++this.revision;this.loading=true;this.error='';this.render();
     try {
-      const result=await sharingAPI('feed',{cursor:more?this.cursor:null});
+      const result=await sharingAPI(this.calendar?'calendar':'feed',{month:this.month,cursor:more?this.cursor:null});
       if(revision!==this.revision || !this.isConnected)return;
-      if(this.day!==result.day){this.selected=null;this.details=null;this.draft='';more=false;}
-      this.day=result.day;this.posts=more?[...this.posts,...result.posts.filter(post=>!this.posts.some(item=>item.id===post.id))]:result.posts;this.cursor=result.nextCursor;
-      this.local=(await loadCards()).find(card=>card.day===this.day&&card.creation==='photo-challenge')||null;
+      if(!this.calendar && this.day!==result.day){this.selected=null;this.details=null;this.draft='';more=false;}
+      if(!this.calendar)this.day=result.day;this.posts=more?[...this.posts,...result.posts.filter(post=>!this.posts.some(item=>item.id===post.id))]:result.posts;this.cursor=result.nextCursor;
+      this.localCards=await loadCards();this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;
     }catch(error){if(revision===this.revision){this.error=error.message;this.posts=[];this.selected=null;this.details=null;this.local=null;}}
     finally{if(revision===this.revision&&this.isConnected){this.loading=false;this.render();}}
   }
   async handle(event) {
     const button=event.target.closest('[data-public-action]');if(!button || this.busy)return;
     const action=button.dataset.publicAction;
+    if(action==='calendar-day'){
+      this.day=button.dataset.day;this.selected=null;this.details=null;this.draft='';this.status='';
+      this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;this.render();return;
+    }
+    if(action==='calendar-month'||action==='calendar-today'){
+      this.month=action==='calendar-today'?japanDay().slice(0,7):shiftMonth(this.month,Number(button.dataset.delta));
+      this.day=action==='calendar-today'?japanDay():this.month+'-01';this.selected=null;this.details=null;this.posts=[];this.status='';return this.load();
+    }
+    if(action==='share-month'){
+      if(this.cursor){this.error='この月の投稿をすべて読み込んでから共有してください。';this.render();return;}
+      const cards=unsharedMonthCards(this.localCards,this.month,this.posts);
+      if(!cards.length || !confirm(`${this.month}の未共有の写真${cards.length}枚とひとことを、参加している友達に共有しますか？個人の振り返りメモは共有されません。`))return;
+      this.busy=true;this.error='';let sent=0;this.render();
+      try{for(const card of cards){if(!await publishCard(card))break;sent++;this.status=`${sent} / ${cards.length}枚を共有中…`;this.render();}this.status=`${sent}枚の写真を友達に共有しました。`;}
+      catch(error){this.error=`${sent}枚は共有済みです。${error.message}`;}
+      finally{this.busy=false;const failure=this.error;await this.load();if(failure){this.error=failure;this.render();}}return;
+    }
     if(action==='copy-invite'){
       try{await navigator.clipboard.writeText(this.inviteURL);this.status='招待リンクをコピーしました。友達に貼り付けて送ってください。';}
       catch{this.querySelector('[aria-label="招待リンク"]')?.select();this.status='リンクを選択しました。長押しまたはCtrl+Cでコピーしてください。';return;}
@@ -43,9 +62,9 @@ class PublicFeed extends HTMLElement {
       try{
         if(action==='signout'){await friendsSignOut();this.posts=[];this.details=null;this.selected=null;this.inviteURL='';this.local=null;}
         else if(await ensureSharingProfile()){
-          if(action==='create-group'){await createFriendsGroup();this.inviteURL=await createFriendsInvite();this.status='グループと招待リンクを作成しました。リンクを友達に送ってください。';}
+          if(action==='create-group'){await createFriendsGroup();this.inviteURL=await createFriendsInvite({calendar:this.calendar});this.status='グループと招待リンクを作成しました。リンクを友達に送ってください。';}
           if(action==='join')await joinFriendsGroup();
-          if(action==='invite'){this.inviteURL=await createFriendsInvite();this.status='招待リンクを作成しました。有効期限は約7日間です。';this.render();}
+          if(action==='invite'){this.inviteURL=await createFriendsInvite({calendar:this.calendar});this.status='招待リンクを作成しました。有効期限は約7日間です。';this.render();}
         }
       }catch(error){this.error=friendlyError(error).message;}
       finally{this.busy=false;this.accessAction=null;const failure=this.error;await this.load();if(failure){this.error=failure;this.render();}}return;
@@ -95,8 +114,15 @@ class PublicFeed extends HTMLElement {
   render() {
     let profile=null;try{profile=sharingProfile();}catch(error){this.error=error.message;}
     const demo=window.BASHO_SHARING_DEMO;
-    const controls=demo?'':`<div class="friends-access">${profile?.confirmed?`<button class="outline-button" data-public-action="signout">ログアウト</button>${pendingInvite()?'<p>招待されたグループに参加します。参加後、友達の写真を閲覧できます。</p><button class="main-button" data-public-action="join">この招待で参加する</button>':friendsGroup()?`<button class="outline-button" data-public-action="invite" ${this.busy?'disabled':''}>${this.accessAction==='invite'?'招待リンクを作成中…':'友達の招待リンクを作る'}</button>`:'<button class="outline-button" data-public-action="create-group">友達のグループを作る</button><p>招待された方は、招待リンクから開いてください。</p>'}`:'<p>Googleでログイン後、招待リンクから参加してください。最初の一人はグループを作成できます。</p>'}${this.inviteURL?`<label>招待リンク（約7日間有効）<input aria-label="招待リンク" readonly value="${esc(this.inviteURL)}" onclick="this.select()"></label><button type="button" class="main-button" data-public-action="copy-invite">リンクをコピー</button><p>このリンクを渡した人が参加できます。信頼する友達にだけ送ってください。</p>`:''}</div>`;
-    this.innerHTML=`<section class="friends-feature public-feed"><header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v75</small><h1>${demo?'みんなの投稿':'友達の投稿'}</h1><button class="outline-button" data-public-action="refresh" ${this.loading?'disabled':''}>更新</button></header><article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article><p class="public-audience">${demo?'共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。':'Googleでログインし、招待リンクから参加した友達だけに共有されます。'}</p>${profile?.confirmed?`<p class="public-identity">投稿者：${esc(profile.name)}</p>`:`<button class="outline-button" data-public-action="profile">${demo?'表示名を登録して参加する':'Googleでログインする'}</button>`}${controls}${this.local?`<div class="public-local"><p>今日の写真を、この端末のカレンダーに保存しています。</p><button class="outline-button" data-public-action="publish-local" ${this.busy?'disabled':''}>${this.posts.some(post=>post.own)?'保存した写真で共有を更新する':'保存した写真を友達に共有する'}</button></div>`:''}<p class="friend-status" role="status">${esc(this.status)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!this.posts.length?'<p class="public-empty">今日の投稿はまだありません。最初の一枚を撮ってみよう。</p>':''}<div class="friend-photo-grid">${this.posts.map(post=>`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount}</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}<small class="public-retention">${demo?'プレビューでは実際のサーバーへの公開・送信は行いません。':'共有した写真は削除するまでグループに残ります。端末に保存した写真はカレンダーに残ります。'}</small></section>`;
+    const controls=demo?'':`<div class="friends-access">${profile?.confirmed?`<button class="outline-button" data-public-action="signout">ログアウト</button>${pendingInvite()?'<p>招待されたグループに参加します。参加後、友達の写真を閲覧できます。</p><button class="main-button" data-public-action="join">この招待で参加する</button>':friendsGroup()?`<button class="outline-button" data-public-action="invite" ${this.busy?'disabled':''}>${this.accessAction==='invite'?'招待リンクを作成中…':this.calendar?'カレンダーの招待リンクを作る':'友達の招待リンクを作る'}</button>`:'<button class="outline-button" data-public-action="create-group">友達のグループを作る</button><p>招待された方は、招待リンクから開いてください。</p>'}`:'<p>Googleでログイン後、招待リンクから参加してください。最初の一人はグループを作成できます。</p>'}${this.inviteURL?`<label>招待リンク（約7日間有効）<input aria-label="招待リンク" readonly value="${esc(this.inviteURL)}" onclick="this.select()"></label><button type="button" class="main-button" data-public-action="copy-invite">リンクをコピー</button><p>このリンクを渡した人が参加できます。信頼する友達にだけ送ってください。</p>`:''}</div>`;
+    const shown=this.calendar?this.posts.filter(post=>post.day===this.day):this.posts;
+    const missing=this.calendar?unsharedMonthCards(this.localCards,this.month,this.posts):[];
+    const monthView=this.calendar?`<section class="reading-calendar shared-calendar"><div class="reading-month"><button data-public-action="calendar-month" data-delta="-1" aria-label="共有カレンダーの前の月" ${this.loading||this.busy?'disabled':''}>←</button><h2>${this.month.replace('-','年 ')}月</h2><button data-public-action="calendar-month" data-delta="1" aria-label="共有カレンダーの次の月" ${this.loading||this.busy?'disabled':''}>→</button></div><button class="outline-button" data-public-action="calendar-today">今日へ</button><div class="reading-week" aria-hidden="true">${'日月火水木金土'.split('').map(d=>`<span>${d}</span>`).join('')}</div><div class="reading-days">${monthCells(this.month).map(day=>{
+      if(!day)return '<span></span>';
+      const photos=this.posts.filter(p=>p.day===day),photo=photos[0];
+      return `<button class="${photo?'has-photo':''} ${day===this.day?'selected':''}" data-public-action="calendar-day" data-day="${day}" aria-pressed="${day===this.day}" aria-label="${day}、共有写真${photos.length}枚">${photo?`<img class="calendar-day-photo" src="${esc(photo.image)}" alt="">`:''}<span class="calendar-day-number">${Number(day.slice(8))}</span><small class="shared-day-count">${photos.length?photos.length+'枚':'·'}</small></button>`;
+    }).join('')}</div>${this.cursor?'<p class="reading-help">この月の投稿には続きがあります。下の「もっと見る」で追加してください。</p>':''}</section><h2 class="shared-selected-date">${esc(this.day.replaceAll('-',' / '))} · ${shown.length}枚</h2>${missing.length&&!this.cursor?`<button class="outline-button" data-public-action="share-month" ${this.busy||this.loading?'disabled':''}>この月の未共有の写真を共有する（${missing.length}枚）</button><p class="reading-help">この端末に残っている写真とひとことを共有します。確認してから送信します。</p>`:''}`:'';
+    this.innerHTML=`<section class="friends-feature public-feed"><header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v76</small><h1>${this.calendar?'友達と共有するカレンダー':demo?'みんなの投稿':'友達の投稿'}</h1><button class="outline-button" data-public-action="refresh" ${this.loading?'disabled':''}>更新</button></header><article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article><p class="public-audience">${demo?'共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。':'Googleでログインし、招待リンクから参加した友達だけに共有されます。'}</p>${profile?.confirmed?`<p class="public-identity">投稿者：${esc(profile.name)}</p>`:`<button class="outline-button" data-public-action="profile">${demo?'表示名を登録して参加する':'Googleでログインする'}</button>`}${controls}${monthView}${this.local?`<div class="public-local"><p>${this.calendar?'この日の':'今日の'}写真を、この端末のカレンダーに保存しています。</p><button class="outline-button" data-public-action="publish-local" ${this.busy?'disabled':''}>${this.posts.some(post=>post.own&&post.day===this.day)?'保存した写真で共有を更新する':'保存した写真を友達に共有する'}</button></div>`:''}<p class="friend-status" role="status">${esc(this.status)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!shown.length?`<p class="public-empty">${this.calendar?'この日の共有投稿はまだありません。':'今日の投稿はまだありません。最初の一枚を撮ってみよう。'}</p>`:''}<div class="friend-photo-grid">${shown.map(post=>`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(this.calendar?{...post,createdAt:null}:post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount}</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}<small class="public-retention">${demo?'プレビューでは実際のサーバーへの公開・送信は行いません。':'共有した写真は削除するまでグループに残ります。端末に保存した写真はカレンダーに残ります。'}</small></section>`;
   }
 }
 customElements.define('basho-public-feed',PublicFeed);

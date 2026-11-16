@@ -9,18 +9,20 @@ function read() {
  return {day,posts:[
   {id:'a'.repeat(64),memberId:'demo-aoi',day,topicId:topic.id,modern:topic.modern,image:'./assets/kotoba-forest.png',caption:'通り慣れた道にも、こんな緑があった。',name:'あおい（サンプル）',createdAt:time-120000,updatedAt:time-120000},
   {id:'b'.repeat(64),memberId:'demo-haru',day,topicId:topic.id,modern:topic.modern,image:'./assets/kotoba-lake.png',caption:'いつもより少し立ち止まって見てみた。',name:'はる（サンプル）',createdAt:time-240000,updatedAt:time-240000},
+  ...[1,32].map((ago,index)=>{const past=japanDay(new Date(time-ago*86400000)),topic=dailyTopic(past);return {id:(index?'d':'c').repeat(64),memberId:'demo-haru',day:past,topicId:topic.id,modern:topic.modern,image:'./assets/kotoba-lake.png',caption:'前に見つけた景色も、友達と。',name:'はる（サンプル）',createdAt:time-ago*86400000,updatedAt:time-ago*86400000};}),
  ],details:{}};
 }
 function detail(state,id){return state.details[id] || (state.details[id]={stamps:[],mine:[],comments:[]});}
 export async function demoAPI(action,input={}) {
  const state=read(),member=input.identity;
  if(action==='profile')return {member:{id:member.id,name:input.name.trim()}};
- if(action==='feed')return {day:state.day,posts:state.posts.map(post=>({...post,own:post.memberId===member?.id,stampCount:detail(state,post.id).mine.length,commentCount:detail(state,post.id).comments.length})),nextCursor:null};
+ if(action==='calendar')return {month:input.month,posts:state.posts.filter(post=>post.day.startsWith(input.month+'-')).map(post=>({...post,own:post.memberId===member?.id,stampCount:detail(state,post.id).mine.length,commentCount:detail(state,post.id).comments.length})),nextCursor:null};
+ if(action==='feed')return {day:state.day,posts:state.posts.filter(post=>post.day===state.day).map(post=>({...post,own:post.memberId===member?.id,stampCount:detail(state,post.id).mine.length,commentCount:detail(state,post.id).comments.length})),nextCursor:null};
  if(action==='publish') {
   const profile=JSON.parse(localStorage.getItem('basho_public_profile_v1')||'null');
-  const existing=state.posts.find(post=>post.memberId===member.id),id=existing?.id || member.id.padEnd(64,'0');
-  const topic=dailyTopic(state.day),now=Date.now();
-  const post={id,memberId:member.id,name:profile.name,day:state.day,topicId:topic.id,modern:topic.modern,image:input.image,caption:input.caption,createdAt:existing?.createdAt || now,updatedAt:now};
+  const day=input.day||state.day,existing=state.posts.find(post=>post.memberId===member.id&&post.day===day),id=existing?.id || day+'_'+member.id;
+  const topic=dailyTopic(day),now=Date.now();
+  const post={id,memberId:member.id,name:profile.name,day,topicId:topic.id,modern:topic.modern,image:input.image,caption:input.caption,createdAt:existing?.createdAt || now,updatedAt:now};
   state.posts=[post,...state.posts.filter(post=>post.id!==id)];
   localStorage.setItem(KEY,JSON.stringify(state));return {published:true,id,day:state.day,updatedAt:now};
  }

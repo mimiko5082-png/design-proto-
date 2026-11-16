@@ -1,5 +1,5 @@
 importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v75-fresh-sharing-assets";
+const CACHE_NAME = "basho-manazashi-v76-shared-calendar";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -22,6 +22,7 @@ const APP_SHELL = [
   "./sharing-client.js",
   "./firebase-friends-config.js",
   "./firebase-friends.js",
+  "./sharing-calendar.js",
   "./friends-bootstrap.js",
   "./legacy-sharing-client.js",
   "./friend-reactions.js",

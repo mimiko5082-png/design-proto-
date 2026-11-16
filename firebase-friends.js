@@ -1,6 +1,7 @@
+import { sharedPhotoDay, readSharedCalendar } from './sharing-calendar.js?v=76';
 import { REACTIONS } from './friend-reactions.js';
 import { japanDay } from './reading-store.js';
-import { dailyTopic } from './haiku-catalog.js';
+import { dailyTopic, topicById } from './haiku-catalog.js';
 const GROUP_KEY='basho_firebase_friends_group_v1';
 let sessionPromise, currentUser=null, ready=false;
 export class FriendsError extends Error {}
@@ -64,7 +65,7 @@ async function requireFriendsMembership(session){
   }
   return group;
 }
-export async function createFriendsInvite(){
+export async function createFriendsInvite({calendar=false}={}){
   const s=await authorized(),id=await requireFriendsMembership(s);
   const token=key()+key(),expiresAt=await friendsServerNow(s)+7*86400000-60000;
   try{await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});}
@@ -72,7 +73,7 @@ export async function createFriendsInvite(){
     if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('グループへの参加は確認できましたが、招待リンクの保存が拒否されました。basho-friendsの公開済みルールのinvites部分を確認してください。');
     throw error;
   }
-  const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
+  const url=new URL(location.href);url.search=calendar?'calendar=shared':'';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
 }
 export async function joinFriendsGroup(){
   const s=await authorized(),token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');
@@ -98,19 +99,25 @@ export async function firebaseSharingAPI(action,data={}){
     const s=await authorized(),group=friendsGroup();if(!group)throw new FriendsError('招待リンクで参加するか、友達のグループを作成してください。');
     const {ref,get,set,remove,query,orderByChild,equalTo}=s.dbSDK,base=`groups/${group}`,uid=currentUser.uid,day=japanDay();
     const photoPath=`${base}/photos/${data.photoId}`;
-    const decorate=post=>({...post,own:post.author===uid,original:dailyTopic(post.day).original,modern:dailyTopic(post.day).modern,lines:dailyTopic(post.day).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
+    const decorate=post=>({...post,own:post.author===uid,original:(topicById(post.topicId)||dailyTopic(post.day)).original,modern:(topicById(post.topicId)||dailyTopic(post.day)).modern,lines:(topicById(post.topicId)||dailyTopic(post.day)).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
+    if(action==='calendar'){
+      await requireFriendsMembership(s);
+      const result=await readSharedCalendar(s,group,data.month,data.cursor);
+      return {...result,posts:result.posts.map(decorate)};
+    }
     if(action==='feed'){
       await requireFriendsMembership(s);
       const snap=await get(query(ref(s.db,`${base}/photos`),orderByChild('day'),equalTo(day)));
       return {day,posts:Object.entries(snap.val()||{}).map(([id,p])=>decorate({...p,id})).sort((a,b)=>b.createdAt-a.createdAt),nextCursor:null};
     }
     if(action==='publish'){
-      if(data.day!==day || data.topicId!==dailyTopic(day).id)throw new FriendsError('今日の写真を選択してください。');
+      const postDay=sharedPhotoDay(data.day,day);
+      if(!topicById(data.topicId))throw new FriendsError('記録の日付に合う写真を選択してください。');
       if(!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data.image||'') || data.image.length>1100000)throw new FriendsError('写真は1MB以内のJPEG・PNG・WebPを選んでください。');
       if((data.caption||'').length>120)throw new FriendsError('ひとことは120文字までです。');
-      const id=`${day}_${uid}`,path=`${base}/photos/${id}`;
+      const id=`${postDay}_${uid}`,path=`${base}/photos/${id}`;
       // Update photo fields separately, preserving friends' comments and stamps.
-      await s.dbSDK.update(ref(s.db,path),{author:uid,name:currentUser.displayName||'友達',day,topicId:data.topicId,image:data.image,caption:data.caption||'',createdAt:s.dbSDK.serverTimestamp()});return {id};
+      await s.dbSDK.update(ref(s.db,path),{author:uid,name:currentUser.displayName||'友達',day:postDay,topicId:data.topicId,image:data.image,caption:data.caption||'',createdAt:s.dbSDK.serverTimestamp()});return {id};
     }
     if(!/^[A-Za-z0-9_-]{1,180}$/.test(data.photoId||''))throw new FriendsError('写真を選択してください。');
     if(action==='detail'){

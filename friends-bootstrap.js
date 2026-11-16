@@ -1,7 +1,8 @@
-import { friendsSession, pendingInvite } from './firebase-friends.js?v=75';
+import { friendsSession, pendingInvite } from './firebase-friends.js?v=76';
 // Prepare Google authentication before the user opens the sign-in popup.
-friendsSession().catch(() => {});
+if (!window.BASHO_SHARING_DEMO) friendsSession().catch(() => {});
 // An invitation opens the participation screen after the application is ready.
 window.addEventListener('load', () => {
-  if (pendingInvite()) window.dispatchEvent(new Event('basho-show-posts'));
+  if (location.search.includes('calendar=shared')) window.dispatchEvent(new Event('basho-show-calendar'));
+  else if (pendingInvite()) window.dispatchEvent(new Event('basho-show-posts'));
 });

@@ -3838,3 +3838,12 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .friends-access input[readonly] { display: block; width: 100%; box-sizing: border-box; padding: 12px; color: #102418; background: #f2f8ef; }
 
 .friends-release { display:block; font-size:11px; opacity:.65; margin:0 12px 0 0; }
+
+.calendar-audience { display:flex; gap:10px; padding:18px; position:relative; }
+.calendar-audience button { flex:1; margin:0; padding:12px 6px; }
+.calendar-audience button[aria-pressed="true"] { background:#2fbb78; color:#06150d; border-radius:8px; }
+.shared-calendar .reading-days button { position:relative; min-height:58px; overflow:hidden; }
+.shared-day-count { position:absolute; bottom:2px; right:3px; padding:1px 4px; background:#07130edb; color:#fff; border-radius:4px; font-size:10px; }
+.shared-selected-date { margin:18px; font-size:18px; }
+.reading-mode-calendar .public-feed .feed-heading h1 { font-size:22px; }
+.reading-mode-calendar .public-feed .reading-error { color:#692d1e; }
