@@ -123,8 +123,8 @@ try:
   page.locator('.tabbar [data-nav=calendar]').evaluate('button=>button.click()')
   expect(page.locator('.reading-mode-calendar')).to_be_visible()
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
-  expect(page.locator('.saved-haiku')).to_have_count(1)
-  expect(page.locator('.saved-photo-caption')).to_have_text('いつもの道の光がきれい。')
+  expect(page.locator('.local-calendar-photo')).to_have_count(1)
+  expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text('いつもの道の光がきれい。')
   page.locator('.tabbar [data-nav=friends]').click()
   expect(page.locator('.friend-own-caption')).to_have_text('いつもの道の光がきれい。')
   assert not errors,errors

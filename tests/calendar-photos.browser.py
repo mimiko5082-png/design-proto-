@@ -41,7 +41,7 @@ try:
   day=page.locator('[data-day="2026-10-05"]')
   expect(day.locator('.calendar-day-photo')).to_have_attribute('src',images[1])
   day.click()
-  expect(page.locator('.saved-haiku .haiku-photo')).to_have_attribute('src',images[1])
+  expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',images[1])
   expect(page.locator('[data-day="2026-10-06"] .calendar-day-photo')).to_have_count(0)
   page.locator('[aria-label="前の月"]').click()
   expect(page.locator('.reading-days .calendar-day-photo')).to_have_count(0)

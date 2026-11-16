@@ -24,3 +24,11 @@ export function unsharedMonthCards(cards,month,posts,today=japanDay()){
   const unique=[...new Map([...cards].sort((a,b)=>(Number(a.createdAt)||0)-(Number(b.createdAt)||0)).map(card=>[card.day,card])).values()];
   return unique.filter(card=>['photo-challenge','photo-ai'].includes(card.creation) && validDay(card.day) && card.day<=today && card.day.startsWith(month+'-') && typeof card.image==='string' && !posts.some(p=>p.own && p.day===card.day));
 }
+
+// Merge device-only photos with group posts without publishing private records.
+export function calendarPosts(cards,posts){
+  const sharedDays=new Set(posts.filter(post=>post.own).map(post=>post.day));
+  const local=cards.filter(card=>['photo-challenge','photo-ai'].includes(card.creation) && validDay(card.day) && typeof card.image==='string' && card.image && !sharedDays.has(card.day))
+    .map(card=>({id:'local:'+card.id,day:card.day,image:card.image,modern:card.modern,caption:card.caption||'',createdAt:card.createdAt,name:'自分',own:true,localOnly:true}));
+  return [...posts,...local];
+}
