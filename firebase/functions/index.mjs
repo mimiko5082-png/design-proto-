@@ -42,11 +42,21 @@ export const fcmDisableDevice=onCall(callable,async request=>{
 export const fcmTestNotification=onCall(callable,async request=>{
   const {uid,deviceId}=identity(request),ref=db().ref(`fcmDevices/${deviceId}`),at=Date.now();
   return withLiveDevice(ref,async()=>{
+    let rejection;
     const claim=await ref.transaction(current=>{
-      if(!current?.enabled||current.uid!==uid||at-(current.testAt||0)<60000)return;
+      rejection=null;
+      if(!current){rejection={reason:'FCM_DEVICE_MISSING'};return;}
+      if(current.uid!==uid){rejection={reason:'FCM_DEVICE_ACCOUNT'};return;}
+      if(current.enabled!==true){rejection={reason:'FCM_DEVICE_DISABLED'};return;}
+      const remaining=60000-(at-(current.testAt||0));
+      if(remaining>0){rejection={reason:'FCM_TEST_COOLDOWN',retryAfterSeconds:Math.min(60,Math.ceil(remaining/1000))};return;}
       return {...current,testAt:at};
     });
-    if(!claim.committed)throw new HttpsError('failed-precondition','通知を有効にしてからお試しください。テストは1分に1回までです。');
+    if(!claim.committed){
+      const details=rejection||{reason:'FCM_TEST_CONFLICT'};
+      console.info('FCM test rejected',details);
+      throw new HttpsError('failed-precondition','テスト通知の送信条件を確認してください。',details);
+    }
     const record=claim.snapshot.val();
     try{await messaging().send(fcmMessage(record.token,'test',japanDay()));}
     catch(error){

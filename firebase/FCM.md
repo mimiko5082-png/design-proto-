@@ -102,3 +102,20 @@ npx --yes firebase-tools@15.36.0 deploy --project basho-friends --only functions
 ```
 
 送信権限・Web Push鍵・失効トークンのエラーは、秘密情報を含めない種別で画面に表示します。Functionsログには失敗コードだけを記録し、FCMトークンやAPI応答本文は記録しません。送信権限エラーなら実行サービスアカウントのFCM権限、鍵エラーならFirebaseコンソールのWeb Push証明書を確認します。
+
+## テスト送信を止めた理由の確認
+
+テストの前提条件エラーは、端末登録なし `FCM_DEVICE_MISSING`、アカウント不一致 `FCM_DEVICE_ACCOUNT`、停止中 `FCM_DEVICE_DISABLED`、1分以内の再送 `FCM_TEST_COOLDOWN`、同時変更 `FCM_TEST_CONFLICT` を区別します。再送制限では残り秒数も表示します。ログは理由と残り秒数だけで、ユーザーID・端末ID・トークンは含めません。`FCM_TEST_LEGACY` は詳細理由を返さない旧サーバーからの応答です。
+
+Cloud Shellで別ブランチを使っていると `git pull` だけでは修正版が取得されません。既存作業を上書きせず、検証済みコミットを新しい作業ディレクトリへ取り出してデプロイできます（`COMMIT_SHA` は検証済みの完全なSHAへ置換）。
+
+```sh
+cd ~/basho-fcm-deploy
+git fetch origin codex-preview
+git worktree add --detach ../basho-fcm-diagnostics COMMIT_SHA
+cd ../basho-fcm-diagnostics
+npm ci --prefix firebase/functions
+npx --yes firebase-tools@15.36.0 deploy --project basho-friends --only functions:fcm
+```
+
+本番側の受信成功は、公開チェックやエミュレーター検証では確認できません。理由の表示と実機での受信を別途確認してください。

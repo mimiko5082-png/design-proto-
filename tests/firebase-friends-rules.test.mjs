@@ -44,6 +44,14 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     const adminApp=requireAdmin('firebase-admin/app'),adminDB=requireAdmin('firebase-admin/database');
     const cold=adminApp.initializeApp({projectId:'demo-basho-friends',databaseURL:process.env.FIREBASE_DATABASE_URL},'cold-fcm');
     const coldRef=adminDB.getDatabase(cold).ref('fcmDevices/'+fcmData.deviceId);
+    // Exercise the real test callable's rejection paths without sending any push.
+    const testRequest={auth:auth('alice'),data:fcmData};
+    await assert.rejects(fcm.fcmTestNotification.run({auth:auth('bob'),data:fcmData}),error=>error.details?.reason==='FCM_DEVICE_ACCOUNT');
+    await coldRef.update({enabled:false});
+    await assert.rejects(fcm.fcmTestNotification.run(testRequest),error=>error.details?.reason==='FCM_DEVICE_DISABLED');
+    await coldRef.update({enabled:true,testAt:Date.now()});
+    await assert.rejects(fcm.fcmTestNotification.run(testRequest),error=>error.details?.reason==='FCM_TEST_COOLDOWN'&&error.details.retryAfterSeconds>0&&error.details.retryAfterSeconds<=60);
+    await assert.rejects(fcm.fcmTestNotification.run({auth:auth('alice'),data:{deviceId:'f'.repeat(32)}}),error=>error.details?.reason==='FCM_DEVICE_MISSING');
     const {deliverDevice}=await import('../firebase/functions/delivery.mjs');let sent=0;
     const record={token:fcmData.token,updatedAt:Date.now(),enabled:true};
     assert.equal(await deliverDevice(coldRef,record,'morning','2026-11-17',{send:async()=>sent++}),'sent');

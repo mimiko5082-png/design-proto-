@@ -1,5 +1,5 @@
 importScripts("./firebase-messaging-sw.js");
-const CACHE_NAME = "basho-manazashi-fcm3-feedback";
+const CACHE_NAME = "basho-manazashi-fcm4-diagnostics";
 const APP_SHELL = [
   "./",
   "./index.html",
