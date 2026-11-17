@@ -48,14 +48,15 @@ def context(browser,init=''):
  ctx.route('**/test-db*',api)
  for name,code in [('firebase-app',APP),('firebase-auth',AUTH),('firebase-database',DB)]:
   ctx.route(f'https://www.gstatic.com/firebasejs/**/{name}.js',lambda route,request,code=code:route.fulfill(content_type='text/javascript',body=code))
- ctx.route('**/join-test*',lambda route:route.fulfill(content_type='text/html',body='<link rel="stylesheet" href="/basho-styles.css"><script src="/firebase-friends-config.js"></script><script type="module" src="/public-feed.js?v=77"></script><basho-public-feed></basho-public-feed>'))
+ ctx.route('**/join-test*',lambda route:route.fulfill(content_type='text/html',body='<link rel="stylesheet" href="/basho-styles.css"><script src="/firebase-friends-config.js"></script><script>window.inviteRoutes=[];for(const name of ["basho-show-posts","basho-show-calendar"])window.addEventListener(name,()=>window.inviteRoutes.push(name));</script><script type="module" src="/friends-bootstrap.js"></script><script type="module" src="/public-feed.js?v=77"></script><basho-public-feed></basho-public-feed>'))
  return ctx
 try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH') or None,args=['--no-sandbox'])
   base=f'http://127.0.0.1:{server.server_port}';errors=[]
   safari=context(browser);page=safari.new_page();page.on('pageerror',lambda error:errors.append(str(error)))
-  page.goto(base+'/join-test#invite='+TOKEN,wait_until='networkidle')
+  page.goto(base+'/join-test?calendar=shared#invite='+TOKEN,wait_until='networkidle')
+  assert page.evaluate('window.inviteRoutes')==['basho-show-posts']
   page.get_by_role('button',name='この招待で参加する',exact=True).click()
   expect(page.locator('.friend-status')).to_contain_text('友達とつながりました')
   assert data['userGroups/alice']=={'groupId':GROUP}

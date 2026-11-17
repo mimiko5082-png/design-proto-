@@ -85,6 +85,10 @@ try:
   expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
   expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_have_count(0)
   expect(page.get_by_role('button',name='カレンダーの招待リンクを作る',exact=True)).to_have_count(0)
+  expect(page.get_by_role('button',name='友達の招待リンクを作る',exact=True)).to_have_count(0)
+  expect(page.locator('[data-public-action=join], [data-public-action=create-group], [data-invite-input]')).to_have_count(0)
+  page.evaluate("document.addEventListener('click',event=>{if(event.target.closest('[data-nav=friends]'))document.querySelector('basho-public-feed').replaceWith(document.createElement('basho-public-feed'));});")
+  page.get_by_role('button',name='友達の招待・参加を開く',exact=True).click()
   page.get_by_role('button',name='友達の招待リンクを作る',exact=True).click()
   expect(page.get_by_role('textbox',name='招待リンク',exact=True)).to_have_value(base+'/members-test#invite=test-invite')
   assert page.evaluate('window.inviteArgs.length')==0
