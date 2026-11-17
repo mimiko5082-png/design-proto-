@@ -54,6 +54,7 @@ try:
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿しています…')
+  page.wait_for_function('typeof window.releasePublish==="function"')
   page.evaluate('document.querySelector("[data-haiku-action=save]").click();window.releasePublish()')
   expect(page.locator('.post-complete-dialog h2')).to_have_text('写真を友達に共有しました！')
   assert len(attempts)==1
