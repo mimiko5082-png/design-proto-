@@ -48,10 +48,10 @@ try:
   caption='<帰り道> & 小さな光を見つけた。'
   page.locator('[data-photo-caption]').fill(caption)
   page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('.post-complete-dialog')).to_be_visible()
-  page.locator('.post-later').click()
+  expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
+  expect(page.locator('.post-complete-dialog')).to_have_count(0)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('.photo-capture-preview-note')).to_have_count(0)
   expect(page.locator('[data-photo-note]')).to_have_count(0)
   original=page.locator('basho-haiku .haiku-photo').get_attribute('src')
@@ -70,7 +70,7 @@ try:
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',original)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
   expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
   replacement=page.locator('basho-haiku .haiku-photo').get_attribute('src')
@@ -88,7 +88,7 @@ try:
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',replacement)
   expect(page.locator('[data-day="2026-10-27"] .calendar-day-photo')).to_have_attribute('src',replacement)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
   # The normal single-file preview now requires Firebase for friends sharing.
   # Offline, local photos remain readable and the login control stays available.

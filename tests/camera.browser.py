@@ -24,6 +24,7 @@ try:
   context=browser.new_context(viewport={'width':390,'height':844},permissions=['camera'])
   page=context.new_page();errors=[];external=[]
   page.on('pageerror',lambda error:errors.append(str(error)))
+  page.route('https://**/*',lambda route:route.abort())
   origin=f'http://127.0.0.1:{server.server_port}'
   page.on('request',lambda req:external.append(req.url) if req.url.startswith(('http://','https://')) and not req.url.startswith(origin+'/') else None)
   page.add_init_script("""window.cameraCalls=0;window.cameraTracks=[];
@@ -88,10 +89,10 @@ try:
   page.locator('[data-photo-caption]').fill('いつもの道の光がきれい。')
   assert page.locator('basho-haiku').evaluate('(node)=>node.caption')=='いつもの道の光がきれい。'
   page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('.post-complete-dialog')).to_be_visible()
-  page.locator('.post-later').click()
+  expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
+  expect(page.locator('.post-complete-dialog')).to_have_count(0)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   assert page.locator('basho-haiku').evaluate('(node)=>node.card.caption')=='いつもの道の光がきれい。'
   saved=page.locator('basho-haiku .haiku-photo').get_attribute('src')
   # A missing requested lens reports failure instead of silently using the other lens.
@@ -126,9 +127,10 @@ try:
   expect(page.locator('.local-calendar-photo')).to_have_count(1)
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text('いつもの道の光がきれい。')
   page.locator('.tabbar [data-nav=friends]').click()
-  expect(page.locator('.friend-own-caption')).to_have_text('いつもの道の光がきれい。')
+  expect(page.locator('.friend-own-caption')).to_have_count(0)
+  expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
   assert not errors,errors
-  assert not external,external
+  assert all(url.startswith('https://www.gstatic.com/firebasejs/') for url in external),external
   browser.close()
   print('PASS: direct camera opening, rear preference, capture, retake/cancel, permission denial, stale grant and navigation track cleanup; no uploads')
 finally:server.shutdown()

@@ -25,6 +25,7 @@ try:
   context=browser.new_context(viewport={'width':390,'height':844})
   page=context.new_page(); errors=[];external=[]
   page.on('pageerror',lambda error:errors.append(str(error)))
+  page.route('https://**/*',lambda route:route.abort())
   base=f'http://127.0.0.1:{server.server_port}'
   page.on('request',lambda req:external.append(req.url) if req.url.startswith(('http://','https://')) and not req.url.startswith(base+'/') else None)
   page.clock.install(time=datetime(2026,10,27,3,0,tzinfo=timezone.utc))
@@ -37,22 +38,22 @@ try:
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('.post-complete-dialog')).to_be_visible()
-  page.locator('.post-later').click()
+  expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
+  expect(page.locator('.post-complete-dialog')).to_have_count(0)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.local-calendar-photo')).to_contain_text(opening)
   page.reload(wait_until='networkidle')
   expect(page.locator('.local-calendar-photo')).to_have_count(1)
   page.locator('.tabbar [data-nav=home]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('今日の写真を保存済み')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
 
   assert page.evaluate('async()=> (await navigator.serviceWorker.getRegistrations()).length')==0
-  assert not external,external
+  assert all(url.startswith('https://www.gstatic.com/firebasejs/') for url in external),external
   assert not errors,errors
   browser.close()
-  print('PASS: built preview, modern prompt, photo, daily limit, save, calendar, reload; zero external requests and no service worker')
+  print('PASS: built preview, modern prompt, photo, daily limit, save, calendar, reload; external requests blocked and no service worker')
 finally:
  server.shutdown()

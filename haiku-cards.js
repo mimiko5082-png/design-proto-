@@ -41,7 +41,7 @@ class HaikuCards extends HTMLElement {
     this.day = japanDay(); this.topic = dailyTopic(this.day);
     this.caption = '';
     this.reflection = ''; this.noteEdited = false; this.showHint = false; this.noteOpen = false; this.restoring = true;
-    this.busy = false; this.message = ''; this.error = ''; this.selection = 0;
+    this.busy = false; this.message = ''; this.error = ''; this.selection = 0; this.posting=false;this.shared=false;this.shareFailed=false;this.publishError='';
     this.cameraFacing = 'environment'; this.cameraSession = 0; this.cameraStream = null; this.cameraOpening = false; this.cameraReady = false;
     this.onDayCheck = () => this.refreshDay();
     this.dayTimer = setInterval(this.onDayCheck, 1000);
@@ -99,7 +99,7 @@ class HaikuCards extends HTMLElement {
     this.stopCamera(); this.cameraError = '';
     this.selection++;
     this.day = day; this.topic = dailyTopic(day); this.showHint = false; this.noteOpen = false; this.restoring = true;
-    this.card = null; this.image = null; this.caption = ''; this.reflection = ''; this.noteEdited = false; this.saved = false; this.busy = false; this.error = ''; this.shareFailed=false; this.publishError='';
+    this.card = null; this.image = null; this.caption = ''; this.reflection = ''; this.noteEdited = false; this.saved = false; this.busy = false; this.error = ''; this.posting=false;this.shared=false; this.shareFailed=false; this.publishError='';
     this.message = '新しい日になりました。今日のお題に切り替わりました。昨日までの保存済み写真はカレンダーに残っています。';
     this.render(); this.restore();
     window.dispatchEvent(new Event('basho-reading-updated'));
@@ -232,24 +232,25 @@ class HaikuCards extends HTMLElement {
     try {
       const result=await publishCard(card);
       if(!this.isConnected || card.day!==this.day) return !!result;
-      this.shareFailed=false; this.publishError='';
+      this.shared=!!result;this.shareFailed=!result; this.publishError=result?'':'写真はこの端末に保存しました。友達への投稿はまだです。ログインして、もう一度投稿してください。';
       if(result) { this.message='参加している友達に写真を共有しました。'; window.dispatchEvent(new Event('basho-sharing-updated')); }
       else this.message='この端末に保存しました。写真は公開していません。';
       return !!result;
     }catch(error){
       if(!this.isConnected || card.day!==this.day) return false;
-      this.shareFailed=true;
+      this.shared=false;this.shareFailed=true;
       this.publishError=`この端末には保存済みですが、写真の公開結果を確認できません。${error.message}`;
       return false;
     }
   }
   async save() {
-    if (this.busy || this.restoring || this.cameraStream || this.cameraOpening || !this.image || (this.saved && !this.hasPendingChanges() && !this.shareFailed)) return;
+    if (this.busy || this.restoring || this.cameraStream || this.cameraOpening || !this.image || (this.saved && !this.hasPendingChanges() && !this.canPostSaved())) return;
     if (this.refreshDay()) return;
     const revision = this.selection;
-    this.busy = true; this.error = ''; this.render();
+    this.busy = true;this.posting=true; this.error = ''; this.render();
     try {
       if (this.saved) {
+        if(!this.hasPendingChanges()){await this.publishSavedCard(this.card);return;}
         const updated = await replaceCardPhoto(this.card.id, this.image, this.reflection, this.caption);
         window.dispatchEvent(new Event('basho-reading-updated'));
         if (revision !== this.selection || !this.isConnected) return;
@@ -274,25 +275,29 @@ class HaikuCards extends HTMLElement {
       this.message = added ? '今日の写真を保存しました。' : '今日の写真は保存済みです。';
       const published=await this.publishSavedCard(this.card);
       if(revision!==this.selection || !this.isConnected)return;
-      if(added && (window.BASHO_PHOTO_PREVIEW || published)) openPostCompletion(this.card,{published});
+      if(added && (published || (window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey&&!window.BASHO_SHARING_DEMO))) openPostCompletion(this.card,{published});
       window.dispatchEvent(new Event('basho-reading-updated'));
     } catch { if (revision === this.selection) this.error = '保存できませんでした。空き容量やブラウザの保存設定を確認してください。'; }
-    finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
+    finally { if (revision === this.selection && this.isConnected) { this.busy = false;this.posting=false; this.render(); } }
   }
   hasPendingChanges() {
     return !!this.saved && (this.image !== this.card.image || this.caption.trim() !== (this.card.caption || ''));
   }
+  canPostSaved() {
+    return this.shareFailed || (!this.shared && (!window.BASHO_PHOTO_PREVIEW || !!window.BASHO_FRIENDS_FIREBASE?.apiKey || window.BASHO_SHARING_DEMO));
+  }
   saveLabel() {
+    if(this.posting)return '投稿しています…';
     if(this.shareFailed) return '公開を再試行する';
     if (!this.saved) return '投稿する';
-    if (!this.hasPendingChanges()) return '今日の写真を保存済み';
+    if (!this.hasPendingChanges()) return this.shared?'友達に投稿済み':this.canPostSaved()?'友達に投稿する':'今日の写真を保存済み';
     return '投稿する';
   }
   paintDraftControls() {
     const pending = this.hasPendingChanges();
     const save = this.querySelector('[data-haiku-action="save"]');
     save.textContent = this.saveLabel();
-    save.disabled = !this.image || this.busy || this.cameraStream || this.cameraOpening || (this.saved && !pending && !this.shareFailed);
+    save.disabled = !this.image || this.busy || this.cameraStream || this.cameraOpening || (this.saved && !pending && !this.canPostSaved());
     for (const node of this.querySelectorAll('[data-pending-edit]')) node.hidden = !pending;
   }
   render() {
@@ -304,7 +309,7 @@ class HaikuCards extends HTMLElement {
     <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><span class="photo-edition" aria-hidden="true">BASHO <i></i> DAILY FRAME</span><small>${esc(this.topic.original || this.topic.lines.join(''))}</small><p class="photo-modern">${esc(this.topic.modern)}</p><div class="photo-topic-options"><button type="button" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint">${this.showHint?'ヒントを閉じる':'ヒントを見る'}</button></div><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
     <time class="capture-date">${esc(this.saved?postDate(this.card):postDate({day:this.day,createdAt:Date.now()}))}</time>
     ${this.image?`<label class="photo-caption-field"><small>もう一言だけ</small><textarea data-photo-caption rows="2" maxlength="120" aria-label="写真にひとこと（任意）" placeholder="見つけたことを、ひとこと。" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>${esc(this.caption)}</textarea></label>`:`<button type="button" data-haiku-action="camera" class="photo-capture-empty" ${this.busy||this.restoring?'disabled':''}><span class="camera-shutter" aria-hidden="true"></span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'タップしてカメラを開く'}</strong></button>`}
-    <div class="photo-capture-actions" ${this.image?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||this.cameraStream||this.cameraOpening||(this.saved&&!pending&&!this.shareFailed)?'disabled':''}>${this.saveLabel()}</button></div>
+    <div class="photo-capture-actions" ${this.image?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy||this.cameraStream||this.cameraOpening?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!this.image||this.busy||this.cameraStream||this.cameraOpening||(this.saved&&!pending&&!this.canPostSaved())?'disabled':''}>${this.saveLabel()}</button></div>
     <div class="capture-extra-actions"><button type="button" data-nav="calendar" aria-label="自分の記録を開く">▦</button><button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える">↻</button></div>
     </div>
     <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
