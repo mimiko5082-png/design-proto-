@@ -50,6 +50,14 @@ export async function friendsServerNow(session, clock=Date.now){
 export async function readFriendsMembership(session, group, uid){
   return (await session.dbSDK.get(session.dbSDK.ref(session.db,`groups/${group}/members/${uid}`))).exists();
 }
+export async function readFriendsMembers(session, group, uid){
+  const snapshot=await session.dbSDK.get(session.dbSDK.ref(session.db,`groups/${group}/members`));
+  return Object.entries(snapshot.val()||{}).map(([id,member])=>({
+    name:typeof member?.name==='string'?member.name:'友達',
+    joinedAt:typeof member?.joinedAt==='number' && Number.isFinite(member.joinedAt) && member.joinedAt>0 && member.joinedAt<=8640000000000000?member.joinedAt:null,
+    own:id===uid,
+  })).sort((a,b)=>(a.joinedAt??Infinity)-(b.joinedAt??Infinity)||a.name.localeCompare(b.name,'ja'));
+}
 async function requireFriendsMembership(session){
   const group=friendsGroup();
   if(!group)throw new FriendsError('招待リンクで参加するか、友達のグループを作成してください。');
@@ -100,6 +108,10 @@ export async function firebaseSharingAPI(action,data={}){
     const {ref,get,set,remove,query,orderByChild,equalTo}=s.dbSDK,base=`groups/${group}`,uid=currentUser.uid,day=japanDay();
     const photoPath=`${base}/photos/${data.photoId}`;
     const decorate=post=>({...post,own:post.author===uid,original:(topicById(post.topicId)||dailyTopic(post.day)).original,modern:(topicById(post.topicId)||dailyTopic(post.day)).modern,lines:(topicById(post.topicId)||dailyTopic(post.day)).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
+    if(action==='members'){
+      await requireFriendsMembership(s);
+      return {members:await readFriendsMembers(s,group,uid)};
+    }
     if(action==='calendar'){
       await requireFriendsMembership(s);
       const result=await readSharedCalendar(s,group,data.month,data.cursor);

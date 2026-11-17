@@ -36,6 +36,15 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertSucceeds(get(ref(bob,`invites/${token}`)));
     await assertSucceeds(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time(),invite:token}));
     await assertSucceeds(get(ref(bob,'groups/friends')));
+    const {readFriendsMembers}=await import('../firebase-friends.js');
+    const members=await readFriendsMembers({db:bob,dbSDK:{ref,get}},'friends','bob');
+    assert.equal(members.length,2);
+    assert.ok(members.some(member=>member.name==='Bob'&&member.own));
+    assert.ok(members.some(member=>member.name==='Alice'&&!member.own));
+    assert.ok(members.every(member=>!('invite' in member)));
+    await assertFails(readFriendsMembers({db:eve,dbSDK:{ref,get}},'friends','eve'));
+    await assertFails(readFriendsMembers({db:anon,dbSDK:{ref,get}},'friends','anon'));
+    await assertFails(readFriendsMembers({db:password,dbSDK:{ref,get}},'friends','password'));
     await assertSucceeds(set(ref(bob,`invites/${other}`),{groupId:'friends',owner:'bob',expiresAt:time()+86400000}));
     await assertFails(set(ref(eve,`invites/${'e'.repeat(64)}`),{groupId:'friends',owner:'eve',expiresAt:time()+86400000}));
     await env.withSecurityRulesDisabled(async c=>set(ref(c.database(),`invites/${expired}`),{groupId:'friends',owner:'alice',expiresAt:time()-1}));
@@ -43,6 +52,7 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertFails(set(ref(eve,'groups/friends/members/eve'),{name:'Eve',joinedAt:time(),invite:'f'.repeat(64)}));
     await assertFails(set(ref(bob,'groups/friends/members/eve'),{name:'Eve',joinedAt:time(),invite:token}));
     await assertSucceeds(set(ref(alice,'groups/other'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()}}}));
+    await assertFails(readFriendsMembers({db:bob,dbSDK:{ref,get}},'other','bob'));
     await assertFails(set(ref(eve,'groups/other/members/eve'),{name:'Eve',joinedAt:time(),invite:token}));
     const path='groups/friends/photos/2026-11-16_alice';
     const photo={author:'alice',name:'Alice',createdAt:time(),day:'2026-11-16',topicId:'test-topic',caption:'光',image:'data:image/png;base64,AAAA'};
