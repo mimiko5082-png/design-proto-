@@ -132,6 +132,19 @@
       ".indexOn": [
         "uid"
       ]
+    },
+    "userGroups": {
+      "$uid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid && (!newData.exists() || root.child('groups').child(newData.child('groupId').val()).child('members').child(auth.uid).exists())",
+        ".validate": "newData.hasChildren(['groupId'])",
+        "groupId": {
+          ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{1,100}$/)"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }

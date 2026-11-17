@@ -3854,3 +3854,12 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .shared-selected-date { margin:18px; font-size:18px; }
 .reading-mode-calendar .public-feed .feed-heading h1 { font-size:22px; }
 .reading-mode-calendar .public-feed .reading-error { color:#692d1e; }
+
+.friends-join { margin: 18px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-light); color: var(--ink); }
+.friends-join h2 { margin: 0 0 12px; font-size: 19px; }
+.friends-join p { font-size: 13px; line-height: 1.8; }
+.friends-join label { display: block; font-size: 13px; }
+.friends-join input { display: block; width: 100%; box-sizing: border-box; min-width: 0; padding: 12px; margin: 8px 0 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #16271c; font: inherit; }
+.friends-join .main-button { width: 100%; }
+.friends-create-group { margin: 12px 18px; font-size: 12px; }
+.friends-create-group summary { padding: 10px 0; cursor: pointer; }

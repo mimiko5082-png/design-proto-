@@ -1,5 +1,5 @@
 importScripts("./firebase-messaging-sw.js");
-const CACHE_NAME = "basho-manazashi-fcm1";
+const CACHE_NAME = "basho-manazashi-fcm2-invites";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,6 +24,8 @@ const APP_SHELL = [
   "./firebase-friends.js",
   "./sharing-calendar.js",
   "./friends-bootstrap.js",
+  "./friends-membership.js",
+  "./friends-invites.js",
   "./legacy-sharing-client.js",
   "./friend-reactions.js",
   "./photo-sharing.js",

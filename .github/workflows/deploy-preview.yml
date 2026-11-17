@@ -58,6 +58,7 @@ jobs:
           python3 -m playwright install --with-deps chromium
           python3 tests/shared-calendar.browser.py
           python3 tests/friends-members.browser.py
+          python3 tests/friends-pwa.browser.py
           python3 tests/photo-auto-sharing.browser.py
           python3 tests/fcm.browser.py
       - name: Initial setup is still needed

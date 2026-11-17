@@ -2,14 +2,16 @@ import { sharedPhotoDay, readSharedCalendar } from './sharing-calendar.js?v=76';
 import { REACTIONS } from './friend-reactions.js';
 import { japanDay } from './reading-store.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
-const GROUP_KEY='basho_firebase_friends_group_v1';
+import {GROUP_KEY,restoreFriendsGroup,syncFriendsGroup} from './friends-membership.js';
+import {readPendingInvite,rememberInvite,forgetInvite} from './friends-invites.js';
 let sessionPromise, currentUser=null, ready=false;
 export class FriendsError extends Error {}
 const changed=()=>window.dispatchEvent(new Event('basho-sharing-updated'));
 export function friendsProfile(){return currentUser?{id:currentUser.uid,name:currentUser.displayName||'友達',confirmed:true}:null;}
 export function friendsGroup(){return currentUser?(localStorage.getItem(`${GROUP_KEY}:${currentUser.uid}`)||''):'';}
 export function friendsConfigured(){const c=window.BASHO_FRIENDS_FIREBASE;return c?.projectId==='basho-friends' && !!c.apiKey && !!c.appId && /^https:\/\/basho-friends[-a-z0-9]*\.asia-southeast1\.firebasedatabase\.app\/?$/.test(c.databaseURL||'') && c.authDomain==='basho-friends.firebaseapp.com';}
-export function pendingInvite(){const p=new URLSearchParams(location.hash.slice(1));return p.get('invite')||'';}
+export function pendingInvite(){return readPendingInvite(location.href,localStorage);}
+export function stageFriendsInvite(value){const token=rememberInvite(value,location.href,localStorage);if(!token)throw new FriendsError('友達から届いた招待リンクを、そのまま貼り付けてください。');const url=new URL(location.href);url.hash=new URLSearchParams({invite:token}).toString();history.replaceState(null,'',url.href);changed();return token;}
 export async function friendsSession(){
   if(!friendsConfigured())throw new FriendsError('Firebaseの接続設定待ちです。basho-friends のWebアプリ設定を登録後に利用できます。');
   if(!sessionPromise)sessionPromise=(async()=>{
@@ -17,8 +19,12 @@ export async function friendsSession(){
     const [appSDK,authSDK,dbSDK]=await Promise.all(['firebase-app.js','firebase-auth.js','firebase-database.js'].map(file=>import(/* @vite-ignore */base+file)));
     const app=appSDK.initializeApp(window.BASHO_FRIENDS_FIREBASE,'basho-friends');
     const auth=authSDK.getAuth(app),db=dbSDK.getDatabase(app);
-    await new Promise((resolve,reject)=>{authSDK.onAuthStateChanged(auth,user=>{currentUser=user;window.dispatchEvent(new Event('basho-auth-changed'));resolve();if(ready)changed();},reject);});
-    ready=true;return {auth,db,authSDK,dbSDK};
+    const session={auth,db,authSDK,dbSDK};
+    await new Promise((resolve,reject)=>{authSDK.onAuthStateChanged(auth,user=>{currentUser=user;window.dispatchEvent(new Event('basho-auth-changed'));
+      const restore=user?restoreFriendsGroup(session,user.uid,localStorage,()=>currentUser?.uid===user.uid):Promise.resolve('');
+      restore.catch(()=>{}).finally(()=>{resolve();if(ready)changed();});
+    },reject);});
+    ready=true;return session;
   })().catch(error=>{sessionPromise=null;throw error;});
   return sessionPromise;
 }
@@ -27,13 +33,15 @@ export async function friendsSignIn(){
   if(!currentUser){const provider=new s.authSDK.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});await s.authSDK.signInWithPopup(s.auth,provider);currentUser=s.auth.currentUser;}
   changed();return true;
 }
+export async function refreshFriendsGroup(){const s=await friendsSession(),uid=currentUser?.uid;if(!uid)return;const before=friendsGroup();await restoreFriendsGroup(s,uid,localStorage,()=>currentUser?.uid===uid);if(currentUser?.uid===uid&&before!==friendsGroup())changed();}
 export async function friendsSignOut(){const s=await friendsSession();await s.authSDK.signOut(s.auth);currentUser=null;changed();}
 async function authorized(){const s=await friendsSession();if(!currentUser)throw new FriendsError('Googleでログインしてください。');return s;}
 const key=()=>crypto.randomUUID().replaceAll('-','');
 export async function createFriendsGroup(){
-  const s=await authorized(),id=key();
-  await s.dbSDK.set(s.dbSDK.ref(s.db,`groups/${id}`),{owner:currentUser.uid,createdAt:s.dbSDK.serverTimestamp(),members:{[currentUser.uid]:{name:currentUser.displayName||'友達',joinedAt:s.dbSDK.serverTimestamp()}}});
-  localStorage.setItem(`${GROUP_KEY}:${currentUser.uid}`,id);changed();return id;
+  const s=await authorized(),id=key(),uid=currentUser.uid,name=currentUser.displayName||'友達';
+  await s.dbSDK.set(s.dbSDK.ref(s.db,`groups/${id}`),{owner:uid,createdAt:s.dbSDK.serverTimestamp(),members:{[uid]:{name,joinedAt:s.dbSDK.serverTimestamp()}}});
+  if(currentUser?.uid!==uid)throw new FriendsError('ログイン中のアカウントが変わりました。もう一度操作してください。');
+  localStorage.setItem(`${GROUP_KEY}:${uid}`,id);await syncFriendsGroup(s,uid,id);changed();return id;
 }
 export async function friendsServerNow(session, clock=Date.now){
   // .info values live in the SDK's local information tree, not normal database data.
@@ -69,7 +77,7 @@ async function requireFriendsMembership(session){
   }
   if(!member){
     localStorage.removeItem(`${GROUP_KEY}:${currentUser.uid}`);
-    throw new FriendsError('この端末に保存されていたグループの参加情報が見つかりません。グループを作成し直すか、友達の招待リンクから参加してください。');
+    throw new FriendsError('この端末の参加情報を確認できません。招待された方は、新しいグループを作らず、このアプリ内に友達の招待リンクを貼り付けて参加してください。');
   }
   return group;
 }
@@ -84,13 +92,18 @@ export async function createFriendsInvite(){
   const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
 }
 export async function joinFriendsGroup(){
-  const s=await authorized(),token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');
-  const snap=await s.dbSDK.get(s.dbSDK.ref(s.db,`invites/${token}`)),invite=snap.val();
+  const s=await authorized(),uid=currentUser.uid,name=currentUser.displayName||'友達',token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');
+  let snap;try{snap=await s.dbSDK.get(s.dbSDK.ref(s.db,`invites/${token}`));}
+  catch(error){if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('招待リンクを確認できません。期限切れの場合は、友達に新しい招待リンクを作ってもらってください。');throw error;}
+  const invite=snap.val();
   if(!invite || invite.expiresAt<=await friendsServerNow(s))throw new FriendsError('招待リンクの期限が切れています。新しいリンクを送ってもらってください。');
-  const member=s.dbSDK.ref(s.db,`groups/${invite.groupId}/members/${currentUser.uid}`);
+  const member=s.dbSDK.ref(s.db,`groups/${invite.groupId}/members/${uid}`);
   const existing=await s.dbSDK.get(member);
-  if(!existing.exists())await s.dbSDK.set(member,{name:currentUser.displayName||'友達',joinedAt:s.dbSDK.serverTimestamp(),invite:token});
-  localStorage.setItem(`${GROUP_KEY}:${currentUser.uid}`,invite.groupId);history.replaceState(null,'',location.pathname+location.search);changed();
+  if(currentUser?.uid!==uid)throw new FriendsError('ログイン中のアカウントが変わりました。もう一度参加してください。');
+  if(!existing.exists())await s.dbSDK.set(member,{name,joinedAt:s.dbSDK.serverTimestamp(),invite:token});
+  if(currentUser?.uid!==uid)throw new FriendsError('ログイン中のアカウントが変わりました。もう一度参加してください。');
+  localStorage.setItem(`${GROUP_KEY}:${uid}`,invite.groupId);const synced=await syncFriendsGroup(s,uid,invite.groupId);
+  forgetInvite(localStorage,token);const url=new URL(location.href);url.hash='';url.searchParams.delete('invite');history.replaceState(null,'',url.href);changed();return {synced};
 }
 export function friendlyError(error){
   if(error instanceof FriendsError)return error;

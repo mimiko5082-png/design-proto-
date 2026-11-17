@@ -16,6 +16,7 @@ export const friendlyError=e=>e;
 export const friendsProfile=()=>({id:'me',name:'自分',confirmed:true});
 export const friendsGroup=()=> 'test-group';
 export const friendsSession=async()=>({});
+export const stageFriendsInvite=()=>{};
 export const pendingInvite=()=>'';
 export const friendsSignIn=async()=>!window.cancelSignIn;
 export const friendsSignOut=async()=>{};

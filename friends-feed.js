@@ -1,4 +1,4 @@
-import './public-feed.js?v=76';
+import './public-feed.js?v=77';
 import { postcardMarkup } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';

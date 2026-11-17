@@ -17,6 +17,7 @@ window.testMembers=[{name:'自分',joinedAt:Date.parse('2026-11-16T16:00:00Z'),o
 export const friendsProfile=()=>window.testUser;
 export const friendsGroup=()=>window.testUser&&window.testJoined?'test-group':'';
 export const friendsSession=async()=>({});
+export const stageFriendsInvite=value=>{const url=new URL(location.href);url.hash='invite=test-invite';history.replaceState(null,'',url.href);};
 export const pendingInvite=()=>location.hash.includes('invite=')?'test-invite':'';
 export const friendlyError=e=>e;
 export const friendsSignIn=async()=>true;

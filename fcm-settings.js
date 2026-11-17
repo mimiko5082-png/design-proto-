@@ -1,9 +1,9 @@
-import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=76';
+import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=77';
 import {notificationEnvironment,notificationError,fcmSession,refreshFcmDevice,enableFcm,disableFcm,startFcmReceiver} from './fcm-service.js';
 class FcmSettings extends HTMLElement{
   connectedCallback(){
     this.revision=0;this.enabled=false;this.registered=false;this.busy=false;this.session=null;
-    this.innerHTML=`<section class="place-attach daily-notifications" aria-label="プッシュ通知の設定"><h2>写真のお題をプッシュ通知</h2><p>毎日8:00と23:50（日本時間）にお知らせします。アプリを閉じていても受信できます。</p><p>iPhone・iPadでは、Safariの共有メニューから「ホーム画面に追加」し、そのアイコンから開いてください（iOS/iPadOS 16.4以降）。</p><p>端末の省電力設定・集中モードや通信状況により、配信が遅れる場合があります。</p><p data-fcm-status role="status" aria-live="polite">通知設定を確認しています…</p><button class="outline-button" data-fcm-login hidden>Googleでログインする</button><button class="outline-button" data-fcm-enable disabled>通知を受け取る</button><button class="outline-button" data-fcm-disable hidden>この端末の通知を停止</button><button class="outline-button" data-fcm-test hidden>テスト通知を送る</button><button class="outline-button" data-fcm-retry>設定を再確認</button></section>`;
+    this.innerHTML=`<section class="place-attach daily-notifications" aria-label="プッシュ通知の設定"><h2>写真のお題をプッシュ通知</h2><p>毎日8:00と23:50（日本時間）にお知らせします。アプリを閉じていても受信できます。</p><p data-fcm-ios-help>iPhone・iPadでは、Safariの共有メニューから「ホーム画面に追加」し、そのアイコンから開いてください（iOS/iPadOS 16.4以降）。</p><p>端末の省電力設定・集中モードや通信状況により、配信が遅れる場合があります。</p><p data-fcm-status role="status" aria-live="polite">通知設定を確認しています…</p><button class="outline-button" data-fcm-login hidden>Googleでログインする</button><button class="outline-button" data-fcm-enable disabled>通知を受け取る</button><button class="outline-button" data-fcm-disable hidden>この端末の通知を停止</button><button class="outline-button" data-fcm-test hidden>テスト通知を送る</button><button class="outline-button" data-fcm-retry>設定を再確認</button></section>`;
     this.querySelector('[data-fcm-enable]').onclick=()=>this.enable();
     this.querySelector('[data-fcm-disable]').onclick=()=>this.disable();
     this.querySelector('[data-fcm-test]').onclick=()=>this.test();
@@ -27,6 +27,7 @@ class FcmSettings extends HTMLElement{
   async initialize(){
     const revision=++this.revision;this.busy=true;this.session=null;this.enabled=false;this.registered=false;
     this.unsupported=notificationEnvironment();
+    this.querySelector('[data-fcm-ios-help]').hidden=this.unsupported.includes('ホーム画面に追加');
     if(this.unsupported){this.busy=false;this.message(this.unsupported);this.paint();return;}
     this.message('通知設定を確認しています…');this.paint();
     try{

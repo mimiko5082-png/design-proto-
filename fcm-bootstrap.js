@@ -1,4 +1,4 @@
-import {friendsSession,friendsProfile} from './firebase-friends.js?v=76';
+import {friendsSession,friendsProfile} from './firebase-friends.js?v=77';
 import {fcmSession,refreshFcmDevice,startFcmReceiver,stopFcmReceiver,notificationEnvironment} from './fcm-service.js';
 let revision=0,busy=false,pending=false;
 async function initialize(){

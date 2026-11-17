@@ -55,6 +55,17 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertSucceeds(get(ref(bob,`invites/${token}`)));
     await assertSucceeds(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time(),invite:token}));
     await assertSucceeds(get(ref(bob,'groups/friends')));
+    await assertSucceeds(set(ref(alice,'userGroups/alice'),{groupId:'friends'}));
+    await assertSucceeds(set(ref(bob,'userGroups/bob'),{groupId:'friends'}));
+    assert.equal((await get(ref(alice,'userGroups/alice'))).val().groupId,'friends');
+    await assertFails(get(ref(bob,'userGroups/alice')));
+    await assertFails(get(ref(anon,'userGroups/alice')));
+    await assertFails(get(ref(password,'userGroups/alice')));
+    await assertFails(get(ref(alice,'userGroups')));
+    await assertFails(set(ref(bob,'userGroups/alice'),{groupId:'friends'}));
+    await assertFails(set(ref(eve,'userGroups/eve'),{groupId:'friends'}));
+    await assertFails(set(ref(alice,'userGroups/alice'),{groupId:'missing'}));
+    await assertFails(set(ref(alice,'userGroups/alice'),{groupId:'friends',extra:'no'}));
     const {readFriendsMembers}=await import('../firebase-friends.js');
     const members=await readFriendsMembers({db:bob,dbSDK:{ref,get}},'friends','bob');
     assert.equal(members.length,2);
@@ -72,6 +83,7 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertFails(set(ref(bob,'groups/friends/members/eve'),{name:'Eve',joinedAt:time(),invite:token}));
     await assertSucceeds(set(ref(alice,'groups/other'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()}}}));
     await assertFails(readFriendsMembers({db:bob,dbSDK:{ref,get}},'other','bob'));
+    await assertFails(set(ref(bob,'userGroups/bob'),{groupId:'other'}));
     await assertFails(set(ref(eve,'groups/other/members/eve'),{name:'Eve',joinedAt:time(),invite:token}));
     const path='groups/friends/photos/2026-11-16_alice';
     const photo={author:'alice',name:'Alice',createdAt:time(),day:'2026-11-16',topicId:'test-topic',caption:'光',image:'data:image/png;base64,AAAA'};

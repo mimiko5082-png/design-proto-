@@ -1,4 +1,4 @@
-import {friendsSession} from './firebase-friends.js?v=76';
+import {friendsSession} from './firebase-friends.js?v=77';
 import {notificationSupport,applicationKey} from './notification-service.js';
 const VERSION='12.11.0',KEY='basho_fcm_device_v1';
 export function notificationEnvironment(){
@@ -27,7 +27,7 @@ export async function fcmSession(){
   const [sdk,functionsSDK]=await Promise.all(['firebase-messaging.js','firebase-functions.js'].map(file=>import(/* @vite-ignore */`https://www.gstatic.com/firebasejs/${VERSION}/${file}`)));
   if(!await sdk.isSupported())throw Object.assign(new Error('Unsupported'),{code:'messaging/unsupported-browser'});
   const messaging=sdk.getMessaging(session.auth.app),functions=functionsSDK.getFunctions(session.auth.app,window.BASHO_FCM?.region||'asia-northeast1');
-  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm1',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
+  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=invite77',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
   await navigator.serviceWorker.ready;
   const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name)({deviceId:deviceID(),...data})).data;
   return {sdk,messaging,registration,call};

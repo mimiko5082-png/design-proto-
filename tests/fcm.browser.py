@@ -92,6 +92,12 @@ try:
   page.evaluate('window.fcmUser=null;window.dispatchEvent(new Event("basho-auth-changed"))')
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
   expect(enable).to_be_disabled()
+  # The iPhone installation instruction is shown once, with no permission request.
+  page.add_init_script("Object.defineProperty(navigator,'userAgent',{value:'iPhone'});Object.defineProperty(navigator,'standalone',{value:false});")
+  page.reload(wait_until='networkidle')
+  expect(page.locator('[data-fcm-status]')).to_contain_text('ホーム画面に追加')
+  expect(page.locator('[data-fcm-ios-help]')).to_be_hidden()
+  assert page.evaluate('window.permissionRequests')==0
   assert not errors,errors
   browser.close()
   print('FCM settings: consent, token/region/scope, migration, foreground display, test/stop, denial, retry, auth reset and mobile passed; no real FCM requests.')
