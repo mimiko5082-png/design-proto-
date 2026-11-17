@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {deliverDevice,sendScheduled,validRegistration,fcmMessage,japanDay,SCHEDULES,DEVICE_TTL,APP_URL} from '../firebase/functions/delivery.mjs';
 const token='test-token-'.repeat(8),now=Date.parse('2026-11-16T23:00:00Z');
-function memoryRef(record){let value=structuredClone(record);return {value:()=>structuredClone(value),async transaction(update){const result=update(structuredClone(value));if(result===undefined)return {committed:false,snapshot:{val:()=>value}};value=structuredClone(result);return {committed:true,snapshot:{val:()=>value}};}};}
+function memoryRef(record){let value=structuredClone(record);return {on(event,listener){queueMicrotask(listener);},off(){},value:()=>structuredClone(value),async transaction(update){const result=update(structuredClone(value));if(result===undefined)return {committed:false,snapshot:{val:()=>value}};value=structuredClone(result);return {committed:true,snapshot:{val:()=>value}};}};}
 const device=()=>({uid:'alice',token,enabled:true,updatedAt:now});
 test('FCM schedule is exactly 08:00 and 23:50 in Japan, independent of UTC midnight',()=>{
  assert.equal(SCHEDULES.morning.schedule,'0 8 * * *');assert.equal(SCHEDULES.night.schedule,'50 23 * * *');

@@ -24,9 +24,11 @@ export function onMessage(messaging,fn){window.receiveFcm=fn;return ()=>{window.
 '''
 FUNCTIONS='''
 export const getFunctions=(app,region)=>{window.functionRegion=region;return {app,region};};
-export const httpsCallable=(instance,name)=>async data=>{
+export const httpsCallable=(instance,name,options)=>async data=>{
+ window.callOptions=options;
+ if(name==='fcmTestNotification'&&window.holdTest)await new Promise(resolve=>window.releaseTest=resolve);
  window.calls.push({name,data});
- if(window.callError)throw {code:window.callError,message:'DO_NOT_SHOW_SECRET'};
+ if(window.callError)throw {code:window.callError,details:window.callDetails,message:'DO_NOT_SHOW_SECRET'};
  if(name==='fcmDeviceStatus')return {data:{enabled:window.serverEnabled||false}};
  if(name==='fcmRegisterDevice'){window.serverEnabled=true;return {data:{enabled:true}};}
  if(name==='fcmDisableDevice'){window.serverEnabled=false;return {data:{enabled:false}};}
@@ -37,7 +39,7 @@ INIT='''
 window.calls=[];window.notices=[];window.permissionValue='default';window.permissionRequests=0;
 window.Notification={get permission(){return window.permissionValue;},requestPermission(){window.permissionRequests++;window.permissionInGesture=navigator.userActivation.isActive;window.permissionValue=window.permissionResult||'granted';return Promise.resolve(window.permissionValue);}};
 window.PushManager=function(){};
-const registration={scope:location.origin+'/',pushManager:{getSubscription:async()=>window.oldSubscription||null},showNotification:async(title,options)=>{window.notices.push({title,options});}};
+const registration={scope:location.origin+'/',pushManager:{getSubscription:async()=>window.oldSubscription||null},showNotification:async(title,options)=>{if(window.failDisplay)throw new Error('Display unavailable');window.notices.push({title,options});}};
 Object.defineProperty(navigator,'serviceWorker',{value:{register:async(url,options)=>{window.workerURL=url;window.workerScope=options.scope;return registration;},ready:Promise.resolve(registration)}});
 '''
 try:
@@ -64,11 +66,29 @@ try:
   assert page.evaluate('window.functionRegion')=='asia-northeast1'
   assert page.evaluate('window.tokenOptions.vapidKey')==page.evaluate('window.BASHO_FCM.vapidKey')
   assert page.evaluate('window.calls.some(c=>c.name==="fcmRegisterDevice" && /^[a-f0-9]{32}$/.test(c.data.deviceId))')
+  page.evaluate('window.holdTest=true')
   page.get_by_role('button',name='テスト通知を送る',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('テスト通知を送信しています')
+  expect(page.get_by_role('button',name='送信中…',exact=True)).to_be_disabled()
+  page.wait_for_function('typeof window.releaseTest==="function"')
+  page.evaluate('window.releaseTest();window.holdTest=false')
   expect(page.locator('[data-fcm-status]')).to_contain_text('端末での受信を確認')
+  assert page.evaluate('window.callOptions.timeout')==15000
+  page.evaluate('window.callError="functions/deadline-exceeded"')
+  page.get_by_role('button',name='テスト通知を送る',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('15秒以内')
+  expect(page.get_by_role('button',name='テスト通知を送る',exact=True)).to_be_enabled()
+  page.evaluate('window.callError="functions/unavailable";window.callDetails={reason:"FCM_SERVER_PERMISSION"}')
+  page.get_by_role('button',name='テスト通知を送る',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('送信権限')
+  page.evaluate('window.callError="";window.callDetails=null')
   page.evaluate("window.receiveFcm({data:{title:'朝のお題',body:'お題を見よう',tag:'morning',url:'https://evil.example'}})")
+  expect(page.locator('[data-fcm-status]')).to_contain_text('この端末で通知を受信しました')
   assert page.evaluate('window.notices.length')==1
   assert page.evaluate('window.notices[0].options.data.url')==base+'/'
+  page.evaluate("window.failDisplay=true;window.receiveFcm({data:{title:'テスト',body:'表示失敗の確認'}})")
+  expect(page.locator('[data-fcm-status]')).to_contain_text('端末で表示できませんでした')
+  page.evaluate('window.failDisplay=false')
   page.get_by_role('button',name='この端末の通知を停止',exact=True).click()
   expect(page.locator('[data-fcm-status]')).to_contain_text('通知を停止しました')
   assert not page.evaluate('window.serverEnabled')

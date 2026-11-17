@@ -1,3 +1,4 @@
+import {withLiveDevice} from './live-device.mjs';
 export const APP_URL='https://mimiko5082-png.github.io/design-proto-/';
 export const SCHEDULES={morning:{schedule:'0 8 * * *',time:'08:00'},night:{schedule:'50 23 * * *',time:'23:50'}};
 export const DEVICE_TTL=90*86400000;
@@ -17,29 +18,31 @@ export function fcmMessage(token,kind,day){
 }
 export function terminalTokenError(error){return ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error?.code);}
 export async function deliverDevice(ref,record,kind,day,{send,clock=Date.now}){
-  const claimAt=clock();
-  const claimed=await ref.transaction(current=>{
-    if(!current?.enabled||current.token!==record.token||current.updatedAt<claimAt-DEVICE_TTL)return;
-    const last=current.deliveries?.[kind];
-    if(last?.day===day && (last.state==='sent'||last.state==='sending'&&last.at>claimAt-300000))return;
-    return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'sending',at:claimAt}}};
+  return withLiveDevice(ref,async()=>{
+    const claimAt=clock();
+    const claimed=await ref.transaction(current=>{
+      if(!current?.enabled||current.token!==record.token||current.updatedAt<claimAt-DEVICE_TTL)return;
+      const last=current.deliveries?.[kind];
+      if(last?.day===day && (last.state==='sent'||last.state==='sending'&&last.at>claimAt-300000))return;
+      return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'sending',at:claimAt}}};
+    });
+    if(!claimed.committed)return 'skipped';
+    try{
+      await send(fcmMessage(record.token,kind,day));
+      await ref.transaction(current=>{
+        if(!current||current.token!==record.token||current.deliveries?.[kind]?.at!==claimAt)return;
+        return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'sent',at:clock()}}};
+      });
+      return 'sent';
+    }catch(error){
+      await ref.transaction(current=>{
+        if(!current||current.token!==record.token||current.deliveries?.[kind]?.at!==claimAt)return;
+        if(terminalTokenError(error))return null;
+        return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'failed',at:clock()}}};
+      });
+      return terminalTokenError(error)?'expired':'failed';
+    }
   });
-  if(!claimed.committed)return 'skipped';
-  try{
-    await send(fcmMessage(record.token,kind,day));
-    await ref.transaction(current=>{
-      if(!current||current.token!==record.token||current.deliveries?.[kind]?.at!==claimAt)return;
-      return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'sent',at:clock()}}};
-    });
-    return 'sent';
-  }catch(error){
-    await ref.transaction(current=>{
-      if(!current||current.token!==record.token||current.deliveries?.[kind]?.at!==claimAt)return;
-      if(terminalTokenError(error))return null;
-      return {...current,deliveries:{...current.deliveries,[kind]:{day,state:'failed',at:clock()}}};
-    });
-    return terminalTokenError(error)?'expired':'failed';
-  }
 }
 export async function sendScheduled(db,send,kind,clock=Date.now,scheduledAt=clock()){
   const counts={sent:0,skipped:0,expired:0,failed:0},day=japanDay(scheduledAt);let after;
@@ -50,7 +53,7 @@ export async function sendScheduled(db,send,kind,clock=Date.now,scheduledAt=cloc
     for(let start=0;start<rows.length;start+=20){
       await Promise.all(rows.slice(start,start+20).map(async row=>{
         const record=row.val();
-        if(record.updatedAt<clock()-DEVICE_TTL){await row.ref.transaction(current=>current?.updatedAt<clock()-DEVICE_TTL?null:undefined);counts.expired++;return;}
+        if(record.updatedAt<clock()-DEVICE_TTL){await withLiveDevice(row.ref,()=>row.ref.transaction(current=>current?.updatedAt<clock()-DEVICE_TTL?null:undefined));counts.expired++;return;}
         const result=await deliverDevice(row.ref,record,kind,day,{send,clock});counts[result]++;
       }));
     }

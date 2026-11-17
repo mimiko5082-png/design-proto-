@@ -4,6 +4,7 @@ import {getMessaging} from 'firebase-admin/messaging';
 import {onCall,HttpsError} from 'firebase-functions/v2/https';
 import {onSchedule} from 'firebase-functions/v2/scheduler';
 import {setGlobalOptions} from 'firebase-functions/v2';
+import {withLiveDevice} from './live-device.mjs';
 import {validRegistration,fcmMessage,japanDay,sendScheduled,SCHEDULES,terminalTokenError} from './delivery.mjs';
 initializeApp({databaseURL:process.env.FIREBASE_DATABASE_URL||'https://basho-friends-default-rtdb.asia-southeast1.firebasedatabase.app'});
 setGlobalOptions({region:'asia-northeast1',maxInstances:3});
@@ -40,18 +41,23 @@ export const fcmDisableDevice=onCall(callable,async request=>{
 });
 export const fcmTestNotification=onCall(callable,async request=>{
   const {uid,deviceId}=identity(request),ref=db().ref(`fcmDevices/${deviceId}`),at=Date.now();
-  const claim=await ref.transaction(current=>{
-    if(!current?.enabled||current.uid!==uid||at-(current.testAt||0)<60000)return;
-    return {...current,testAt:at};
+  return withLiveDevice(ref,async()=>{
+    const claim=await ref.transaction(current=>{
+      if(!current?.enabled||current.uid!==uid||at-(current.testAt||0)<60000)return;
+      return {...current,testAt:at};
+    });
+    if(!claim.committed)throw new HttpsError('failed-precondition','通知を有効にしてからお試しください。テストは1分に1回までです。');
+    const record=claim.snapshot.val();
+    try{await messaging().send(fcmMessage(record.token,'test',japanDay()));}
+    catch(error){
+      if(terminalTokenError(error))await ref.transaction(current=>current?.token===record.token?null:undefined);
+      const code=/^[a-z-]+\/[a-z0-9-]+$/.test(error?.code||'')?error.code:'messaging/unknown-error';
+      console.warn('FCM test send failed',{code});
+      const reason=['messaging/authentication-error','messaging/mismatched-credential','messaging/sender-id-mismatch','app/invalid-credential'].includes(code)?'FCM_SERVER_PERMISSION':code==='messaging/third-party-auth-error'?'FCM_WEBPUSH_KEY':terminalTokenError(error)?'FCM_TOKEN_EXPIRED':'FCM_SEND_FAILED';
+      throw new HttpsError('unavailable','テスト通知を送信できませんでした。',{reason,code});
+    }
+    return {accepted:true};
   });
-  if(!claim.committed)throw new HttpsError('failed-precondition','通知を有効にしてからお試しください。テストは1分に1回までです。');
-  const record=claim.snapshot.val();
-  try{await messaging().send(fcmMessage(record.token,'test',japanDay()));}
-  catch(error){
-    if(terminalTokenError(error))await ref.transaction(current=>current?.token===record.token?null:undefined);
-    throw new HttpsError('unavailable','テスト通知を送信できませんでした。通知を登録し直してください。');
-  }
-  return {accepted:true};
 });
 async function daily(kind,event){
   // Use Scheduler's intended time, so retries after midnight do not use the next day.

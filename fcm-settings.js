@@ -9,11 +9,14 @@ class FcmSettings extends HTMLElement{
     this.querySelector('[data-fcm-test]').onclick=()=>this.test();
     this.querySelector('[data-fcm-retry]').onclick=()=>this.initialize();
     this.querySelector('[data-fcm-login]').onclick=async()=>{try{await friendsSignIn();await this.initialize();}catch(error){this.message(notificationError(error));}};
-    this.onAuth=()=>{++this.revision;this.session=null;this.enabled=false;this.registered=false;this.busy=false;this.paint();this.initialize();};
+    this.onAuth=()=>{++this.revision;this.session=null;this.enabled=false;this.registered=false;this.busy=false;this.testing=false;this.paint();this.initialize();};
     window.addEventListener('basho-auth-changed',this.onAuth);
+    this.onReceived=()=>{this.received=true;this.message('この端末で通知を受信しました。表示されない場合は、通知センターと端末の通知設定を確認してください。');};
+    this.onDisplayError=()=>{this.received=true;this.message('通知は届きましたが、端末で表示できませんでした。通知の許可を確認し、アプリを開き直して再試行してください。');};
+    window.addEventListener('basho-fcm-received',this.onReceived);window.addEventListener('basho-fcm-display-error',this.onDisplayError);
     this.initialize();
   }
-  disconnectedCallback(){++this.revision;window.removeEventListener('basho-auth-changed',this.onAuth);}
+  disconnectedCallback(){++this.revision;window.removeEventListener('basho-auth-changed',this.onAuth);window.removeEventListener('basho-fcm-received',this.onReceived);window.removeEventListener('basho-fcm-display-error',this.onDisplayError);}
   message(value){if(this.isConnected)this.querySelector('[data-fcm-status]').textContent=value;}
   paint(){
     if(!this.isConnected)return;
@@ -23,9 +26,10 @@ class FcmSettings extends HTMLElement{
     this.querySelector('[data-fcm-enable]').disabled=this.busy||!this.session||Notification.permission==='denied';
     this.querySelector('[data-fcm-disable]').hidden=!this.registered;
     this.querySelector('[data-fcm-test]').hidden=!this.enabled;
+    this.querySelector('[data-fcm-test]').textContent=this.testing?'送信中…':'テスト通知を送る';
   }
   async initialize(){
-    const revision=++this.revision;this.busy=true;this.session=null;this.enabled=false;this.registered=false;
+    const revision=++this.revision;this.testing=false;this.busy=true;this.session=null;this.enabled=false;this.registered=false;
     this.unsupported=notificationEnvironment();
     this.querySelector('[data-fcm-ios-help]').hidden=this.unsupported.includes('ホーム画面に追加');
     if(this.unsupported){this.busy=false;this.message(this.unsupported);this.paint();return;}
@@ -59,10 +63,10 @@ class FcmSettings extends HTMLElement{
     finally{if(revision===this.revision){this.busy=false;this.paint();}}
   }
   async test(){
-    if(this.busy||!this.enabled)return;const revision=this.revision;this.busy=true;this.paint();
-    try{await this.session.call('fcmTestNotification');if(revision===this.revision)this.message('FCMにテスト通知の送信を依頼しました。端末での受信を確認してください。');}
+    if(this.busy||!this.enabled)return;const revision=this.revision;this.busy=true;this.testing=true;this.received=false;this.message('テスト通知を送信しています…（最大15秒）');this.paint();
+    try{await this.session.call('fcmTestNotification');if(revision===this.revision&&!this.received)this.message('FCMにテスト通知の送信を依頼しました。端末での受信を確認してください。');}
     catch(error){if(revision===this.revision)this.message(notificationError(error));}
-    finally{if(revision===this.revision){this.busy=false;this.paint();}}
+    finally{if(revision===this.revision){this.busy=false;this.testing=false;this.paint();}}
   }
 }
 customElements.define('basho-fcm-settings',FcmSettings);

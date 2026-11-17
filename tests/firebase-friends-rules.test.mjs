@@ -39,6 +39,16 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     assert.equal(otherStatus.enabled,false);assert.equal(otherStatus.token,undefined);
     await assert.rejects(fcm.fcmDisableDevice.run({auth:auth('bob'),data:fcmData}),error=>error.code==='permission-denied');
     await assert.rejects(fcm.fcmRegisterDevice.run({auth:auth('bob'),data:{...fcmData,token:'other_emulator_token_'.repeat(8)}}),error=>error.code==='permission-denied');
+    // Separate Admin app instances reproduce cold Cloud Functions caches.
+    const requireAdmin=createRequire(new URL('../firebase/functions/package.json',import.meta.url));
+    const adminApp=requireAdmin('firebase-admin/app'),adminDB=requireAdmin('firebase-admin/database');
+    const cold=adminApp.initializeApp({projectId:'demo-basho-friends',databaseURL:process.env.FIREBASE_DATABASE_URL},'cold-fcm');
+    const coldRef=adminDB.getDatabase(cold).ref('fcmDevices/'+fcmData.deviceId);
+    const {deliverDevice}=await import('../firebase/functions/delivery.mjs');let sent=0;
+    const record={token:fcmData.token,updatedAt:Date.now(),enabled:true};
+    assert.equal(await deliverDevice(coldRef,record,'morning','2026-11-17',{send:async()=>sent++}),'sent');
+    assert.equal(await deliverDevice(coldRef,record,'morning','2026-11-17',{send:async()=>sent++}),'skipped');
+    assert.equal(sent,1);
     await fcm.fcmDisableDevice.run({auth:auth('alice'),data:fcmData});
     assert.equal((await fcm.fcmDeviceStatus.run({auth:auth('alice'),data:fcmData})).enabled,false);
     // .info belongs to the SDK-local tree: verify the actual SDK listener path.

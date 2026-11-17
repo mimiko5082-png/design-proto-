@@ -13,6 +13,10 @@ export function deviceID(){
 }
 export function notificationError(error){
   const code=String(error?.code||'');
+  if(error?.details?.reason==='FCM_SERVER_PERMISSION')return '通知サーバーの送信権限を確認する必要があります。管理者にこの表示を伝えてください。';
+  if(error?.details?.reason==='FCM_WEBPUSH_KEY')return 'Firebaseに登録したWeb Push公開鍵の確認が必要です。管理者にこの表示を伝えてください。';
+  if(error?.details?.reason==='FCM_TOKEN_EXPIRED')return 'この端末の通知登録が失効しています。通知を停止してから、もう一度登録してください。';
+  if(/deadline-exceeded/.test(code))return '15秒以内に送信結果を確認できませんでした。遅れて届く場合があります。1分待ってから再試行してください。';
   if(/permission-blocked|permission-default/.test(code))return '通知が許可されていません。端末・ブラウザの設定で通知を許可してください。';
   if(/unauthenticated/.test(code))return 'Googleでログインしてから通知を設定してください。';
   if(/resource-exhausted/.test(code))return '登録できる端末は10台までです。不要な端末の通知を停止してください。';
@@ -27,9 +31,9 @@ export async function fcmSession(){
   const [sdk,functionsSDK]=await Promise.all(['firebase-messaging.js','firebase-functions.js'].map(file=>import(/* @vite-ignore */`https://www.gstatic.com/firebasejs/${VERSION}/${file}`)));
   if(!await sdk.isSupported())throw Object.assign(new Error('Unsupported'),{code:'messaging/unsupported-browser'});
   const messaging=sdk.getMessaging(session.auth.app),functions=functionsSDK.getFunctions(session.auth.app,window.BASHO_FCM?.region||'asia-northeast1');
-  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=invite77',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
+  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm3',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
   await navigator.serviceWorker.ready;
-  const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name)({deviceId:deviceID(),...data})).data;
+  const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name,{timeout:15000})({deviceId:deviceID(),...data})).data;
   return {sdk,messaging,registration,call};
 }
 export async function refreshFcmDevice(session){
@@ -60,9 +64,10 @@ let stopForeground;
 export function stopFcmReceiver(){stopForeground?.();stopForeground=null;}
 export function startFcmReceiver(session){
   stopFcmReceiver();
-  stopForeground=session.sdk.onMessage(session.messaging,payload=>{
+  stopForeground=session.sdk.onMessage(session.messaging,async payload=>{
     const data=payload.data||{};
     if(typeof data.title!=='string'||typeof data.body!=='string')return;
-    return session.registration.showNotification(data.title.slice(0,120),{body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,icon:new URL('./assets/kotoba-icon-192.png',import.meta.url).href,data:{url:new URL('./',import.meta.url).href}});
+    try{await session.registration.showNotification(data.title.slice(0,120),{body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,icon:new URL('./assets/kotoba-icon-192.png',import.meta.url).href,data:{url:new URL('./',import.meta.url).href}});window.dispatchEvent(new Event('basho-fcm-received'));}
+    catch{window.dispatchEvent(new Event('basho-fcm-display-error'));}
   });
 }
