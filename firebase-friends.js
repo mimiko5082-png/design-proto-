@@ -73,7 +73,7 @@ async function requireFriendsMembership(session){
   }
   return group;
 }
-export async function createFriendsInvite({calendar=false}={}){
+export async function createFriendsInvite(){
   const s=await authorized(),id=await requireFriendsMembership(s);
   const token=key()+key(),expiresAt=await friendsServerNow(s)+7*86400000-60000;
   try{await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});}
@@ -81,7 +81,7 @@ export async function createFriendsInvite({calendar=false}={}){
     if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('グループへの参加は確認できましたが、招待リンクの保存が拒否されました。basho-friendsの公開済みルールのinvites部分を確認してください。');
     throw error;
   }
-  const url=new URL(location.href);url.search=calendar?'calendar=shared':'';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
+  const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
 }
 export async function joinFriendsGroup(){
   const s=await authorized(),token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');

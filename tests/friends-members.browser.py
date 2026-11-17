@@ -12,25 +12,26 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'p
 threading.Thread(target=server.serve_forever,daemon=True).start()
 MOCK='''
 export class FriendsError extends Error {}
-window.testUser={id:'me',name:'自分',confirmed:true};
+window.testUser={id:'me',name:'自分',confirmed:true};window.testJoined=!location.hash.includes('invite=');window.joinCount=0;window.testPosts=[];
 window.testMembers=[{name:'自分',joinedAt:Date.parse('2026-11-16T16:00:00Z'),own:true},{name:'未投稿の友達 <img src=x onerror=alert(1)>',joinedAt:null,own:false}];
 export const friendsProfile=()=>window.testUser;
-export const friendsGroup=()=>window.testUser?'test-group':'';
+export const friendsGroup=()=>window.testUser&&window.testJoined?'test-group':'';
 export const friendsSession=async()=>({});
-export const pendingInvite=()=>'';
+export const pendingInvite=()=>location.hash.includes('invite=')?'test-invite':'';
 export const friendlyError=e=>e;
 export const friendsSignIn=async()=>true;
 export const friendsSignOut=async()=>{window.testUser=null;window.dispatchEvent(new Event('basho-auth-changed'));};
 export const createFriendsGroup=async()=>{};
-export const createFriendsInvite=async()=>'';
-export const joinFriendsGroup=async()=>{};
+export async function createFriendsInvite(...args){window.inviteArgs=args;return new URL('#invite=test-invite',location.href).href;}
+export const joinFriendsGroup=async()=>{window.testJoined=true;window.joinCount++;history.replaceState(null,'',location.pathname);window.dispatchEvent(new Event('basho-sharing-updated'));};
 export async function firebaseSharingAPI(action){
  if(action==='members'){
   if(window.testWait)await new Promise(resolve=>window.resolveMembers=resolve);
   if(window.testError)throw new Error('参加者を取得できませんでした');
   return {members:window.testMembers};
  }
- return {day:'2026-11-17',posts:[],nextCursor:null};
+ if(!window.testJoined)throw new Error('招待リンクから参加してください');
+ return {day:'2026-11-17',posts:window.testPosts,nextCursor:null};
 }
 '''
 try:
@@ -70,6 +71,23 @@ try:
   page.evaluate('window.resolveMembers()')
   expect(panel).to_have_count(0)
   expect(page.get_by_role('button',name='参加中の友達を見る',exact=True)).to_have_count(0)
+  # A single friends invitation connects both the feed and calendar.
+  page.goto(base+'/members-test#invite=test-invite',wait_until='networkidle')
+  page.reload(wait_until='networkidle')
+  expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_be_visible()
+  page.get_by_role('button',name='この招待で参加する',exact=True).click()
+  expect(page.locator('.friend-status')).to_contain_text('友達の投稿とカレンダーの両方')
+  page.evaluate("window.testPosts=[{id:'friend-photo',name:'招待した友達',day:'2026-11-17',image:'./assets/kotoba-forest.png',caption:'友達から届いた写真',createdAt:1794873600000,stampCount:0,commentCount:0}]")
+  page.get_by_role('button',name='更新',exact=True).click()
+  expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
+  page.evaluate("const calendar=document.createElement('basho-public-feed');calendar.setAttribute('calendar','');calendar.setAttribute('day','2026-11-17');document.querySelector('basho-public-feed').replaceWith(calendar)")
+  expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
+  expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_have_count(0)
+  expect(page.get_by_role('button',name='カレンダーの招待リンクを作る',exact=True)).to_have_count(0)
+  page.get_by_role('button',name='友達の招待リンクを作る',exact=True).click()
+  expect(page.get_by_role('textbox',name='招待リンク',exact=True)).to_have_value(base+'/members-test#invite=test-invite')
+  assert page.evaluate('window.inviteArgs.length')==0
+  assert page.evaluate('window.joinCount')==1
   assert not errors,errors
   browser.close()
   print('Member UI: unposted friend, Japanese date, escaped names, retry, mobile layout and delayed response after signout passed.')
