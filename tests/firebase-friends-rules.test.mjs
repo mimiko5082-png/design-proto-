@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 // Run with the Firebase Database Emulator. No production project credentials needed.
 const enabled=!!process.env.FIREBASE_DATABASE_EMULATOR_HOST;
 test('Firebase: Google identity, invitation-only membership and private photo ownership', {skip:!enabled},async()=>{
@@ -18,10 +19,28 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     const password=env.authenticatedContext('password',{firebase:{sign_in_provider:'password'}}).database();
     const time=()=>Date.now();
     await assertFails(get(ref(anon,'groups')));
+    // FCM tokens are server-only, including for signed-in owners.
+    for(const client of [anon,alice,bob]){
+      await assertFails(get(ref(client,'fcmDevices')));
+      await assertFails(set(ref(client,'fcmDevices/test-device'),{uid:'alice',token:'private-token'}));
+    }
     await assertFails(set(ref(password,'groups/wrong'),{owner:'password',createdAt:time(),members:{password:{name:'password',joinedAt:time()}}}));
     await assertSucceeds(set(ref(alice,'groups/friends'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()}}}));
     await assertFails(get(ref(bob,'groups/friends')));
     await assertFails(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time()}));
+    // Execute the real callable handlers against the emulator, never a real project.
+    process.env.FIREBASE_DATABASE_URL='https://demo-basho-friends.firebaseio.com';
+    const fcm=await import('../firebase/functions/index.mjs');
+    const auth=uid=>({uid,token:{firebase:{sign_in_provider:'google.com'}}});
+    const fcmData={deviceId:'e'.repeat(32),token:'emulator_token_'.repeat(10)};
+    await fcm.fcmRegisterDevice.run({auth:auth('alice'),data:fcmData});
+    assert.equal((await fcm.fcmDeviceStatus.run({auth:auth('alice'),data:fcmData})).enabled,true);
+    const otherStatus=await fcm.fcmDeviceStatus.run({auth:auth('bob'),data:fcmData});
+    assert.equal(otherStatus.enabled,false);assert.equal(otherStatus.token,undefined);
+    await assert.rejects(fcm.fcmDisableDevice.run({auth:auth('bob'),data:fcmData}),error=>error.code==='permission-denied');
+    await assert.rejects(fcm.fcmRegisterDevice.run({auth:auth('bob'),data:{...fcmData,token:'other_emulator_token_'.repeat(8)}}),error=>error.code==='permission-denied');
+    await fcm.fcmDisableDevice.run({auth:auth('alice'),data:fcmData});
+    assert.equal((await fcm.fcmDeviceStatus.run({auth:auth('alice'),data:fcmData})).enabled,false);
     // .info belongs to the SDK-local tree: verify the actual SDK listener path.
     const { friendsServerNow, readFriendsMembership }=await import('../firebase-friends.js');
     assert.equal(await readFriendsMembership({db:alice,dbSDK:{ref,get}},'friends','alice'),true);
@@ -96,5 +115,10 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertSucceeds(remove(ref(alice,path)));
     await assertFails(set(ref(bob,`${path}/stamps/heart/bob`),true));
     await assertFails(set(ref(alice,'groups/smuggled'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()},eve:{name:'Eve',joinedAt:time()}}}));
-  }finally{await env.cleanup();}
+  }finally{
+    const require=createRequire(new URL('../firebase/functions/package.json',import.meta.url));
+    const {getApps,deleteApp}=require('firebase-admin/app');
+    await Promise.all(getApps().map(app=>deleteApp(app)));
+    await env.cleanup();
+  }
 });

@@ -1,5 +1,5 @@
-importScripts("./notification-push.js");
-const CACHE_NAME = "basho-manazashi-v76-shared-calendar";
+importScripts("./firebase-messaging-sw.js");
+const CACHE_NAME = "basho-manazashi-fcm1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -32,10 +32,12 @@ const APP_SHELL = [
   "./image-tools.js",
   "./image-service.js",
   "./image-validation.js",
-  "./notification-config.js",
-  "./notification-settings.js",
+  "./fcm-config.js",
+  "./fcm-service.js",
+  "./fcm-settings.js",
+  "./fcm-bootstrap.js",
+  "./firebase-messaging-sw.js",
   "./notification-service.js",
-  "./notification-push.js",
   "./perspective-config.js",
   "./firebase-config.js",
   "./manifest.webmanifest",

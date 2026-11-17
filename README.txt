@@ -1,3 +1,5 @@
+FCMプッシュ通知の設定・デプロイ・実機検証は firebase/FCM.md を参照してください。
+
 芭蕉のまなざし Firebase自動同期版
 https://mimiko5082-png.github.io/design-proto-/
 GitHubの design-proto- リポジトリで、次の4ファイルをこのフォルダのものに置き換えてください。

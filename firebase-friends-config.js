@@ -1,7 +1,7 @@
 // Firebase Web SDK configuration supplied by the project owner for this preview.
 // This browser configuration is public; it grants no database permissions.
 // Access is enforced by Google authentication and database.rules.json.
-window.BASHO_FRIENDS_FIREBASE = {
+globalThis.BASHO_FRIENDS_FIREBASE = {
   apiKey: 'AIzaSyDBlZ6WCKobB-cLbBeuWtPEg7QSpWXVveY',
   authDomain: 'basho-friends.firebaseapp.com',
   databaseURL: 'https://basho-friends-default-rtdb.asia-southeast1.firebasedatabase.app',

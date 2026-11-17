@@ -10,5 +10,17 @@
       "enabled": false
     }
   },
-  "singleProjectMode": true
+  "singleProjectMode": true,
+  "functions": [
+    {
+      "source": "firebase/functions",
+      "codebase": "fcm",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log"
+      ]
+    }
+  ]
 }

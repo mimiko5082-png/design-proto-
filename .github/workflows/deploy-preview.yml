@@ -41,6 +41,8 @@ jobs:
           name: basho-preview-html
           path: preview/share.html
           retention-days: 7
+      - name: Install FCM function dependencies for server validation
+        run: npm ci --prefix firebase/functions --ignore-scripts --no-audit --no-fund
       - name: Build and validate isolated preview
         run: |
           node preview/build.mjs
@@ -57,6 +59,7 @@ jobs:
           python3 tests/shared-calendar.browser.py
           python3 tests/friends-members.browser.py
           python3 tests/photo-auto-sharing.browser.py
+          python3 tests/fcm.browser.py
       - name: Initial setup is still needed
         if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
         run: echo '::notice::Preview deployment is waiting for CLOUDFLARE_PREVIEW_API_TOKEN and CLOUDFLARE_PREVIEW_ACCOUNT_ID repository secrets. No deployment was attempted.'

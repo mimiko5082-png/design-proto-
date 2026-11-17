@@ -50,6 +50,7 @@ let html = readFileSync(join(root, 'index.html'), 'utf8');
 html = html.replace(/<script>\s*if \("serviceWorker" in navigator\) \{[\s\S]*?<\/script>/, '');
 if (html.includes('serviceWorker.register')) throw Error('Service worker registration must be disabled in preview');
 html = html.replace(/\s*<script type="module" src="\.\/notification-settings\.js[^>]*><\/script>/, '');
+html = html.replace(/\s*<script[^>]*src="\.\/fcm-(?:config|settings|bootstrap)\.js[^>]*><\/script>/g, '');
 html = html.replace('<head>', '<head>\n<meta name="robots" content="noindex,nofollow">\n<script src="./preview-runtime.js"></script>');
 html = html.replace('みんなの投稿</button>', '友達の投稿</button>');
 html = html.replace('<title>芭蕉のまなざし</title>', '<title>プレビュー｜芭蕉の読み札</title>');

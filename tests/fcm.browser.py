@@ -1,0 +1,98 @@
+"""FCM settings using real client code and mocked Firebase SDK/callables; no real pushes."""
+import os,json,threading
+from functools import partial
+from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
+from pathlib import Path
+from playwright.sync_api import sync_playwright,expect
+ROOT=Path(__file__).resolve().parent.parent
+class Handler(SimpleHTTPRequestHandler):
+ def log_message(self,*args):pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT)))
+threading.Thread(target=server.serve_forever,daemon=True).start()
+AUTH='''
+window.fcmUser={id:'alice',name:'Alice',confirmed:true};
+export const friendsProfile=()=>window.fcmUser;
+export const friendsSession=async()=>({auth:{app:{name:'basho-friends'},currentUser:window.fcmUser}});
+export const friendsSignIn=async()=>{window.fcmUser={id:'alice',confirmed:true};window.dispatchEvent(new Event('basho-auth-changed'));};
+'''
+MESSAGING='''
+export const isSupported=async()=>!window.sdkUnsupported;
+export const getMessaging=app=>({app});
+export async function getToken(messaging,options){window.tokenOptions={vapidKey:options.vapidKey,scope:options.serviceWorkerRegistration.scope};return 'mock_fcm_token_'.repeat(5);}
+export async function deleteToken(){window.deletedTokens=(window.deletedTokens||0)+1;return true;}
+export function onMessage(messaging,fn){window.receiveFcm=fn;return ()=>{window.receiveFcm=null;};}
+'''
+FUNCTIONS='''
+export const getFunctions=(app,region)=>{window.functionRegion=region;return {app,region};};
+export const httpsCallable=(instance,name)=>async data=>{
+ window.calls.push({name,data});
+ if(window.callError)throw {code:window.callError,message:'DO_NOT_SHOW_SECRET'};
+ if(name==='fcmDeviceStatus')return {data:{enabled:window.serverEnabled||false}};
+ if(name==='fcmRegisterDevice'){window.serverEnabled=true;return {data:{enabled:true}};}
+ if(name==='fcmDisableDevice'){window.serverEnabled=false;return {data:{enabled:false}};}
+ return {data:{accepted:true}};
+};
+'''
+INIT='''
+window.calls=[];window.notices=[];window.permissionValue='default';window.permissionRequests=0;
+window.Notification={get permission(){return window.permissionValue;},requestPermission(){window.permissionRequests++;window.permissionInGesture=navigator.userActivation.isActive;window.permissionValue=window.permissionResult||'granted';return Promise.resolve(window.permissionValue);}};
+window.PushManager=function(){};
+const registration={scope:location.origin+'/',pushManager:{getSubscription:async()=>window.oldSubscription||null},showNotification:async(title,options)=>{window.notices.push({title,options});}};
+Object.defineProperty(navigator,'serviceWorker',{value:{register:async(url,options)=>{window.workerURL=url;window.workerScope=options.scope;return registration;},ready:Promise.resolve(registration)}});
+'''
+try:
+ with sync_playwright() as p:
+  browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH') or None,args=['--no-sandbox'])
+  page=browser.new_page(viewport={'width':390,'height':844});errors=[]
+  page.on('pageerror',lambda error:errors.append(str(error)))
+  page.add_init_script(INIT)
+  page.route('**/firebase-friends.js*',lambda route:route.fulfill(content_type='text/javascript',body=AUTH))
+  page.route('https://www.gstatic.com/firebasejs/**/firebase-messaging.js',lambda route:route.fulfill(content_type='text/javascript',body=MESSAGING))
+  page.route('https://www.gstatic.com/firebasejs/**/firebase-functions.js',lambda route:route.fulfill(content_type='text/javascript',body=FUNCTIONS))
+  page.route('**/fcm-test',lambda route:route.fulfill(content_type='text/html',body='<link rel="stylesheet" href="/basho-styles.css"><script src="/fcm-config.js"></script><script type="module" src="/fcm-settings.js"></script><basho-fcm-settings></basho-fcm-settings>'))
+  base=f'http://127.0.0.1:{server.server_port}'
+  page.goto(base+'/fcm-test',wait_until='networkidle')
+  enable=page.get_by_role('button',name='通知を受け取る',exact=True)
+  expect(enable).to_be_enabled()
+  assert page.evaluate('window.permissionRequests')==0
+  # An old VAPID subscription is retired only when the user opts into FCM.
+  page.evaluate('window.oldSubscription={options:{applicationServerKey:new Uint8Array([1,2,3]).buffer},unsubscribe:async()=>{window.retired=true;return true;}}')
+  enable.click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('登録しました')
+  assert page.evaluate('window.permissionInGesture')
+  assert page.evaluate('window.retired')
+  assert page.evaluate('window.functionRegion')=='asia-northeast1'
+  assert page.evaluate('window.tokenOptions.vapidKey')==page.evaluate('window.BASHO_FCM.vapidKey')
+  assert page.evaluate('window.calls.some(c=>c.name==="fcmRegisterDevice" && /^[a-f0-9]{32}$/.test(c.data.deviceId))')
+  page.get_by_role('button',name='テスト通知を送る',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('端末での受信を確認')
+  page.evaluate("window.receiveFcm({data:{title:'朝のお題',body:'お題を見よう',tag:'morning',url:'https://evil.example'}})")
+  assert page.evaluate('window.notices.length')==1
+  assert page.evaluate('window.notices[0].options.data.url')==base+'/'
+  page.get_by_role('button',name='この端末の通知を停止',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('通知を停止しました')
+  assert not page.evaluate('window.serverEnabled')
+  # Permission denial never registers a device.
+  before=page.evaluate('window.calls.filter(c=>c.name==="fcmRegisterDevice").length')
+  page.evaluate('window.permissionValue="default";window.permissionResult="denied"')
+  enable.click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('許可されませんでした')
+  assert page.evaluate('window.calls.filter(c=>c.name==="fcmRegisterDevice").length')==before
+  # Server failures keep the UI retryable and do not leak raw exception details.
+  page.evaluate('window.permissionValue="granted";window.callError="functions/unavailable"')
+  page.get_by_role('button',name='設定を再確認',exact=True).click()
+  expect(page.locator('[data-fcm-status]')).to_contain_text('デプロイ状況')
+  expect(page.locator('body')).not_to_contain_text('DO_NOT_SHOW_SECRET')
+  page.evaluate('window.callError=""')
+  page.get_by_role('button',name='設定を再確認',exact=True).click()
+  expect(enable).to_be_enabled()
+  for width in [320,390]:
+   page.set_viewport_size({'width':width,'height':844})
+   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  page.evaluate('window.fcmUser=null;window.dispatchEvent(new Event("basho-auth-changed"))')
+  expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
+  expect(enable).to_be_disabled()
+  assert not errors,errors
+  browser.close()
+  print('FCM settings: consent, token/region/scope, migration, foreground display, test/stop, denial, retry, auth reset and mobile passed; no real FCM requests.')
+finally:server.shutdown()

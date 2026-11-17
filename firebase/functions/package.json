@@ -1,0 +1,9 @@
+{
+  "name": "basho-fcm-functions",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "engines": {"node": "22"},
+  "scripts": {"test": "node --test ../../tests/fcm*.test.mjs"},
+  "dependencies": {"firebase-admin": "^13.6.0", "firebase-functions": "^7.0.0"}
+}

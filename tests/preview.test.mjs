@@ -16,6 +16,8 @@ test('preview build strips production credentials, live Firebase and service wor
  assert.match(text('index.html'),/preview-runtime\.js/);
  assert.match(text('haiku-store.js'),/basho-haiku-preview-only/);
  assert.ok(!existsSync(resolve(dir,'sw.js')));
+ assert.doesNotMatch(text('index.html'),/fcm-(settings|bootstrap|config)\.js/);
+ assert.ok(!existsSync(resolve(dir,'firebase-messaging-sw.js')));
  assert.ok(!existsSync(resolve(dir,'ai-service')));
 });
 test('all emitted relative JS module dependencies exist',()=>{
