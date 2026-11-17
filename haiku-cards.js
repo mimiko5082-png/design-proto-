@@ -1,4 +1,4 @@
-import { publishCard } from './sharing-client.js?v=76';
+import { publishCard, sharingProfile } from './sharing-client.js?v=76';
 import { openPostCompletion, postDate } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
@@ -226,6 +226,7 @@ class HaikuCards extends HTMLElement {
     try { const image = await preparePhoto(file); if (revision === this.selection) { this.image = image; this.cameraError = ''; } }
     catch (error) { if (revision === this.selection) this.error = error.message; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
+    if(revision===this.selection && this.isConnected && !this.error && sharingProfile()?.confirmed)await this.save({automatic:true});
   }
   async publishSavedCard(card) {
     if(window.BASHO_PHOTO_PREVIEW && !window.BASHO_FRIENDS_FIREBASE?.apiKey) return false;
@@ -243,7 +244,7 @@ class HaikuCards extends HTMLElement {
       return false;
     }
   }
-  async save() {
+  async save({automatic=false}={}) {
     if (this.busy || this.restoring || this.cameraStream || this.cameraOpening || !this.image || (this.saved && !this.hasPendingChanges() && !this.canPostSaved())) return;
     if (this.refreshDay()) return;
     const revision = this.selection;
@@ -275,7 +276,7 @@ class HaikuCards extends HTMLElement {
       this.message = added ? '今日の写真を保存しました。' : '今日の写真は保存済みです。';
       const published=await this.publishSavedCard(this.card);
       if(revision!==this.selection || !this.isConnected)return;
-      if(added && (published || (window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey&&!window.BASHO_SHARING_DEMO))) openPostCompletion(this.card,{published});
+      if(!automatic && added && (published || (window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey&&!window.BASHO_SHARING_DEMO))) openPostCompletion(this.card,{published});
       window.dispatchEvent(new Event('basho-reading-updated'));
     } catch { if (revision === this.selection) this.error = '保存できませんでした。空き容量やブラウザの保存設定を確認してください。'; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false;this.posting=false; this.render(); } }
@@ -314,7 +315,7 @@ class HaikuCards extends HTMLElement {
     </div>
     <button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button>
     ${this.cameraError?`<p class="reading-error" role="alert">${esc(this.cameraError)}</p><div class="camera-facing-options" role="group" aria-label="カメラを選んで再試行"><button type="button" data-haiku-action="camera-environment">外カメを開く</button><button type="button" data-haiku-action="camera-user">内カメを開く</button></div><button type="button" class="outline-button" data-haiku-action="pick-file">端末のカメラ・写真選択を使う</button>`:''}
-    ${window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey?'':'<p class="public-audience">投稿すると、写真とひとことが招待リンクで参加した友達だけに共有されます。</p>'}${this.publishError?`<p class="reading-error" role="alert">${esc(this.publishError)}</p>`:''}<p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
+    ${window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey?'':'<p class="public-audience">ログインして撮影すると、写真は友達の投稿とカレンダーに自動で反映されます。ひとことは後から更新できます。</p>'}${this.publishError?`<p class="reading-error" role="alert">${esc(this.publishError)}</p>`:''}<p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}
     ${(this.cameraOpening||this.cameraStream)?`<dialog class="photo-camera-dialog" aria-label="写真を撮影"><header><strong>今日の一枚を撮る</strong><button type="button" data-haiku-action="camera-close" aria-label="カメラを閉じる">×</button></header><div class="camera-facing-options" role="group" aria-label="使うカメラ"><button type="button" data-camera-facing="environment" data-haiku-action="camera-environment" aria-pressed="${this.cameraFacing==='environment'}" disabled>外カメ</button><button type="button" data-camera-facing="user" data-haiku-action="camera-user" aria-pressed="${this.cameraFacing==='user'}" disabled>内カメ</button></div><div class="photo-camera-view"><video data-camera-video autoplay muted playsinline></video></div><p data-camera-status role="status">${this.cameraOpening?'カメラを開いています…':'カメラの準備をしています…'}</p><div class="photo-camera-controls"><button type="button" class="outline-button" data-haiku-action="camera-close">やめる</button><button type="button" class="main-button" data-haiku-action="camera-shoot" disabled>撮影する</button></div></dialog>`:''}
     </section>`;
     const dialog=this.querySelector('.photo-camera-dialog');

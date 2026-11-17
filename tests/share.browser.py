@@ -95,7 +95,7 @@ try:
   page.locator('.tabbar [data-nav=friends]').click()
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
   expect(page.get_by_role('button',name='参加中の友達を見る',exact=True)).to_have_count(0)
-  expect(page.locator('.public-local')).to_contain_text('この端末のカレンダーに保存しています')
+  expect(page.locator('.public-local')).to_have_count(0)
   page.locator('.tabbar [data-nav=calendar]').click()
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text(caption)
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',replacement)
