@@ -6,6 +6,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *_args): pass
@@ -45,7 +52,7 @@ try:
                 route.fulfill(content_type="application/json",body=json.dumps({"accepted":True,"registered":action=='subscribe'}))
         page.route("**/api/notifications/**",api)
         page.goto(origin+'/',wait_until='networkidle')
-        page.locator('.tabbar [data-nav=calendar]').click()
+        go(page,'calendar')
         page.locator('details.place-attach > summary').click()
         expect(page.locator('[data-notification-enable]')).to_be_enabled()
         assert page.evaluate('permissionRequests')==0

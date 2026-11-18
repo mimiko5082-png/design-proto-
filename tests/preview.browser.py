@@ -8,6 +8,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['node','preview/build.mjs'],cwd=ROOT,check=True)
 HEADERS="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; worker-src 'none'; object-src 'none'"
@@ -40,13 +47,13 @@ try:
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
   expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('.local-calendar-photo')).to_contain_text(opening)
   page.reload(wait_until='networkidle')
   expect(page.locator('.local-calendar-photo')).to_have_count(1)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
 

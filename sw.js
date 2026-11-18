@@ -1,5 +1,5 @@
 importScripts("./firebase-messaging-sw.js");
-const CACHE_NAME = "basho-manazashi-reaction-names78";
+const CACHE_NAME = "basho-manazashi-design80";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -8,6 +8,13 @@ from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['node','preview/build.mjs'],cwd=ROOT,check=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -42,7 +49,7 @@ try:
   expect(page.locator('.friend-own-caption')).to_have_text('駅前のバス停、まだ日なたが暑い')
   expect(page.locator('.friend-own-photo .postcard-prompt')).to_have_text(page.locator('.friend-photo-tile .postcard-prompt').first.inner_text())
   page.screenshot(path='/tmp/basho-reference-4-feed.png',full_page=True)
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('[data-day="2026-10-29"] .calendar-day-photo')).to_have_count(1)
   expect(page.locator('.saved-photo-caption')).to_have_text('駅前のバス停、まだ日なたが暑い')
   page.screenshot(path='/tmp/basho-reference-5-calendar.png',full_page=True)

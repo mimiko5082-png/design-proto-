@@ -7,6 +7,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['npm','--prefix','preview','run','share'],cwd=ROOT,check=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -24,11 +31,11 @@ try:
   page.clock.install(time=datetime(2026,10,27,3,0,tzinfo=timezone.utc))
   page.goto(f'http://127.0.0.1:{server.server_port}/share.html',wait_until='networkidle')
   context.set_offline(True)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('.haiku-topic')).to_be_visible()
   expect(page.locator('.home-view .reading-growth')).to_have_count(0)
   expect(page.locator('.tabbar [data-nav=garden]')).to_have_count(0)
-  expect(page.locator('.tabbar .tab')).to_have_count(3)
+  expect(page.locator('.capture-nav [data-nav]')).to_have_count(2)
   expect(page.locator('.home-view h1')).to_have_text('今日のお題')
   expect(page.locator('.photo-capture-actions')).to_be_hidden()
   expect(page.locator('[data-photo-note]')).to_have_count(0)
@@ -50,7 +57,7 @@ try:
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
   expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('.photo-capture-preview-note')).to_have_count(0)
   expect(page.locator('[data-photo-note]')).to_have_count(0)
@@ -67,9 +74,9 @@ try:
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('.reading-error')).to_contain_text('保存できませんでした')
   page.evaluate('() => { IDBObjectStore.prototype.put = window.originalPut; }')
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',original)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
   expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
@@ -77,7 +84,7 @@ try:
   assert replacement != original
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('.haiku-status')).to_contain_text('写真を変更しました')
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('.local-calendar-photo')).to_have_count(1)
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text(caption)
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',replacement)
@@ -87,16 +94,16 @@ try:
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text(caption)
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',replacement)
   expect(page.locator('[data-day="2026-10-27"] .calendar-day-photo')).to_have_attribute('src',replacement)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
   # The normal single-file preview now requires Firebase for friends sharing.
   # Offline, local photos remain readable and the login control stays available.
-  page.locator('.tabbar [data-nav=friends]').click()
+  go(page,'friends')
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
   expect(page.get_by_role('button',name='参加中の友達を見る',exact=True)).to_have_count(0)
   expect(page.locator('.public-local')).to_have_count(0)
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text(caption)
   expect(page.locator('.local-calendar-photo .postcard-image')).to_have_attribute('src',replacement)
   for width in [320,390]:

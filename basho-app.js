@@ -12,6 +12,8 @@ let bashoFirebaseReady = false;
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
+// 友達の投稿とカレンダーから撮影画面へ戻る、画面下中央のボタン。
+const SCREEN_NAV = '<nav class="screen-nav" aria-label="撮影に戻る"><button type="button" data-nav="home" aria-label="撮影に戻る"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.2" r="3.4"/></svg></button></nav>';
 
 const gazes = [
   {
@@ -265,8 +267,8 @@ function render() {
     update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
-    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-fcm-settings></basho-fcm-settings></details>'}</div>`,
-    friends: () => `<div class="view"><basho-friends></basho-friends></div>`,
+    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-fcm-settings></basho-fcm-settings></details>'}</div>${SCREEN_NAV}`,
+    friends: () => `<div class="view"><basho-friends></basho-friends></div>${SCREEN_NAV}`,
     entry: renderEntry,
     share: renderShare,
     book: renderBook,

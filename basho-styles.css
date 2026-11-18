@@ -3868,3 +3868,584 @@ button:focus-visible, textarea:focus-visible, summary:focus-visible { outline-co
 .friends-join .main-button { width: 100%; }
 .friends-create-group { margin: 12px 18px; font-size: 12px; }
 .friends-create-group summary { padding: 10px 0; cursor: pointer; }
+
+/* ==========================================================================
+   Design system for the three current screens (撮影・友達の投稿・カレンダー).
+   One gutter, one type scale, one button hierarchy. The green frame and the
+   bold italic daily prompt stay the signature; everything else is quiet.
+   ========================================================================== */
+:root {
+  --bg: #0b0e0b;
+  --surface: #121812;
+  --surface-2: #1a231b;
+  --hairline: #273127;
+  --text: #eef1e8;
+  --text-2: #b3bcae;
+  --text-3: #7f8b7b;
+  --green: #32b96e;
+  --green-soft: #32b96e22;
+  --green-line: #32b96e8c;
+  --green-ink: #06160c;
+  --danger-bg: #2b1613;
+  --danger-line: #7a3a2c;
+  --danger-text: #ffc2b0;
+  --gutter: 20px;
+  --frame: 5px;
+  --tabbar-h: calc(62px + var(--safe-bottom));
+  --font-ui: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --font-verse: "Hiragino Mincho ProN", "Yu Mincho", "Shippori Mincho", "Noto Serif JP", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---- Shell ---- */
+basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings, basho-notifications { display: block; }
+.screen { container-type: size; }
+.view {
+  padding: calc(18px + var(--safe-top)) var(--gutter) calc(var(--tabbar-h) + 32px);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+.main-button, .outline-button {
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: 800 15px/1.3 var(--font-ui);
+  letter-spacing: .02em;
+}
+.main-button { border: 1px solid var(--green); background: var(--green); color: var(--green-ink); }
+.outline-button { border: 1px solid var(--green-line); background: transparent; color: var(--green); box-shadow: none; font-weight: 700; font-size: 14px; }
+.main-button:active, .outline-button:active { transform: translateY(1px); }
+.view input, .view textarea, dialog input, dialog textarea { font-size: 16px; }
+
+.tabbar {
+  left: 0; right: 0; bottom: 0;
+  height: var(--tabbar-h);
+  padding: 7px 12px calc(7px + var(--safe-bottom));
+  gap: 6px;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  border-radius: 0;
+  background: #0b0e0bf5;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+.tabbar .tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  min-height: 0; height: 100%;
+  padding: 0 2px;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-3);
+  font: 600 11px/1.2 var(--font-ui);
+  letter-spacing: .03em;
+}
+.tabbar .tab.active { color: var(--green); background: var(--green-soft); border-radius: 14px; }
+.tabbar .tab-icon, .tabbar .tab.active .tab-icon {
+  display: grid; place-items: center;
+  width: 24px; height: 24px;
+  background: none; box-shadow: none; color: inherit; font-size: 0;
+}
+.tabbar .tab-icon svg { display: block; width: 22px; height: 22px; }
+.toast { bottom: calc(var(--tabbar-h) + 14px); background: #eef1e8f2; color: #0b0e0b; font: 600 13px/1.5 var(--font-ui); }
+
+/* ---- 撮影: the framed stage fills the screen above the tab bar ---- */
+.view.home-photo-only { padding: 0 0 var(--tabbar-h); }
+.neo-capture {
+  display: flex; flex-direction: column;
+  min-height: calc(100svh - var(--tabbar-h));
+  margin: 0;
+  color: var(--text);
+}
+@supports (height: 1cqh) { .neo-capture { min-height: calc(100cqh - var(--tabbar-h)); } }
+.neo-capture .capture-stage {
+  flex: 1 1 auto;
+  height: auto; min-height: 460px;
+}
+.capture-stage::before { display: none; }
+.capture-stage::after { background: linear-gradient(180deg,#050a07d9 0%,#050a0766 30%,transparent 50%,#050a0780 72%,#050a07f0 100%); }
+.capture-stage.no-photo::after { background: linear-gradient(180deg,#03090c99 0%,#03090c40 36%,transparent 60%,#03090ccc 100%); }
+
+.capture-prompt .photo-topic-options { margin-top: 16px; opacity: 1; }
+.capture-prompt .photo-topic-options > button {
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid #ffffff4d; border-radius: 999px;
+  background: #0b0e0b8c;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: #eef1e8;
+  font: 600 13px/1.3 var(--font-ui);
+}
+.capture-prompt .haiku-hint {
+  margin: 12px 0 0; padding: 12px 14px;
+  border: 1px solid #ffffff33; border-radius: 12px;
+  background: #0b0e0bd9;
+  color: var(--text);
+  font-size: 14px; line-height: 1.7;
+}
+
+.neo-capture .photo-capture-empty {
+  left: 50%; bottom: 22px;
+  width: auto; padding: 0; gap: 10px;
+  transform: translateX(-50%);
+  color: var(--text);
+}
+.camera-shutter { width: 72px; height: 72px; box-shadow: inset 0 0 0 5px #0b0e0b, 0 0 0 6px #32b96e26; }
+.neo-capture .photo-capture-empty strong { font: 600 13px/1.5 var(--font-ui); letter-spacing: .04em; text-shadow: 0 1px 8px #000; }
+.capture-extra-actions { left: 16px; right: 16px; bottom: 52px; justify-content: space-between; }
+.capture-extra-actions button {
+  width: 46px; height: 46px;
+  border: 1px solid #ffffff4d;
+  background: #0b0e0b8c;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: var(--text);
+  font-size: 22px; line-height: 1;
+}
+
+.neo-capture .photo-caption-field { left: 18px; right: 40px; bottom: 92px; }
+.neo-capture .photo-caption-field > small { font: 600 11px/1.4 var(--font-ui); letter-spacing: .1em; color: #dfe6d9; }
+.neo-capture .photo-caption-field textarea {
+  margin-top: 4px; padding: 6px 0 8px;
+  border-bottom: 1px solid #ffffff59;
+  color: #fff;
+  font: 600 17px/1.55 var(--font-ui);
+}
+.neo-capture .photo-caption-field textarea::placeholder { color: #e3e9de; opacity: .7; }
+.neo-capture .photo-caption-field textarea:focus { outline: none; border-bottom-color: var(--green); }
+.neo-capture .photo-capture-actions { left: 16px; right: 16px; bottom: 20px; grid-template-columns: 1fr 1.5fr; gap: 10px; }
+.neo-capture .photo-capture-actions > button { min-height: 50px; padding: 0 10px; border-radius: 999px; font-size: 15px; }
+.neo-capture .photo-capture-actions .outline-button { border: 1px solid #ffffff66; background: #0b0e0b99; color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+.neo-capture > .public-audience { margin: 10px var(--gutter) 12px; font-size: 12px; line-height: 1.6; color: var(--text-3); }
+.neo-capture .haiku-status { margin: 0 var(--gutter) 10px; font-size: 13px; line-height: 1.6; color: var(--green); }
+.neo-capture > .outline-button, .neo-capture > .reading-error { width: auto; margin: 10px var(--gutter) 0; }
+.neo-capture > .camera-facing-options { margin: 10px var(--gutter) 0; }
+
+/* ---- Photographs as framed postcards ---- */
+.photo-postcard, .friends-feature .photo-postcard { border-width: var(--frame); aspect-ratio: 3 / 4; }
+.photo-postcard::before { display: none; }
+.photo-postcard::after { background: linear-gradient(180deg,#050a07cc,#050a0747 34%,transparent 56%,#050a0799); }
+.postcard-caption, .friend-own-photo .friend-own-caption { padding: 36px 16px 18px; font: 600 15px/1.6 var(--font-ui); color: #fff; }
+
+/* ---- 友達の投稿 ---- */
+.friends-feature { margin: 0 calc(-1 * var(--gutter)); padding-top: 0; color: var(--text); font-family: var(--font-ui); }
+.feed-heading { min-height: 44px; padding: 0 var(--gutter); gap: 10px; }
+.friends-feature h1, .reading-mode-calendar .public-feed .feed-heading h1 {
+  order: 0; margin: 0;
+  color: var(--text);
+  font: 800 24px/1.3 var(--font-ui); font-style: normal; letter-spacing: .02em;
+}
+.feed-heading > .friends-release { order: 1; margin: 2px 0 0 auto; font-size: 10px; letter-spacing: .04em; color: var(--text-3); opacity: .75; }
+.public-feed .feed-heading .outline-button {
+  order: 2;
+  width: auto; min-height: 36px; margin: 0; padding: 0 14px;
+  border-color: var(--hairline); background: var(--surface); color: var(--text-2);
+  font-size: 13px; font-weight: 600;
+}
+.friends-prompt { margin: 14px var(--gutter) 0; padding: 0 0 14px; border: 0; border-bottom: 1px solid var(--hairline); border-radius: 0; background: none; }
+.friends-prompt::before { content: "今日のお題"; display: block; margin-bottom: 4px; color: var(--green); font: 700 11px/1.5 var(--font-ui); letter-spacing: .14em; }
+.reading-mode-calendar .friends-prompt::before { content: "この日のお題"; }
+.friends-prompt p { font-family: var(--font-verse); font-size: 19px; line-height: 1.6; letter-spacing: .1em; color: var(--text); }
+
+.public-audience, .public-identity, .public-empty, .public-retention { margin: 12px var(--gutter); font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.public-identity { color: var(--text); font-weight: 600; }
+.public-retention { margin-top: 28px; font-size: 12px; color: var(--text-3); }
+.public-empty { margin-top: 20px; padding: 34px 18px; border: 1px dashed #3a463a; border-radius: 16px; text-align: center; }
+
+.public-feed .outline-button, .public-feed .main-button {
+  display: flex; width: calc(100% - var(--gutter) * 2);
+  min-height: 48px; margin: 10px var(--gutter);
+  font-size: 14px;
+}
+.public-feed .main-button, .public-feed [data-public-action="profile"] {
+  min-height: 50px;
+  border-color: var(--green); background: var(--green); color: var(--green-ink);
+  font-size: 15px; font-weight: 800;
+}
+.public-feed [data-public-action="signout"] {
+  display: inline-flex; width: auto; min-height: 40px; margin: 0 var(--gutter); padding: 0;
+  border: 0; border-radius: 0;
+  color: var(--text-3);
+  font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px;
+}
+.friends-access > p, .calendar-friends-access > p, .public-feed .reading-help { margin: 10px var(--gutter) 0; font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.friends-access > label { display: block; margin: 16px var(--gutter) 0; font-size: 13px; line-height: 1.6; color: var(--text-2); }
+.friends-access input[readonly] {
+  margin-top: 8px; padding: 13px 14px;
+  border: 1px solid #3a463a; border-radius: 12px;
+  background: var(--bg); color: var(--text);
+  font: 500 14px/1.4 var(--font-mono);
+}
+.friends-join, .friends-members {
+  margin: 16px var(--gutter); padding: 18px 16px;
+  border: 1px solid var(--hairline); border-radius: 16px;
+  background: var(--surface); color: var(--text);
+}
+.friends-join h2, .friends-members h2 { margin: 0 0 8px; font: 800 17px/1.5 var(--font-ui); }
+.friends-join p, .friends-members p { margin: 0 0 12px; font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.friends-join label { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.friends-join input {
+  margin: 8px 0 12px; padding: 13px 14px;
+  border: 1px solid #3a463a; border-radius: 12px;
+  background: var(--bg); color: var(--text);
+}
+.friends-join input::placeholder { color: var(--text-3); }
+.friends-join input:focus-visible, .friends-access input:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+.public-feed .friends-join .main-button, .public-feed .friends-members .outline-button { width: 100%; margin: 4px 0 0; }
+.friends-members li { padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.friends-members strong { font-size: 15px; }
+.friends-members small { font-size: 12px; color: var(--text-3); }
+.friends-create-group { margin: 12px var(--gutter); font-size: 13px; color: var(--text-2); }
+.friends-create-group summary { min-height: 44px; display: flex; align-items: center; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+.public-feed .friends-create-group .outline-button { width: 100%; margin: 6px 0 0; }
+
+.reading-error, .public-feed .reading-error, .reading-mode-calendar .public-feed .reading-error {
+  padding: 12px 14px;
+  border: 1px solid var(--danger-line); border-radius: 12px;
+  background: var(--danger-bg); color: var(--danger-text);
+  font-size: 13px; line-height: 1.7; overflow-wrap: anywhere;
+}
+.reading-error { margin: 12px 0; }
+.reading-error:empty { display: none; }
+.public-feed .reading-error, .reading-mode-calendar .public-feed .reading-error { margin: 12px var(--gutter); }
+/* While logged out, logging in is the one primary action; joining by link stays secondary. */
+.public-feed:has([data-public-action="profile"]) .friends-join .main-button { border-color: var(--green-line); background: transparent; color: var(--green); font-weight: 700; }
+.public-feed .friend-status { margin: 12px var(--gutter); font-size: 13px; line-height: 1.7; color: var(--green); }
+.public-feed .friend-status:empty, .haiku-status:empty { display: none; }
+
+.friend-photo-grid { margin-top: 22px; }
+.friend-own-photo, .feed-post { margin: 0 0 32px; }
+.feed-post-author { padding: 0 var(--gutter) 10px; gap: 10px; font-size: 14px; color: var(--text); }
+.feed-post-author > span { flex: none; width: 32px; height: 32px; font-size: 14px; }
+.feed-post-author strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.feed-post-author small { flex: none; font-size: 12px; color: var(--text-3); }
+.public-feed .feed-post-author button { flex: none; min-height: 32px; padding: 0 12px; border-color: var(--hairline); color: var(--text-2); font-size: 12px; }
+.feed-post > .reading-help { margin: 10px var(--gutter) 0; }
+.public-reaction-count {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: calc(100% - var(--gutter) * 2); min-height: 46px;
+  margin: 10px var(--gutter) 0; padding: 0 14px;
+  border: 1px solid var(--hairline); border-radius: 12px;
+  background: var(--surface); color: var(--text-2);
+  font: 600 13px/1.4 var(--font-ui); text-align: left;
+}
+.public-reaction-count::after { content: "›"; color: var(--green); font-size: 20px; line-height: 1; }
+
+.friend-detail {
+  margin: 10px var(--gutter) 0; padding: 16px;
+  border: 1px solid var(--hairline); border-radius: 16px;
+  background: var(--surface); color: var(--text);
+}
+.friend-detail h3 { margin: 20px 0 10px; color: var(--text); font: 800 15px/1.5 var(--font-ui); }
+.friend-detail header { margin-bottom: 0; }
+.friend-detail header h3 { margin: 0; }
+.friend-close { width: 40px; height: 40px; background: var(--surface-2); color: var(--text); }
+.friend-stamps { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; }
+.friend-stamps button { min-height: 68px; padding: 8px 2px 6px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--bg); color: var(--text-2); }
+.friend-stamps button span { margin-bottom: 2px; font-size: 22px; }
+.friend-stamps button small { display: block; font-size: 10px; line-height: 1.3; }
+.friend-stamps b { top: 4px; right: 6px; font-size: 11px; color: var(--text-3); }
+.friend-stamps button[aria-pressed="true"] { border-color: var(--green); background: #1c3f29; color: #fff; }
+.friend-stamps button[aria-pressed="true"] b { color: var(--green); }
+.friend-reactors { margin: 0; }
+.friend-reactors li, .friend-comments li { padding: 10px 0; border-color: var(--hairline); font-size: 13px; }
+.friend-reactors p, .friend-comments p { color: var(--text-2); font-size: 13px; }
+.friend-detail form label { font-size: 13px; color: var(--text-2); }
+.friend-detail textarea, .public-feed .friend-detail form textarea { margin: 6px 0 10px; padding: 12px 14px; border: 1px solid #3a463a; border-radius: 12px; background: var(--bg); color: var(--text); }
+.public-feed .friend-detail .main-button, .public-feed .friend-detail .outline-button { width: 100%; margin: 0; }
+.public-feed .friend-detail .outline-button { margin-top: 14px; border-color: var(--hairline); color: var(--text-3); }
+.friend-comments button { min-height: 32px; font-size: 12px; color: var(--text-3); text-decoration: underline; }
+.friend-detail > .reading-help, .public-feed .friend-detail .reading-help { margin: 0; }
+
+/* ---- カレンダー ---- */
+.reading-feature { margin: 0; color: var(--text); font-family: var(--font-ui); }
+.reading-calendar.shared-calendar { margin: 16px var(--gutter) 0; padding: 0; border: 0; background: transparent; }
+.reading-month { gap: 8px; }
+.reading-month h2 { flex: 1; margin: 0; text-align: center; color: var(--text); font: 800 18px/1.3 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.reading-month button { flex: none; width: 44px; height: 44px; border: 1px solid var(--hairline); background: var(--surface); color: var(--text); font-size: 18px; }
+.public-feed .shared-calendar > [data-public-action="calendar-today"] {
+  width: fit-content; min-height: 34px; margin: 10px 0 12px auto; padding: 0 14px;
+  border-color: var(--hairline); color: var(--text-2);
+  font-size: 12px; font-weight: 600;
+}
+.reading-week { gap: 4px; padding-bottom: 6px; color: var(--text-3); font-size: 11px; }
+.reading-days { gap: 4px; }
+.reading-days button, .shared-calendar .reading-days button {
+  aspect-ratio: 1; min-height: 0; padding: 0;
+  border: 1px solid transparent; border-radius: 10px;
+  background: var(--surface); color: var(--text-2);
+  font: 600 13px/1 var(--font-ui); font-variant-numeric: tabular-nums;
+}
+.reading-days button:not(.has-photo) .shared-day-count { display: none; }
+.reading-days button.is-today { border-color: transparent; }
+.reading-days button.is-today .calendar-day-number { color: var(--green); font-weight: 800; }
+.reading-days .has-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg,#0b0e0b8c,transparent 55%); pointer-events: none; }
+.reading-days .has-photo .calendar-day-number, .reading-days .has-photo.is-today .calendar-day-number {
+  position: absolute; top: 4px; left: 5px; z-index: 1;
+  margin: 0; padding: 0; background: none; color: #fff; font-size: 12px; text-shadow: 0 1px 4px #000;
+}
+.shared-day-count { right: 3px; bottom: 3px; z-index: 1; padding: 2px 5px; border-radius: 6px; background: #0b0e0bcc; color: #fff; font-size: 10px; line-height: 1.2; }
+.reading-days button.selected, .reading-days .has-photo.selected {
+  background: var(--surface-2); color: var(--text);
+  outline: 2px solid var(--green); outline-offset: -2px;
+}
+.reading-days button.selected small { color: #fff; }
+.shared-selected-date { margin: 26px var(--gutter) 0; color: var(--text); font: 700 15px/1.5 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.calendar-account { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--hairline); }
+.calendar-reading-history:empty { display: none; }
+.reading-date-records > h2 { margin: 24px 0 8px; color: var(--text); font: 700 15px/1.5 var(--font-ui); }
+.saved-haiku { margin: 14px calc(-1 * var(--gutter)); }
+
+/* ---- 通知の設定 ---- */
+.view > details.place-attach {
+  margin: 24px 0 0; padding: 0;
+  border: 1px solid var(--hairline); border-radius: 16px;
+  background: var(--surface); color: var(--text);
+  overflow: hidden;
+}
+.view > details.place-attach > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 56px; padding: 0 16px;
+  font: 700 15px/1.4 var(--font-ui);
+  list-style: none; cursor: pointer;
+}
+.view > details.place-attach > summary::-webkit-details-marker { display: none; }
+.view > details.place-attach > summary::after { content: "＋"; color: var(--green); font-size: 18px; font-weight: 400; }
+.view > details.place-attach[open] > summary::after { content: "－"; }
+.daily-notifications.place-attach { margin: 0; padding: 4px 16px 18px; border: 0; border-top: 1px solid var(--hairline); border-radius: 0; }
+.daily-notifications h2 { margin: 14px 0 6px; font: 800 16px/1.5 var(--font-ui); }
+.daily-notifications p { margin: 6px 0; font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.daily-notifications [data-fcm-status] {
+  margin: 14px 0 6px; padding: 12px 14px;
+  border: 1px solid var(--green-line); border-radius: 12px;
+  background: var(--bg); color: var(--text);
+  font-weight: 600;
+}
+.daily-notifications .outline-button { display: flex; width: 100%; margin: 10px 0 0; }
+.daily-notifications [data-fcm-enable], .daily-notifications [data-fcm-login] { border-color: var(--green); background: var(--green); color: var(--green-ink); font-weight: 800; font-size: 15px; }
+.daily-notifications [data-fcm-disable], .daily-notifications [data-fcm-retry] { border-color: var(--hairline); color: var(--text-2); }
+
+/* ---- Dialogs ---- */
+.post-complete-dialog, .sharing-profile-dialog { border-color: var(--hairline); border-radius: 22px; background: var(--surface); color: var(--text); font-family: var(--font-ui); }
+.post-complete-dialog h2 { color: var(--green); font: 800 20px/1.5 var(--font-ui); font-style: normal; }
+.post-complete-dialog > strong { font-size: 15px; }
+.post-complete-dialog > p, .sharing-profile-dialog p { font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.post-complete-dialog .main-button { display: flex; min-height: 50px; }
+.post-later { min-height: 44px; margin-top: 8px; color: var(--text-2); font-size: 14px; }
+.sharing-profile-dialog h2 { font: 800 20px/1.5 var(--font-ui); }
+.sharing-profile-dialog input { padding: 13px 14px; border-color: #3a463a; border-radius: 12px; background: var(--bg); }
+.sharing-profile-dialog button { display: flex; }
+.view input:focus-visible, .view textarea:focus-visible, dialog input:focus-visible, dialog textarea:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+.photo-camera-dialog { border-color: var(--hairline); background: var(--surface); color: var(--text); font-family: var(--font-ui); }
+.photo-camera-dialog > header button { width: 40px; height: 40px; background: var(--surface-2); color: var(--text); }
+.photo-camera-dialog > p { font-size: 13px; color: var(--text-2); }
+.photo-camera-controls > button { min-height: 50px; }
+
+@media (max-width: 360px) {
+  :root { --gutter: 16px; }
+  .postcard-caption { font-size: 14px; }
+  .tabbar .tab { font-size: 10px; }
+  .friend-stamps button small { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) { .main-button:active, .outline-button:active { transform: none; } }
+
+/* ==========================================================================
+   The frame, set like a sports poster: one thick green border, and every word
+   in the border's colour — heavy italic, no shadow, pushed against the edge.
+   芭蕉の原句 is the headline (three stacked lines), its modern reading sits
+   beneath it, the date runs large down the right edge. No tab bar: the two
+   other screens are the words beside the shutter.
+   ========================================================================== */
+:root { --frame-color: var(--green); --frame-w: clamp(10px, 3vw, 14px); --tabbar-h: 0px; }
+.tabbar { display: none !important; }
+.view { padding-bottom: calc(112px + var(--safe-bottom)); }
+.toast { bottom: calc(104px + var(--safe-bottom)); }
+
+/* ---- 撮影: the whole screen is the framed viewfinder ---- */
+.neo-capture { min-height: 100svh; }
+.neo-capture .capture-stage {
+  flex: none; height: 100svh; min-height: 440px;
+  border: var(--frame-w) solid var(--frame-color);
+}
+@supports (height: 1cqh) { .neo-capture { min-height: 100cqh; } .neo-capture .capture-stage { height: 100cqh; } }
+.capture-stage::after, .capture-stage.no-photo::after { background: linear-gradient(180deg,#00000073 0%,transparent 40%,transparent 58%,#0000008c 100%); }
+.capture-live { background: transparent; }
+.capture-live.is-front-camera { transform: scaleX(-1); }
+
+.neo-capture .capture-prompt { inset: 0 48px auto 0; padding: 0; }
+.photo-words {
+  display: block; width: 100%; padding: 0; border: 0; border-radius: 0;
+  background: none; color: var(--frame-color);
+  text-align: left; cursor: pointer;
+}
+.photo-words:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+.photo-original, .postcard-original {
+  display: block; position: static; margin: -.05em 0 0 -.02em;
+  color: var(--frame-color);
+  font: italic 900 min(11.2vw, 46px)/1.04 var(--font-ui); letter-spacing: -.045em;
+  text-shadow: none;
+}
+.postcard-original { font-size: min(10vw, 40px); }
+/* The longest line of a verse is seven characters: size it to fill the width beside the date. */
+@supports (width: 1cqw) {
+  .photo-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 54px) / 6.75), 52px); }
+  .postcard-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 50px) / 7.4), 46px); }
+}
+.photo-original > span, .postcard-original > span { display: block; white-space: nowrap; }
+.neo-capture .photo-modern, .postcard-prompt {
+  display: block; position: static; width: auto; max-width: 100%;
+  margin: 9px 0 0; padding: 0 0 0 3px; border: 0;
+  color: var(--frame-color);
+  font: italic 900 15px/1.32 var(--font-ui); letter-spacing: -.01em;
+  text-shadow: none; overflow-wrap: anywhere;
+}
+.photo-words::after {
+  content: "＋ ヒント"; display: block; margin: 8px 0 0; padding-left: 3px;
+  font: italic 900 11px/1 var(--font-ui); letter-spacing: .04em; opacity: .85;
+}
+.photo-words[aria-expanded="true"]::after { content: "－ ヒント"; }
+.capture-prompt .haiku-hint {
+  width: fit-content; max-width: 100%;
+  margin: 8px 0 0; padding: 8px 12px 8px 6px;
+  border: 0; border-radius: 0;
+  background: var(--frame-color); color: var(--green-ink);
+  font: italic 800 14px/1.45 var(--font-ui);
+}
+
+.capture-date, .postcard-date {
+  position: absolute; z-index: 2; top: 0; right: 0; bottom: auto; margin: 0;
+  display: flex; align-items: center; gap: 8px;
+  writing-mode: vertical-rl;
+  color: var(--frame-color);
+  font: italic 900 14px/1 var(--font-ui); letter-spacing: .02em;
+  text-shadow: none; opacity: 1;
+}
+.capture-date .date-day, .postcard-date .date-day { font-size: min(11.4vw, 46px); line-height: .92; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.capture-date::after, .postcard-date::after { content: attr(data-weekday); font-size: 14px; }
+
+/* Bottom: 自分の記録 — shutter — みんなの今日 */
+.capture-nav {
+  position: absolute; z-index: 3; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding-bottom: var(--safe-bottom);
+  pointer-events: none;
+}
+.capture-nav button {
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
+  min-width: 104px; min-height: 76px; padding: 14px 6px 1px 2px;
+  border: 0; border-radius: 0; background: none;
+  color: var(--frame-color);
+  font: italic 900 13px/1.05 var(--font-ui); letter-spacing: -.02em;
+  pointer-events: auto;
+}
+.capture-nav button:last-child { align-items: flex-end; padding: 14px 4px 1px 6px; }
+.capture-nav strong { font: inherit; font-size: 30px; line-height: .98; letter-spacing: -.05em; }
+.capture-nav button:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+.neo-capture .photo-capture-empty {
+  left: 50%; bottom: calc(16px + var(--safe-bottom));
+  width: auto; padding: 0; gap: 8px;
+  flex-direction: column-reverse;
+  transform: translateX(-50%);
+  color: var(--frame-color);
+}
+.camera-shutter { width: 76px; height: 76px; border: 4px solid var(--frame-color); background: var(--frame-color); box-shadow: inset 0 0 0 4px #0b0e0b; }
+.photo-capture-empty:disabled { opacity: 1; }
+.photo-capture-empty:disabled .camera-shutter { opacity: .5; }
+.neo-capture .photo-capture-empty strong { font: italic 900 12px/1.2 var(--font-ui); letter-spacing: 0; text-shadow: none; white-space: nowrap; }
+.capture-extra-actions {
+  left: auto; right: 6px; bottom: calc(96px + var(--safe-bottom));
+  flex-direction: column; justify-content: flex-end; gap: 10px;
+}
+.capture-extra-actions button {
+  width: 42px; height: 42px;
+  border: 2px solid var(--frame-color); border-radius: 50%;
+  background: none; color: var(--frame-color);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.capture-extra-actions button svg { display: block; margin: auto; }
+.capture-extra-actions button:disabled { opacity: .45; }
+
+/* After the shot: one line of your own in the same voice, then post. */
+.neo-capture .photo-caption-field { left: 3px; right: 104px; bottom: calc(104px + var(--safe-bottom)); color: var(--frame-color); }
+.neo-capture .photo-caption-field > small { color: var(--frame-color); font: italic 900 11px/1.3 var(--font-ui); letter-spacing: .02em; }
+.neo-capture .photo-caption-field textarea {
+  margin-top: 2px; padding: 2px 0 6px;
+  border: 0; border-bottom: 3px solid var(--frame-color); border-radius: 0;
+  background: none; color: var(--frame-color);
+  font: italic 900 22px/1.22 var(--font-ui); letter-spacing: -.02em;
+}
+.neo-capture .photo-caption-field textarea::placeholder { color: var(--frame-color); opacity: .6; }
+.neo-capture .photo-caption-field textarea:focus { outline: none; border-bottom-color: #fff; }
+.neo-capture .photo-capture-actions { display: contents; }
+.neo-capture .photo-capture-actions > button { position: absolute; z-index: 3; border-radius: 0; font-style: italic; font-weight: 900; }
+/* Posting is the shutter's successor: the same circle, now a send icon; a tick once friends have it. */
+.neo-capture .photo-capture-actions [data-haiku-action="save"] {
+  left: 50%; bottom: calc(16px + var(--safe-bottom));
+  display: grid; place-items: center;
+  width: 76px; min-width: 0; height: 76px; min-height: 0; padding: 0;
+  transform: translateX(-50%);
+  border: 4px solid var(--frame-color); border-radius: 50%;
+  background: var(--frame-color); color: var(--green-ink);
+  box-shadow: inset 0 0 0 4px #0b0e0b;
+}
+.neo-capture .photo-capture-actions [data-haiku-action="save"] svg { display: block; transform: translate(-1px, 1px); }
+.neo-capture .photo-capture-actions [data-haiku-action="save"] .icon-sent { transform: none; }
+.neo-capture .photo-capture-actions [data-haiku-action="save"]:active { transform: translateX(-50%) translateY(1px); }
+.neo-capture .photo-capture-actions [data-haiku-action="save"]:disabled:has(.icon-sent) { opacity: 1; background: none; color: var(--frame-color); box-shadow: none; }
+.neo-capture .photo-capture-actions [data-haiku-action="retake"] {
+  right: 6px; bottom: calc(104px + var(--safe-bottom));
+  width: auto; min-width: 0; min-height: 40px; padding: 0 10px;
+  border: 2px solid var(--frame-color); background: none; color: var(--frame-color);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  font-size: 13px;
+}
+.neo-capture > .public-audience { margin: 12px var(--gutter) 28px; }
+/* Messages and recovery actions sit inside the frame, above the caption. */
+.capture-notices {
+  position: absolute; z-index: 4; left: 0; right: 58px; bottom: calc(204px + var(--safe-bottom));
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  pointer-events: none;
+}
+.capture-stage:not(.has-photo) .capture-notices { bottom: calc(112px + var(--safe-bottom)); }
+.capture-notices > * { margin: 0; pointer-events: auto; }
+.capture-notices .haiku-status { margin: 0; padding: 6px 12px 6px 6px; background: var(--frame-color); color: var(--green-ink); font: italic 800 13px/1.4 var(--font-ui); }
+.capture-notices .reading-error { max-width: 100%; margin: 0; padding: 8px 12px 8px 6px; border: 0; border-radius: 0; background: #ffd9cc; color: #5a1a0c; font: 700 13px/1.5 var(--font-ui); }
+.capture-notices .outline-button { width: auto; min-height: 44px; padding: 0 14px; border: 2px solid var(--frame-color); border-radius: 0; background: #0b0e0b; color: var(--frame-color); font: italic 900 13px/1.2 var(--font-ui); }
+.capture-notices .camera-facing-options { margin: 0; border-radius: 0; background: #0b0e0b; }
+.capture-notices .camera-facing-options button { border-radius: 0; padding: 0 14px; }
+
+/* ---- Posted cards wear the same frame ---- */
+.photo-postcard, .friends-feature .photo-postcard { border: var(--frame-w) solid var(--frame-color); aspect-ratio: 3 / 4; }
+.photo-postcard::before { display: none; }
+.photo-postcard::after { background: linear-gradient(180deg,#00000073 0%,transparent 42%,transparent 64%,#0000008c 100%); }
+.postcard-words { position: absolute; z-index: 2; inset: 0 44px auto 0; }
+.postcard-prompt { margin-top: 7px; font-size: 13px; }
+.postcard-date .date-day { font-size: min(9.6vw, 39px); }
+.postcard-caption, .friend-own-photo .friend-own-caption {
+  left: 0; right: 0; bottom: 0; padding: 0 48px 5px 3px;
+  background: none; color: var(--frame-color);
+  font: italic 900 20px/1.22 var(--font-ui); letter-spacing: -.02em;
+}
+
+/* ---- 友達の投稿・カレンダー: back to the camera, bottom centre ---- */
+.screen-nav { position: absolute; z-index: 30; left: 50%; bottom: calc(18px + var(--safe-bottom)); transform: translateX(-50%); }
+.screen-nav button {
+  display: grid; place-items: center;
+  width: 68px; height: 68px;
+  border: 4px solid var(--bg); border-radius: 50%;
+  background: var(--frame-color); color: var(--green-ink);
+  box-shadow: 0 0 0 3px var(--frame-color);
+}
+.screen-nav button:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+.friends-feature h1, .reading-mode-calendar .public-feed .feed-heading h1 { font: italic 900 30px/1.1 var(--font-ui); letter-spacing: -.04em; }
+
+@media (max-width: 360px) {
+  .capture-nav strong { font-size: 26px; }
+  .capture-nav button { min-width: 88px; }
+  .neo-capture .photo-caption-field textarea { font-size: 19px; }
+  .postcard-caption { font-size: 17px; }
+}
+@media (max-height: 640px) {
+  .neo-capture .capture-stage { min-height: 420px; }
+  .capture-stage.has-photo .photo-modern, .capture-stage.has-photo .photo-words::after { display: none; }
+}

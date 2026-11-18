@@ -4,6 +4,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 class Handler(SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
@@ -35,7 +42,7 @@ try:
    context.route('https://sharing.test/api/sharing/**',api)
   a,b=[context.new_page() for context in contexts]
   for page in [a,b]:page.on('pageerror',lambda error:errors.append(str(error)));page.goto(origin+'/',wait_until='networkidle')
-  b.locator('.tabbar [data-nav=friends]').click()
+  go(b,'friends')
   expect(b.locator('.public-empty')).to_be_visible()
   # A captures and publishes to the actual local Worker, not a fixture feed.
   a.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-sunset.png'))
@@ -68,7 +75,7 @@ try:
   expect(a.locator('[data-public-action=delete-comment]')).to_have_count(0)
   a.screenshot(path='/tmp/basho-public-sharing.png',full_page=True)
   # Publication failure preserves local photo and never reports success.
-  a.locator('.tabbar [data-nav=home]').click()
+  go(a,'home')
   a.locator('[data-photo-caption]').fill('通信に失敗しても保存する写真')
   a.route('https://sharing.test/api/sharing/publish',lambda route:route.fulfill(status=503,headers={'Access-Control-Allow-Origin':origin},content_type='application/json',body='{"error":"サーバーに接続できません。"}'))
   a.locator('[data-haiku-action=save]').click()
@@ -81,7 +88,7 @@ try:
   b.locator('[data-public-action=close]').click()
   b.locator('[data-public-action=refresh]').click()
   expect(b.locator('.postcard-caption')).to_have_text('通信に失敗しても保存する写真')
-  a.locator('.tabbar [data-nav=friends]').click()
+  go(a,'friends')
   a.on('dialog',lambda dialog:dialog.accept())
   a.locator('[data-public-action=delete-photo]').click()
   expect(a.locator('.feed-post')).to_have_count(0)

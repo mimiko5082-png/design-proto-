@@ -1,4 +1,5 @@
-"""A browser-owned fake camera tests opening, capture, cancellation and track cleanup."""
+"""A browser-owned fake camera tests the in-frame viewfinder, capture, cancellation and track cleanup."""
+import re
 import os
 import subprocess
 import threading
@@ -7,6 +8,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 SHARE=os.environ.get('CAMERA_TEST_SHARE')=='1'
 subprocess.run(['npm','--prefix','preview','run','share'] if SHARE else ['node','preview/build.mjs'],cwd=ROOT,check=True)
@@ -33,57 +41,55 @@ try:
    navigator.mediaDevices.getUserMedia=window.realGetCamera;""")
   page.clock.install(time=datetime(2026,10,29,3,0,tzinfo=timezone.utc))
   page.goto(origin+('/share.html' if SHARE else '/'),wait_until='networkidle')
-  expect(page.locator('[data-haiku-action=camera]')).to_be_enabled()
-  assert page.evaluate('window.cameraCalls')==0
-  page.locator('[data-haiku-action=camera]').click()
-  expect(page.locator('.photo-camera-dialog')).to_be_visible()
+  # Without today's photograph the viewfinder starts by itself inside the frame; there is no dialog.
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
+  expect(page.locator('.capture-stage.is-live video[data-camera-video]')).to_be_visible()
+  expect(page.locator('dialog')).to_have_count(0)
+  expect(page.locator('.capture-stage .photo-original')).to_be_visible()
   assert page.evaluate('window.cameraCalls')==1
   assert page.evaluate('window.cameraConstraints.audio')==False
   assert page.evaluate('window.cameraConstraints.video.facingMode.ideal')=='environment'
-  # Both explicit lens choices request the selected side and release the old stream.
-  page.locator('[data-camera-facing=user]').click()
+  # Switching lenses requests the other side explicitly and releases the old stream.
+  page.locator('[data-haiku-action=camera-flip]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   assert page.evaluate('window.cameraConstraints.video.facingMode.exact')=='user'
-  expect(page.locator('[data-camera-facing=user]')).to_have_attribute('aria-pressed','true')
-  expect(page.locator('[data-camera-video]')).to_have_class('is-front-camera')
+  expect(page.locator('[data-camera-video]')).to_have_class(re.compile('is-front-camera'))
   expect(page.locator('[data-camera-status]')).to_contain_text('内カメ')
   assert page.evaluate('window.cameraTracks.slice(0,-1).every(t=>t.readyState==="ended")')
-  page.locator('[data-camera-facing=environment]').click()
+  page.locator('[data-haiku-action=camera-flip]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   assert page.evaluate('window.cameraConstraints.video.facingMode.exact')=='environment'
-  expect(page.locator('[data-camera-facing=environment]')).to_have_attribute('aria-pressed','true')
-  expect(page.locator('[data-camera-video]')).not_to_have_class('is-front-camera')
+  expect(page.locator('[data-camera-video]')).not_to_have_class(re.compile('is-front-camera'))
   expect(page.locator('[data-camera-status]')).to_contain_text('外カメ')
   # A browser rejecting strict facingMode can still open that lens by preference.
   page.evaluate("""() => { window.nativeEnumerate=navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);navigator.mediaDevices.enumerateDevices=async()=>[];window.strictFailures=0;navigator.mediaDevices.getUserMedia=async constraints=>{if(constraints.video.facingMode?.exact){window.strictFailures++;throw new DOMException('unsupported constraint','OverconstrainedError');}return window.realGetCamera(constraints);}; }""")
-  page.locator('[data-camera-facing=user]').click()
+  page.locator('[data-haiku-action=camera-flip]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   assert page.evaluate('window.strictFailures')==1
   assert page.evaluate('window.cameraConstraints.video.facingMode.ideal')=='user'
   expect(page.locator('[data-camera-status]')).to_contain_text('内カメ')
   page.evaluate('() => { navigator.mediaDevices.getUserMedia=window.realGetCamera;navigator.mediaDevices.enumerateDevices=window.nativeEnumerate; }')
-  page.locator('[data-camera-facing=environment]').click()
+  page.locator('[data-haiku-action=camera-flip]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   page.screenshot(path='/tmp/basho-direct-camera.png',full_page=True)
   page.locator('[data-haiku-action=camera-shoot]').click()
-  expect(page.locator('.photo-camera-dialog')).to_have_count(0)
+  expect(page.locator('[data-camera-video]')).to_have_count(0)
   expect(page.locator('basho-haiku .haiku-photo')).to_be_visible()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
   first=page.locator('basho-haiku .haiku-photo').get_attribute('src')
-  # Closing retake preserves the existing photograph; Escape also stops tracks.
+  # Cancelling a retake returns to the existing photograph and stops the tracks.
   page.locator('[data-haiku-action=retake]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
-  page.keyboard.press('Escape')
-  expect(page.locator('.photo-camera-dialog')).to_have_count(0)
+  page.locator('[data-haiku-action=camera-close]').click()
+  expect(page.locator('[data-camera-video]')).to_have_count(0)
   expect(page.locator('basho-haiku .haiku-photo')).to_have_attribute('src',first)
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
   # Retake captures a new frame, but nothing is saved until the submit button.
   page.locator('[data-haiku-action=retake]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
   page.locator('[data-haiku-action=camera-shoot]').click()
-  expect(page.locator('.photo-camera-dialog')).to_have_count(0)
+  expect(page.locator('[data-camera-video]')).to_have_count(0)
   expect(page.locator('[data-photo-caption]')).to_be_enabled()
   expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
   page.locator('[data-photo-caption]').fill('いつもの道の光がきれい。')
@@ -91,7 +97,7 @@ try:
   page.locator('[data-haiku-action=save]').click()
   expect(page.locator('.haiku-create [role=alert]')).to_contain_text('この端末には保存済み')
   expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  page.locator('.tabbar [data-nav=home]').click()
+  go(page,'home')
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   assert page.locator('basho-haiku').evaluate('(node)=>node.card.caption')=='いつもの道の光がきれい。'
   saved=page.locator('basho-haiku .haiku-photo').get_attribute('src')
@@ -111,26 +117,26 @@ try:
   # Permission granted after cancellation must stop its stale stream immediately.
   page.evaluate("() => { navigator.mediaDevices.getUserMedia=async constraints=>{await new Promise(resolve=>window.releaseCamera=resolve);return window.realGetCamera(constraints)}; }")
   page.locator('[data-haiku-action=retake]').click()
-  expect(page.locator('.photo-camera-dialog')).to_be_visible()
+  expect(page.locator('[data-haiku-action=camera-close]')).to_be_visible()
   page.locator('[data-haiku-action=camera-close]').first.click()
   count=page.evaluate('window.cameraTracks.length')
   page.evaluate('window.releaseCamera()')
   page.wait_for_function('count => window.cameraTracks.length === count + 1 && window.cameraTracks.every(t=>t.readyState==="ended")',arg=count)
-  expect(page.locator('.photo-camera-dialog')).to_have_count(0)
+  expect(page.locator('[data-camera-video]')).to_have_count(0)
   # Routing away must release active camera resources.
   page.evaluate('() => { navigator.mediaDevices.getUserMedia=window.realGetCamera; }')
   page.locator('[data-haiku-action=retake]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
-  page.locator('.tabbar [data-nav=calendar]').evaluate('button=>button.click()')
+  page.locator('.capture-nav [data-nav=calendar]').evaluate('button=>button.click()')
   expect(page.locator('.reading-mode-calendar')).to_be_visible()
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
   expect(page.locator('.local-calendar-photo')).to_have_count(1)
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text('いつもの道の光がきれい。')
-  page.locator('.tabbar [data-nav=friends]').click()
+  go(page,'friends')
   expect(page.locator('.friend-own-caption')).to_have_count(0)
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
   assert not errors,errors
   assert all(url.startswith('https://www.gstatic.com/firebasejs/') for url in external),external
   browser.close()
-  print('PASS: direct camera opening, rear preference, capture, retake/cancel, permission denial, stale grant and navigation track cleanup; no uploads')
+  print('PASS: in-frame viewfinder, rear preference, capture, retake/cancel, permission denial, stale grant and navigation track cleanup; no uploads')
 finally:server.shutdown()

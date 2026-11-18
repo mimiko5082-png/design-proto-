@@ -1,4 +1,5 @@
 import { decodeImageData, MAX_AI_IMAGE_BYTES } from './image-validation.js';
+import { topicById } from './haiku-catalog.js';
 export const escapeText = value => String(value || '').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export function postDate(card) {
   const time=Number(card.createdAt);
@@ -8,9 +9,19 @@ export function postDate(card) {
   }
   return String(card.day || '').replaceAll('-','.');
 }
+// The date is split into parts so a frame can set the day large; the text still reads "2026.11.18 19:05".
+export function dateMarkup(card, className) {
+  const text=postDate(card),match=/^(\d{4})\.(\d{2})\.(\d{2})(?: (\d{2}:\d{2}))?$/.exec(text);
+  if(!match) return `<time class="${className}">${escapeText(text)}</time>`;
+  const weekday='日月火水木金土'[new Date(Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]))).getUTCDay()];
+  return `<time class="${className}" aria-label="${text}" data-weekday="${weekday}"><span class="date-year">${match[1]}.</span><span class="date-day"><span class="date-month">${match[2]}</span>.<span class="date-date">${match[3]}</span></span>${match[4]?` <span class="date-time">${match[4]}</span>`:''}</time>`;
+}
+// The verse is set as three stacked lines (5-7-5) when the topic is known, otherwise as one block.
+export const verseLines = (topic, original) => Array.isArray(topic?.lines) && topic.lines.length ? topic.lines : [original || topic?.original || ''].filter(Boolean);
+export const verseMarkup = lines => lines.map(line=>`<span>${escapeText(line)}</span>`).join('');
 export function postcardMarkup(card, {imageClass='',captionClass='',className=''}={}) {
   const esc=escapeText;
-  return `<figure class="photo-postcard ${className}"><img class="postcard-image ${imageClass}" src="${esc(card.image)}" alt="${esc(card.day)}の写真"><span class="postcard-edition" aria-hidden="true">BASHO / DAILY FRAME</span><figcaption class="postcard-prompt">${esc(card.modern || '')}</figcaption><time class="postcard-date">${esc(postDate(card))}</time>${card.caption?`<p class="postcard-caption ${captionClass}">${esc(card.caption)}</p>`:''}</figure>`;
+  return `<figure class="photo-postcard ${className}"><img class="postcard-image ${imageClass}" src="${esc(card.image)}" alt="${esc(card.day)}の写真"><figcaption class="postcard-words"><span class="postcard-original">${verseMarkup(verseLines(topicById(card.topicId),card.original))}</span><span class="postcard-prompt">${esc(card.modern || '')}</span></figcaption>${dateMarkup(card,'postcard-date')}${card.caption?`<p class="postcard-caption ${captionClass}">${esc(card.caption)}</p>`:''}</figure>`;
 }
 function wrap(ctx,text,width) {
   const lines=[];for(const paragraph of String(text||'').split('\n')) {let line='';for(const char of paragraph){if(line&&ctx.measureText(line+char).width>width){lines.push(line);line=char;}else line+=char;}lines.push(line);}return lines;
@@ -20,19 +31,34 @@ export async function createPostcardFile(card) {
   const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(Error('Photo unavailable'));img.src=card.image;});
   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1800;const ctx=canvas.getContext('2d');
   if(!ctx)throw Error('Canvas unavailable');
-  const green='#32b96e',border=12;
-  ctx.fillStyle=green;ctx.fillRect(0,0,1080,1800);
-  const iw=1080-border*2,ih=1800-border*2;
+  // Same poster frame as on screen: thick green border, every word in the border's colour,
+  // heavy italic, no shadow, set against the edge.
+  const green='#32b96e',W=1080,H=1800,border=Math.round(W*.03),iw=W-border*2,ih=H-border*2;
+  const face='-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif';
+  const type=(size,spacing=0)=>{ctx.font=`italic 900 ${size}px ${face}`;if('letterSpacing' in ctx)ctx.letterSpacing=`${(spacing*size).toFixed(1)}px`;};
+  ctx.fillStyle=green;ctx.fillRect(0,0,W,H);
   ctx.save();ctx.beginPath();ctx.rect(border,border,iw,ih);ctx.clip();
   const scale=Math.max(iw/image.width,ih/image.height),sw=iw/scale,sh=ih/scale;
   ctx.drawImage(image,(image.width-sw)/2,(image.height-sh)/2,sw,sh,border,border,iw,ih);
-  const gradient=ctx.createLinearGradient(0,border,0,700);gradient.addColorStop(0,'#050805dd');gradient.addColorStop(1,'#05080500');ctx.fillStyle=gradient;ctx.fillRect(border,border,iw,700);
-  ctx.strokeStyle='#ffffff40';ctx.lineWidth=2;ctx.strokeRect(border+22,border+22,iw-44,ih-44);
-  ctx.fillStyle=green;ctx.font='bold 23px monospace';ctx.fillText('BASHO / DAILY FRAME',border+48,100);
-  ctx.font='bold italic 62px sans-serif';const titleLines=wrap(ctx,card.modern,iw-130);
-  for(let i=0;i<titleLines.length;i++)ctx.fillText(titleLines[i],border+48,195+i*86);
-  if(card.caption){ctx.font='bold italic 46px sans-serif';const lines=wrap(ctx,card.caption,iw-140);const height=lines.length*65+85;const shade=ctx.createLinearGradient(0,1800-border-height-90,0,1800-border);shade.addColorStop(0,'#090d0900');shade.addColorStop(1,'#090d09f5');ctx.fillStyle=shade;ctx.fillRect(border,1800-border-height-90,iw,height+90);ctx.fillStyle='#f3f5ed';lines.forEach((line,i)=>ctx.fillText(line,border+42,1800-border-height+65+i*65));}
-  ctx.translate(1080-border-30,Math.min(1510,1800-border-60));ctx.rotate(Math.PI/2);ctx.fillStyle=green;ctx.font='bold 25px sans-serif';ctx.fillText(postDate(card),-360,0);ctx.restore();
+  const top=ctx.createLinearGradient(0,border,0,border+ih*.4);top.addColorStop(0,'#00000073');top.addColorStop(1,'#00000000');ctx.fillStyle=top;ctx.fillRect(border,border,iw,ih*.4);
+  const foot=ctx.createLinearGradient(0,border+ih*.6,0,H-border);foot.addColorStop(0,'#00000000');foot.addColorStop(1,'#0000008c');ctx.fillStyle=foot;ctx.fillRect(border,border+ih*.6,iw,ih*.4);
+  ctx.fillStyle=green;ctx.textBaseline='top';
+  const dateColumn=150,verse=verseLines(topicById(card.topicId),card.original),verseSize=Math.min((iw-dateColumn)/6.75,144);
+  let y=border-verseSize*.04;
+  type(verseSize,-.045);for(const line of verse){ctx.fillText(line,border,y);y+=verseSize*1.04;}
+  type(42,-.01);y+=22;for(const line of wrap(ctx,card.modern,iw-dateColumn-10)){ctx.fillText(line,border+8,y);y+=42*1.32;}
+  if(card.caption){type(58,-.02);const lines=wrap(ctx,card.caption,iw-dateColumn);let cy=H-border-12-lines.length*58*1.22;for(const line of lines){ctx.fillText(line,border+8,cy);cy+=58*1.22;}}
+  // The date runs down the right edge, the day set large.
+  const stamp=/^(\d{4})\.(\d{2})\.(\d{2})(?: (\d{2}:\d{2}))?$/.exec(postDate(card));
+  ctx.translate(W-border,border);ctx.rotate(Math.PI/2);
+  let x=4;
+  if(stamp){
+    const weekday='日月火水木金土'[new Date(Date.UTC(Number(stamp[1]),Number(stamp[2])-1,Number(stamp[3]))).getUTCDay()];
+    for(const [text,size] of [[stamp[1]+'.',40],[`${stamp[2]}.${stamp[3]}`,128],[stamp[4]||'',40],[weekday,40]]){
+      if(!text)continue;type(size,size>100?-.04:.02);ctx.fillText(text,x,size>100?-6:(128-size)/2);x+=ctx.measureText(text).width+22;
+    }
+  }else{type(40,.02);ctx.fillText(postDate(card),x,0);}
+  ctx.restore();
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Image export failed')),'image/png'));
   return new File([blob],`basho-post-${card.day}.png`,{type:'image/png'});
 }

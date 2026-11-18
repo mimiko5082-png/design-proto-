@@ -5,6 +5,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
+def go(page,target):
+ # There is no tab bar: the camera screen links to the other two screens beside the shutter,
+ # and they return through the camera button at the bottom centre.
+ if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
+ elif target=='home':
+  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
+ if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['node','preview/build.mjs'],cwd=ROOT,check=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -28,7 +35,7 @@ try:
     await saveCard({id:'past-local-photo',day:'2026-11-14',topicDay:'2026-11-14',topicId:topic.id,lines:topic.lines,modern:topic.modern,original:topic.original,creation:'photo-challenge',createdAt:Date.parse('2026-11-14T03:00:00Z'),caption:'以前撮った自分の写真',reflection:'PRIVATE_REFLECTION_NOT_FOR_FRIENDS',image:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='});
     await saveCard({id:'same-day-local-photo',day:'2026-11-15',topicDay:'2026-11-15',topicId:topic.id,lines:topic.lines,modern:topic.modern,creation:'photo-challenge',createdAt:Date.parse('2026-11-15T03:00:00Z'),caption:'友達と同じ日の自分の写真',image:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='});
   }''')
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   expect(page.locator('.calendar-audience')).to_have_count(0)
   page.locator('[data-public-action=calendar-day][data-day="2026-11-14"]').click()
   expect(page.locator('.friend-photo-grid')).to_contain_text('以前撮った自分の写真')
@@ -74,7 +81,7 @@ try:
   # Device photos remain available when Firebase SDK/authentication cannot load.
   page.route('https://**/*',lambda route:route.abort())
   page.goto(base+'/index.html',wait_until='networkidle')
-  page.locator('.tabbar [data-nav=calendar]').click()
+  go(page,'calendar')
   page.locator('[data-public-action=calendar-day][data-day="2026-11-15"]').click()
   expect(page.locator('.local-calendar-photo')).to_contain_text('友達と同じ日の自分の写真')
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
