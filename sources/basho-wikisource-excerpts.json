@@ -1,249 +1,1786 @@
 {
-  "title": "芭蕉俳句全集",
-  "url": "https://ja.wikisource.org/wiki/芭蕉俳句全集",
-  "provenance": "ユーザーが2026-10-29に提供した本文からの抜粋。ライブページを取得したものではない。",
-  "inputSha256": "cd45f664a92b3bf1c7c640d9d912429ca4ad321dcd24a9e64d3446756336efb5",
+ "title": "芭蕉俳句全集",
+ "url": "https://ja.wikisource.org/wiki/芭蕉俳句全集",
+ "provenance": "ユーザーが2026-10-29に提供した本文からの抜粋。ライブページを取得したものではない。",
+ "inputSha256": "cd45f664a92b3bf1c7c640d9d912429ca4ad321dcd24a9e64d3446756336efb5",
+ "normalization": "空白と改行を除去。縦書き繰返し記号〳〵を保持。",
+ "excerpts": [
+  {
+   "id": "basho-shizukasa",
+   "original": "閑さや岩にしみ入るせみの聲"
+  },
+  {
+   "id": "basho-samidare",
+   "original": "五月雨を集めて早し最上川"
+  },
+  {
+   "id": "basho-natsukusa",
+   "original": "夏草や兵どもが夢の跡"
+  },
+  {
+   "id": "basho-akaaka",
+   "original": "あか〳〵と日はつれなくも秋の風"
+  },
+  {
+   "id": "basho-togarashi",
+   "original": "靑くても有るべきものを唐辛"
+  },
+  {
+   "id": "basho-aoyagi",
+   "original": "靑柳の泥にしだるゝ汐干哉"
+  },
+  {
+   "id": "basho-harunare",
+   "original": "春なれや名もなき山の朝霞"
+  },
+  {
+   "id": "basho-harusame-shizuku",
+   "original": "春雨の木下に傳ふしづく哉"
+  },
+  {
+   "id": "basho-harusame-yomogi",
+   "original": "春雨や蓬をのばす草の道"
+  },
+  {
+   "id": "basho-hibari-nagakihi",
+   "original": "長き日を囀り足らぬ雲雀かな"
+  },
+  {
+   "id": "basho-hibari-touge",
+   "original": "雲雀より上に休らふ峠かな"
+  },
+  {
+   "id": "basho-chou-hikage",
+   "original": "蝶のとぶばかり野中の日影哉"
+  },
+  {
+   "id": "basho-chou-hane",
+   "original": "蝶の羽の幾度越ゆる塀の屋根"
+  },
+  {
+   "id": "basho-umegaka",
+   "original": "梅が香にのつと日の出る山路哉"
+  },
+  {
+   "id": "basho-ume-tori",
+   "original": "梅さいて喜ぶとりの景色哉"
+  },
+  {
+   "id": "basho-ippon-yanagi",
+   "original": "野と山の中に一本柳哉"
+  },
+  {
+   "id": "basho-tsubaki-mizu",
+   "original": "落ちさまに水こぼしけり花椿"
+  },
+  {
+   "id": "basho-sakura-kazenaki",
+   "original": "風なきに散るや若木の花櫻"
+  },
+  {
+   "id": "basho-hatsuzakura",
+   "original": "初櫻をりしもけふはよき日也"
+  },
+  {
+   "id": "basho-hananoyama",
+   "original": "山の名もきゝたし花の山の道"
+  },
+  {
+   "id": "basho-sumire",
+   "original": "山路來て何やらゆかし菫草"
+  },
+  {
+   "id": "basho-furuike",
+   "original": "古池や蛙とびこむ水の音"
+  },
+  {
+   "id": "basho-hotaru-kusanoha",
+   "original": "草の葉を落ちるよりとぶ螢哉"
+  },
+  {
+   "id": "basho-hotaru-hiru",
+   "original": "晝見れば首筋赤き螢哉"
+  },
+  {
+   "id": "basho-katatsumuri",
+   "original": "蝸牛角ふりわけよ須磨明石"
+  },
+  {
+   "id": "basho-minakami",
+   "original": "水上は鶯啼いて水淺し"
+  },
+  {
+   "id": "basho-sara-hachi",
+   "original": "皿鉢のほのかに響く宵すゞみ"
+  },
+  {
+   "id": "basho-kawakaze",
+   "original": "川風や薄かき衣たる夕納凉"
+  },
+  {
+   "id": "basho-natsuzashiki",
+   "original": "山も庭も動き入るゝや夏座敷"
+  },
+  {
+   "id": "basho-minazuki",
+   "original": "六月や峰に雲置く嵐山"
+  },
+  {
+   "id": "basho-kitsutsuki",
+   "original": "木啄も庵は破らず夏木立"
+  },
+  {
+   "id": "basho-atsukihi",
+   "original": "暑き日を海へ入れたり最上川"
+  },
+  {
+   "id": "basho-kumo-tsuki",
+   "original": "雲の峰幾つ崩れて月の山"
+  },
+  {
+   "id": "basho-akino-mizu",
+   "original": "あきの野や草の中ゆく水の音"
+  },
+  {
+   "id": "basho-akifukaki",
+   "original": "秋深き隣は何をする人ぞ"
+  },
+  {
+   "id": "basho-konomichi",
+   "original": "此道や行く人なしに秋の暮"
+  },
+  {
+   "id": "basho-kareeda",
+   "original": "枯枝に烏のとまりけり秋の暮"
+  },
+  {
+   "id": "basho-araumi",
+   "original": "荒海や佐渡に橫ふ天の川"
+  },
+  {
+   "id": "basho-meigetsu-mado",
+   "original": "名月や西にもほしき窓一つ"
+  },
+  {
+   "id": "basho-meigetsu-kage",
+   "original": "名月や我と筆架の影法師"
+  },
+  {
+   "id": "basho-asagao-mizu",
+   "original": "朝顏や水ある方に人の立つ"
+  },
+  {
+   "id": "basho-monoieba",
+   "original": "物いへば唇寒し秋の風"
+  },
+  {
+   "id": "basho-kikunoka",
+   "original": "菊の香や奈良には古き佛達"
+  },
+  {
+   "id": "basho-aki-shiroshi",
+   "original": "石山の石より白し秋の風"
+  },
+  {
+   "id": "basho-hatsuyuki-suisen",
+   "original": "初雪や水仙の葉のたわむ程"
+  },
+  {
+   "id": "basho-hatsuyuki-hashi",
+   "original": "初雪やかけかゝりたる橋のうへ"
+  },
+  {
+   "id": "basho-yuki-asa",
+   "original": "雪の朝ひとり乾鮭をかみ得たり"
+  },
+  {
+   "id": "basho-yukimi",
+   "original": "いざさらば雪見にころぶ所迄"
+  },
+  {
+   "id": "basho-suisen-shoji",
+   "original": "水仙や白き障子のともうつり"
+  },
+  {
+   "id": "basho-fuyugare",
+   "original": "冬枯や世は一色に風の音"
+  },
+  {
+   "id": "basho-umikurete",
+   "original": "海暮れて鴨の聲ほのかに白し"
+  },
+  {
+   "id": "basho-hyakunen",
+   "original": "百年の景色を庭の落葉哉"
+  },
+  {
+   "id": "basho-tabiniyande",
+   "original": "旅に病んで夢は枯野をかけめぐる"
+  },
+  {
+   "id": "basho-fuyunosora",
+   "original": "我ために日はうらゝ也冬の空"
+  },
+  {
+   "id": "basho-chanohana",
+   "original": "茶の花に人里ちかき山路哉"
+  },
+  {
+   "id": "basho-kaitsuburi",
+   "original": "かいつぶり顏見合せて又はいり"
+  },
+  {
+   "id": "basho-kamo-ukine",
+   "original": "己が身を枕に鴨のうきね哉"
+  },
+  {
+   "id": "basho-tsukitoume",
+   "original": "春もやゝ景色とゝのふ月と梅"
+  },
+  {
+   "id": "basho-neko-oboro",
+   "original": "猫の戀やむ時閨のおぼろ月"
+  },
+  {
+   "id": "basho-chanoha-aki",
+   "original": "秋風の吹いても靑し栗の毯"
+  }
+ ],
+ "additions": {
+  "provenance": "2026-11-18にWikisourceの同ページ（action=render）を取得した本文からの抜粋。各句は本文の1行と完全一致。季節は底本の部立てに従い、新年の句（春の部）は1月に出すため冬の枠に入れた。読みと五七五の区切り・現代語訳はAIによる下書きで、人による確認前。",
+  "inputSha256": "16f45745fcba1a4837aaa854b43e90596fcad664f6c8d566aff6e5151772f8bd",
   "normalization": "空白と改行を除去。縦書き繰返し記号〳〵を保持。",
   "excerpts": [
-    {
-      "id": "basho-shizukasa",
-      "original": "閑さや岩にしみ入るせみの聲"
-    },
-    {
-      "id": "basho-samidare",
-      "original": "五月雨を集めて早し最上川"
-    },
-    {
-      "id": "basho-natsukusa",
-      "original": "夏草や兵どもが夢の跡"
-    },
-    {
-      "id": "basho-akaaka",
-      "original": "あか〳〵と日はつれなくも秋の風"
-    },
-    {
-      "id": "basho-togarashi",
-      "original": "靑くても有るべきものを唐辛"
-    },
-    {
-      "id": "basho-aoyagi",
-      "original": "靑柳の泥にしだるゝ汐干哉"
-    },
-    {
-      "id": "basho-harunare",
-      "original": "春なれや名もなき山の朝霞"
-    },
-    {
-      "id": "basho-harusame-shizuku",
-      "original": "春雨の木下に傳ふしづく哉"
-    },
-    {
-      "id": "basho-harusame-yomogi",
-      "original": "春雨や蓬をのばす草の道"
-    },
-    {
-      "id": "basho-hibari-nagakihi",
-      "original": "長き日を囀り足らぬ雲雀かな"
-    },
-    {
-      "id": "basho-hibari-touge",
-      "original": "雲雀より上に休らふ峠かな"
-    },
-    {
-      "id": "basho-chou-hikage",
-      "original": "蝶のとぶばかり野中の日影哉"
-    },
-    {
-      "id": "basho-chou-hane",
-      "original": "蝶の羽の幾度越ゆる塀の屋根"
-    },
-    {
-      "id": "basho-umegaka",
-      "original": "梅が香にのつと日の出る山路哉"
-    },
-    {
-      "id": "basho-ume-tori",
-      "original": "梅さいて喜ぶとりの景色哉"
-    },
-    {
-      "id": "basho-ippon-yanagi",
-      "original": "野と山の中に一本柳哉"
-    },
-    {
-      "id": "basho-tsubaki-mizu",
-      "original": "落ちさまに水こぼしけり花椿"
-    },
-    {
-      "id": "basho-sakura-kazenaki",
-      "original": "風なきに散るや若木の花櫻"
-    },
-    {
-      "id": "basho-hatsuzakura",
-      "original": "初櫻をりしもけふはよき日也"
-    },
-    {
-      "id": "basho-hananoyama",
-      "original": "山の名もきゝたし花の山の道"
-    },
-    {
-      "id": "basho-sumire",
-      "original": "山路來て何やらゆかし菫草"
-    },
-    {
-      "id": "basho-furuike",
-      "original": "古池や蛙とびこむ水の音"
-    },
-    {
-      "id": "basho-hotaru-kusanoha",
-      "original": "草の葉を落ちるよりとぶ螢哉"
-    },
-    {
-      "id": "basho-hotaru-hiru",
-      "original": "晝見れば首筋赤き螢哉"
-    },
-    {
-      "id": "basho-katatsumuri",
-      "original": "蝸牛角ふりわけよ須磨明石"
-    },
-    {
-      "id": "basho-minakami",
-      "original": "水上は鶯啼いて水淺し"
-    },
-    {
-      "id": "basho-sara-hachi",
-      "original": "皿鉢のほのかに響く宵すゞみ"
-    },
-    {
-      "id": "basho-kawakaze",
-      "original": "川風や薄かき衣たる夕納凉"
-    },
-    {
-      "id": "basho-natsuzashiki",
-      "original": "山も庭も動き入るゝや夏座敷"
-    },
-    {
-      "id": "basho-minazuki",
-      "original": "六月や峰に雲置く嵐山"
-    },
-    {
-      "id": "basho-kitsutsuki",
-      "original": "木啄も庵は破らず夏木立"
-    },
-    {
-      "id": "basho-atsukihi",
-      "original": "暑き日を海へ入れたり最上川"
-    },
-    {
-      "id": "basho-kumo-tsuki",
-      "original": "雲の峰幾つ崩れて月の山"
-    },
-    {
-      "id": "basho-akino-mizu",
-      "original": "あきの野や草の中ゆく水の音"
-    },
-    {
-      "id": "basho-akifukaki",
-      "original": "秋深き隣は何をする人ぞ"
-    },
-    {
-      "id": "basho-konomichi",
-      "original": "此道や行く人なしに秋の暮"
-    },
-    {
-      "id": "basho-kareeda",
-      "original": "枯枝に烏のとまりけり秋の暮"
-    },
-    {
-      "id": "basho-araumi",
-      "original": "荒海や佐渡に橫ふ天の川"
-    },
-    {
-      "id": "basho-meigetsu-mado",
-      "original": "名月や西にもほしき窓一つ"
-    },
-    {
-      "id": "basho-meigetsu-kage",
-      "original": "名月や我と筆架の影法師"
-    },
-    {
-      "id": "basho-asagao-mizu",
-      "original": "朝顏や水ある方に人の立つ"
-    },
-    {
-      "id": "basho-monoieba",
-      "original": "物いへば唇寒し秋の風"
-    },
-    {
-      "id": "basho-kikunoka",
-      "original": "菊の香や奈良には古き佛達"
-    },
-    {
-      "id": "basho-aki-shiroshi",
-      "original": "石山の石より白し秋の風"
-    },
-    {
-      "id": "basho-hatsuyuki-suisen",
-      "original": "初雪や水仙の葉のたわむ程"
-    },
-    {
-      "id": "basho-hatsuyuki-hashi",
-      "original": "初雪やかけかゝりたる橋のうへ"
-    },
-    {
-      "id": "basho-yuki-asa",
-      "original": "雪の朝ひとり乾鮭をかみ得たり"
-    },
-    {
-      "id": "basho-yukimi",
-      "original": "いざさらば雪見にころぶ所迄"
-    },
-    {
-      "id": "basho-suisen-shoji",
-      "original": "水仙や白き障子のともうつり"
-    },
-    {
-      "id": "basho-fuyugare",
-      "original": "冬枯や世は一色に風の音"
-    },
-    {
-      "id": "basho-umikurete",
-      "original": "海暮れて鴨の聲ほのかに白し"
-    },
-    {
-      "id": "basho-hyakunen",
-      "original": "百年の景色を庭の落葉哉"
-    },
-    {
-      "id": "basho-tabiniyande",
-      "original": "旅に病んで夢は枯野をかけめぐる"
-    },
-    {
-      "id": "basho-fuyunosora",
-      "original": "我ために日はうらゝ也冬の空"
-    },
-    {
-      "id": "basho-chanohana",
-      "original": "茶の花に人里ちかき山路哉"
-    },
-    {
-      "id": "basho-kaitsuburi",
-      "original": "かいつぶり顏見合せて又はいり"
-    },
-    {
-      "id": "basho-kamo-ukine",
-      "original": "己が身を枕に鴨のうきね哉"
-    },
-    {
-      "id": "basho-tsukitoume",
-      "original": "春もやゝ景色とゝのふ月と梅"
-    },
-    {
-      "id": "basho-neko-oboro",
-      "original": "猫の戀やむ時閨のおぼろ月"
-    },
-    {
-      "id": "basho-chanoha-aki",
-      "original": "秋風の吹いても靑し栗の毯"
-    }
+   {
+    "id": "basho-sakimidasu-momo",
+    "original": "咲きみだす桃の中より初櫻",
+    "reading": "さきみだす もものなかより はつざくら"
+   },
+   {
+    "id": "basho-uguisu-mochi",
+    "original": "鶯や餠に糞する緣の先",
+    "reading": "うぐいすや もちにふんする えんのさき"
+   },
+   {
+    "id": "basho-kareshiba-kagerou",
+    "original": "枯芝やまだ陽炎の一二寸",
+    "reading": "かれしばや まだかげろうの いちにすん"
+   },
+   {
+    "id": "basho-harusame-hachinosu",
+    "original": "春雨や蜂の巢傳ふ屋根の洩",
+    "reading": "はるさめや はちのすつたう やねのもり"
+   },
+   {
+    "id": "basho-furukawa-yanagi",
+    "original": "古川にこびて芽を張る柳哉",
+    "reading": "ふるかわに こびてめをはる やなぎかな"
+   },
+   {
+    "id": "basho-kusanoto-hina",
+    "original": "草の戶も住みかはる世ぞ雛の家",
+    "reading": "くさのとも すみかわるよぞ ひなのいえ"
+   },
+   {
+    "id": "basho-mugimeshi-neko",
+    "original": "麥飯にやつるゝ戀か猫の妻",
+    "reading": "むぎめしに やつるるこいか ねこのつま"
+   },
+   {
+    "id": "basho-momo-sakura-kusamochi",
+    "original": "兩の手に桃と櫻や草の餠",
+    "reading": "りょうのてに ももとさくらや くさのもち"
+   },
+   {
+    "id": "basho-kisonojou-harunokusa",
+    "original": "木曾の情雪や生えぬく春の草",
+    "reading": "きそのじょう ゆきやはえぬく はるのくさ"
+   },
+   {
+    "id": "basho-hananokumo-kane",
+    "original": "花の雲鐘は上野か淺草か",
+    "reading": "はなのくも かねはうえのか あさくさか"
+   },
+   {
+    "id": "basho-uguisu-yanagi-yabu",
+    "original": "黃鳥や柳のうしろ藪の前",
+    "reading": "うぐいすや やなぎのうしろ やぶのまえ"
+   },
+   {
+    "id": "basho-sakazuki-tsubame",
+    "original": "盃に泥な落しそ村燕",
+    "reading": "さかずきに どろなおとしそ むらつばめ"
+   },
+   {
+    "id": "basho-konomoto-sakura",
+    "original": "木の下に汁も鱠もさくら哉",
+    "reading": "このもとに しるもなますも さくらかな"
+   },
+   {
+    "id": "basho-bushousa-harunoame",
+    "original": "不性さやかき起されし春の雨",
+    "reading": "ぶしょうさや かきおこされし はるのあめ"
+   },
+   {
+    "id": "basho-wazuraeba-momo",
+    "original": "煩へば餠こそくはね桃の花",
+    "reading": "わずらえば もちこそくわね もものはな"
+   },
+   {
+    "id": "basho-kannon-iraka",
+    "original": "觀音の甍見やりつ花の雲",
+    "reading": "かんのんの いらかみやりつ はなのくも"
+   },
+   {
+    "id": "basho-nabatake-suzume",
+    "original": "菜畠に花見顏なる雀哉",
+    "reading": "なばたけに はなみがおなる すずめかな"
+   },
+   {
+    "id": "basho-yoshino-hinokigasa",
+    "original": "よし野にて櫻見せうぞ檜木笠",
+    "reading": "よしのにて さくらみしょうぞ ひのきがさ"
+   },
+   {
+    "id": "basho-uguisu-kasa-tsubaki",
+    "original": "鶯の笠落したる椿かな",
+    "reading": "うぐいすの かさおとしたる つばきかな"
+   },
+   {
+    "id": "basho-yotsugoki-hanami",
+    "original": "四つ五器の揃はぬ花見心哉",
+    "reading": "よつごきの そろわぬはなみ ごころかな"
+   },
+   {
+    "id": "basho-samazama-sakura",
+    "original": "さま〴〵のこと思ひ出す櫻哉",
+    "reading": "さまざまの ことおもいだす さくらかな"
+   },
+   {
+    "id": "basho-hanazakari-asaborake",
+    "original": "花盛り山は日ごろの朝朗",
+    "reading": "はなざかり やまはひごろの あさぼらけ"
+   },
+   {
+    "id": "basho-kagerou-kamiko",
+    "original": "陽炎の我が肩に立つ紙衣哉",
+    "reading": "かげろうの わがかたにたつ かみこかな"
+   },
+   {
+    "id": "basho-shibaraku-tsukiyo",
+    "original": "暫くは花の上なる月夜哉",
+    "reading": "しばらくは はなのうえなる つきよかな"
+   },
+   {
+    "id": "basho-taneimo-hana",
+    "original": "種芋や花の盛を賣りありく",
+    "reading": "たねいもや はなのさかりを うりありく"
+   },
+   {
+    "id": "basho-harusame-kawayanagi",
+    "original": "春雨や簑ふきかへす川柳",
+    "reading": "はるさめや みのふきかえす かわやなぎ"
+   },
+   {
+    "id": "basho-harunoyo-sakura",
+    "original": "春の夜は櫻に明けてしまひけり",
+    "reading": "はるのよは さくらにあけて しまいけり"
+   },
+   {
+    "id": "basho-kashinoki-sugata",
+    "original": "樫の木の花にかまはぬ姿哉",
+    "reading": "かしのきの はなにかまわぬ すがたかな"
+   },
+   {
+    "id": "basho-funaashi-momo",
+    "original": "舟足も休む時あり濱の桃",
+    "reading": "ふなあしも やすむときあり はまのもも"
+   },
+   {
+    "id": "basho-kamiginu-amenohana",
+    "original": "紙衣の濡るとも折らん雨の花",
+    "reading": "かみぎぬの ぬるともおらん あめのはな"
+   },
+   {
+    "id": "basho-karasaki-oboro",
+    "original": "唐崎の松は花より朧にて",
+    "reading": "からさきの まつははなより おぼろにて"
+   },
+   {
+    "id": "basho-ougi-chirusakura",
+    "original": "扇にて酒くむ陰や散る櫻",
+    "reading": "おうぎにて さけくむかげや ちるさくら"
+   },
+   {
+    "id": "basho-okiyo-kochou",
+    "original": "起きよ〳〵我友にせんぬる胡蝶",
+    "reading": "おきよおきよ わがともにせん ぬるこちょう"
+   },
+   {
+    "id": "basho-otoroi-nori",
+    "original": "衰や齒にくひあてし海苔の砂",
+    "reading": "おとろいや はにくいあてし のりのすな"
+   },
+   {
+    "id": "basho-shihou-nionoumi",
+    "original": "四方より花吹き入れて鳰の海",
+    "reading": "しほうより はなふきいれて におのうみ"
+   },
+   {
+    "id": "basho-hananokao-oborozuki",
+    "original": "花の顏に晴れうてしてや朧月",
+    "reading": "はなのかおに はれうてしてや おぼろづき"
+   },
+   {
+    "id": "basho-koeyokuba-sakurachiru",
+    "original": "聲よくばうたはんものを櫻散る",
+    "reading": "こえよくば うたわんものを さくらちる"
+   },
+   {
+    "id": "basho-shirauo-mo",
+    "original": "藻にすだく白魚ぞとれば消えぬべき",
+    "reading": "もにすだく しらうおぞとれば きえぬべき"
+   },
+   {
+    "id": "basho-hanawoyado-hatsuka",
+    "original": "花を宿にはじめ終りや二十日程",
+    "reading": "はなをやどに はじめおわりや はつかほど"
+   },
+   {
+    "id": "basho-toshidoshi-hananochiri",
+    "original": "とし〳〵や櫻をこやす花の塵",
+    "reading": "としどしや さくらをこやす はなのちり"
+   },
+   {
+    "id": "basho-sabishisa-asunarou",
+    "original": "淋しさやはなのあたりの翌檜",
+    "reading": "さびしさや はなのあたりの あすなろう"
+   },
+   {
+    "id": "basho-nara-nanae",
+    "original": "奈良七重七堂伽藍八重櫻",
+    "reading": "ならななえ しちどうがらん やえざくら"
+   },
+   {
+    "id": "basho-kutabirete-fuji",
+    "original": "草臥れて宿借る頃や藤の花",
+    "reading": "くたびれて やどかるころや ふじのはな"
+   },
+   {
+    "id": "basho-haranaka-hibari",
+    "original": "原中やものにもつかずなく雲雀",
+    "reading": "はらなかや ものにもつかず なくひばり"
+   },
+   {
+    "id": "basho-kanekiete-hananoka",
+    "original": "鐘消えて花の香は撞く夕哉",
+    "reading": "かねきえて はなのかはつく ゆうべかな"
+   },
+   {
+    "id": "basho-tsutsuji-hidara",
+    "original": "つゝじ活けて其陰に干鱈さく女",
+    "reading": "つつじいけて そのかげにひだら さくおんな"
+   },
+   {
+    "id": "basho-naninoki-nioi",
+    "original": "何の木の花とも知らず匂かな",
+    "reading": "なにのきの はなともしらず においかな"
+   },
+   {
+    "id": "basho-karakasa-yanagi",
+    "original": "傘で押しわけ見たる柳哉",
+    "reading": "からかさで おしわけみたる やなぎかな"
+   },
+   {
+    "id": "basho-horohoro-yamabuki",
+    "original": "ほろ〳〵と山吹散るか瀧の音",
+    "reading": "ほろほろと やまぶきちるか たきのおと"
+   },
+   {
+    "id": "basho-norijiru-asagiwan",
+    "original": "海苔汁の手際見せけり淺黃椀",
+    "reading": "のりじるの てぎわみせけり あさぎわん"
+   },
+   {
+    "id": "basho-hananiasobu-abu",
+    "original": "花に遊ぶ虻な喰ひそ友雀",
+    "reading": "はなにあそぶ あぶなくらいそ ともすずめ"
+   },
+   {
+    "id": "basho-chichihaha-kiji",
+    "original": "父母のしきりに戀し雉子の聲",
+    "reading": "ちちははの しきりにこいし きじのこえ"
+   },
+   {
+    "id": "basho-yamabuki-uji",
+    "original": "山吹や宇治の熔爐の匂ふ時",
+    "reading": "やまぶきや うじのほいろの におうとき"
+   },
+   {
+    "id": "basho-haremono-yanagi",
+    "original": "腫物にさはる柳のしなひかな",
+    "reading": "はれものに さわるやなぎの しないかな"
+   },
+   {
+    "id": "basho-suzumego-nezumi",
+    "original": "雀子と聲鳴きかはす鼠の巢",
+    "reading": "すずめごと こえなきかわす ねずみのす"
+   },
+   {
+    "id": "basho-hitoriama-shirotsutsuji",
+    "original": "ひとり尼藁屋すげなし白躑躅",
+    "reading": "ひとりあま わらやすげなし しろつつじ"
+   },
+   {
+    "id": "basho-hibari-kiji-hyoushi",
+    "original": "雲雀なく中の拍子や雉の聲",
+    "reading": "ひばりなく なかのひょうしや きじのこえ"
+   },
+   {
+    "id": "basho-komakanaru-nasubi",
+    "original": "こまかなる雨や二葉の茄子苗",
+    "reading": "こまかなる あめやふたばの なすびなえ"
+   },
+   {
+    "id": "basho-harunoyo-komorido",
+    "original": "春の夜や籠人ゆかし堂の隅",
+    "reading": "はるのよや こもりどゆかし どうのすみ"
+   },
+   {
+    "id": "basho-yamabuki-kasa",
+    "original": "山吹や笠にさすべき枝の形",
+    "reading": "やまぶきや かさにさすべき えだのなり"
+   },
+   {
+    "id": "basho-imouete-mugura",
+    "original": "芋植ゑて門は葎の若葉哉",
+    "reading": "いもうえて かどはむぐらの わかばかな"
+   },
+   {
+    "id": "basho-hebikuu-kiji",
+    "original": "蛇喰ふときけば恐ろし雉子の聲",
+    "reading": "へびくうと きけばおそろし きじのこえ"
+   },
+   {
+    "id": "basho-hakkuken-yanagi",
+    "original": "八九間空で雨降る柳哉",
+    "reading": "はっくけん そらであめふる やなぎかな"
+   },
+   {
+    "id": "basho-mugura-yabureie",
+    "original": "葎さへ若葉やさしや破れ家",
+    "reading": "むぐらさえ わかばやさしや やぶれいえ"
+   },
+   {
+    "id": "basho-oniazami",
+    "original": "花は賤の目にも見えけり鬼薊",
+    "reading": "はなはしずの めにもみえけり おにあざみ"
+   },
+   {
+    "id": "basho-irikakaru-itoyuu",
+    "original": "入りかゝる日も絲遊の名殘哉",
+    "reading": "いりかかる ひもいとゆうの なごりかな"
+   },
+   {
+    "id": "basho-omoshiroya-tabinosora",
+    "original": "面白やことしの春の旅の空",
+    "reading": "おもしろや ことしのはるの たびのそら"
+   },
+   {
+    "id": "basho-iriai-harunokure",
+    "original": "入相の鐘もきこえず春の暮",
+    "reading": "いりあいの かねもきこえず はるのくれ"
+   },
+   {
+    "id": "basho-ayunoko-shirauo",
+    "original": "鮎の子の白魚おくる別れ哉",
+    "reading": "あゆのこの しらうおおくる わかれかな"
+   },
+   {
+    "id": "basho-yukuharu-wakanoura",
+    "original": "ゆく春に和歌の浦にて追ひつきたり",
+    "reading": "ゆくはるに わかのうらにて おいつきたり"
+   },
+   {
+    "id": "basho-yukuharu-tori",
+    "original": "ゆく春や鳥啼魚の目は泪",
+    "reading": "ゆくはるや とりなきうおの めはなみだ"
+   },
+   {
+    "id": "basho-yukuharu-oumi",
+    "original": "ゆく春を近江の人とをしみけり",
+    "reading": "ゆくはるを おうみのひとと おしみけり"
+   },
+   {
+    "id": "basho-samidare-hikarido",
+    "original": "五月雨の降りのこしてや光堂",
+    "reading": "さみだれの ふりのこしてや ひかりどう"
+   },
+   {
+    "id": "basho-ajisai-usuasagi",
+    "original": "紫陽花や帷子時の薄淺黃",
+    "reading": "あじさいや かたびらどきの うすあさぎ"
+   },
+   {
+    "id": "basho-hototogisu-take",
+    "original": "時鳥大竹藪を洩る月夜",
+    "reading": "ほととぎす おおたけやぶを もるつきよ"
+   },
+   {
+    "id": "basho-ta-ichimai",
+    "original": "田一枚植ゑて立ち去る柳哉",
+    "reading": "たいちまい うえてたちさる やなぎかな"
+   },
+   {
+    "id": "basho-samidare-nio",
+    "original": "五月雨に鳰の浮巢を見にゆかん",
+    "reading": "さみだれに におのうきすを みにゆかん"
+   },
+   {
+    "id": "basho-aoba-wakaba",
+    "original": "あら尊と靑葉若葉の日の光",
+    "reading": "あらとうと あおばわかばの ひのひかり"
+   },
+   {
+    "id": "basho-hotarumi",
+    "original": "螢見や船頭醉うておぼつかな",
+    "reading": "ほたるみや せんどうようて おぼつかな"
+   },
+   {
+    "id": "basho-kakitsubata-mizu",
+    "original": "杜若似たりや似たり水の影",
+    "reading": "かきつばた にたりやにたり みずのかげ"
+   },
+   {
+    "id": "basho-furuoto-ume",
+    "original": "降る音や耳も酸うなる梅の雨",
+    "reading": "ふるおとや みみもすうなる うめのあめ"
+   },
+   {
+    "id": "basho-unohana-yanagi",
+    "original": "卯の花や暗き柳の及び腰",
+    "reading": "うのはなや くらきやなぎの およびごし"
+   },
+   {
+    "id": "basho-furyu-taueuta",
+    "original": "風流のはじめや奧の田植歌",
+    "reading": "ふうりゅうの はじめやおくの たうえうた"
+   },
+   {
+    "id": "basho-hinomichi-aoi",
+    "original": "日の道や葵かたむく五月雨",
+    "reading": "ひのみちや あおいかたむく さつきあめ"
+   },
+   {
+    "id": "basho-ajisai-yabu",
+    "original": "紫陽花や藪を小庭の別座敷",
+    "reading": "あじさいや やぶをこにわの べつざしき"
+   },
+   {
+    "id": "basho-hototogisu-shima",
+    "original": "時鳥消えゆく方や島ひとつ",
+    "reading": "ほととぎす きえゆくかたや しまひとつ"
+   },
+   {
+    "id": "basho-ame-sanae",
+    "original": "雨をり〳〵思ふことなき早苗哉",
+    "reading": "あめおりおり おもうことなき さなえかな"
+   },
+   {
+    "id": "basho-samidare-seta",
+    "original": "五月雨にかくれぬものや瀨田の橋",
+    "reading": "さみだれに かくれぬものや せたのはし"
+   },
+   {
+    "id": "basho-take-uuruhi",
+    "original": "降らずとも竹植うる日は簑と笠",
+    "reading": "ふらずとも たけううるひは みのとかさ"
+   },
+   {
+    "id": "basho-suzushisa-nemaru",
+    "original": "凉さを我宿にして寐まる也",
+    "reading": "すずしさを わがやどにして ねまるなり"
+   },
+   {
+    "id": "basho-hitotsuba",
+    "original": "夏來ても只一ツ葉の一ツかな",
+    "reading": "なつきても ただひとつばの ひとつかな"
+   },
+   {
+    "id": "basho-sazaregani",
+    "original": "さゞれ蟹足這ひ上る淸水哉",
+    "reading": "さざれがに あしはいのぼる しみずかな"
+   },
+   {
+    "id": "basho-yamagatsu-mugura",
+    "original": "山賤のおとがひ閉づる葎哉",
+    "reading": "やまがつの おとがいとずる むぐらかな"
+   },
+   {
+    "id": "basho-mayuhaki-beni",
+    "original": "眉掃を俤にして紅の花",
+    "reading": "まゆはきを おもかげにして べにのはな"
+   },
+   {
+    "id": "basho-asatsuyu-uri",
+    "original": "朝露によごれて凉し瓜の泥",
+    "reading": "あさつゆに よごれてすずし うりのどろ"
+   },
+   {
+    "id": "basho-oigawa-natsutsuki",
+    "original": "大井川波に塵なし夏の月",
+    "reading": "おおいがわ なみにちりなし なつのつき"
+   },
+   {
+    "id": "basho-hirahira-ogi",
+    "original": "ひら〳〵とあくる扇や雲の峰",
+    "reading": "ひらひらと あぐるおうぎや くものみね"
+   },
+   {
+    "id": "basho-yagate-semi",
+    "original": "頓て死ぬけしきは見えず蟬の聲",
+    "reading": "やがてしぬ けしきはみえず せみのこえ"
+   },
+   {
+    "id": "basho-shiinoki",
+    "original": "先づたのむ椎の木もあり夏木立",
+    "reading": "まずたのむ しいのきもあり なつこだち"
+   },
+   {
+    "id": "basho-suzushisa-saga",
+    "original": "凉さを畫に寫しけり嵯峨の竹",
+    "reading": "すずしさを えにうつしけり さがのたけ"
+   },
+   {
+    "id": "basho-uma-bokuboku",
+    "original": "馬ほく〳〵我を繪に見る夏野哉",
+    "reading": "うまぼくぼく われをえにみる なつのかな"
+   },
+   {
+    "id": "basho-hana-mi-uri",
+    "original": "花と實と一度に瓜の盛哉",
+    "reading": "はなとみと いちどにうりの さかりかな"
+   },
+   {
+    "id": "basho-matsukaze-mizu",
+    "original": "松風の落葉か水の音凉し",
+    "reading": "まつかぜの おちばかみずの おとすずし"
+   },
+   {
+    "id": "basho-ishinoka",
+    "original": "石の香や夏草赤く露あつし",
+    "reading": "いしのかや なつくさあかく つゆあつし"
+   },
+   {
+    "id": "basho-arashiyama-kaze",
+    "original": "嵐山藪の茂や風の筋",
+    "reading": "あらしやま やぶのしげりや かぜのすじ"
+   },
+   {
+    "id": "basho-tokoroten",
+    "original": "淸瀧の水くみ寄せて心太",
+    "reading": "きよたきの みずくみよせて ところてん"
+   },
+   {
+    "id": "basho-suzushisa-mikazuki",
+    "original": "凉さやほの三日月の羽黑山",
+    "reading": "すずしさや ほのみかづきの はぐろやま"
+   },
+   {
+    "id": "basho-shiroato-shimizu",
+    "original": "城跡や古井の淸水まづ問はむ",
+    "reading": "しろあとや ふるいのしみず まずとわん"
+   },
+   {
+    "id": "basho-chisa-nasu",
+    "original": "苣はまだ靑葉ながらに茄子汁",
+    "reading": "ちさはまだ あおばながらに なすびじる"
+   },
+   {
+    "id": "basho-sazanami-kaze",
+    "original": "さゞなみや風のかをりの相拍子",
+    "reading": "さざなみや かぜのかおりの あいびょうし"
+   },
+   {
+    "id": "basho-hirune-takamushiro",
+    "original": "窓形に晝寐の臺や簟",
+    "reading": "まどなりに ひるねのだいや たかむしろ"
+   },
+   {
+    "id": "basho-kodai-yanagi",
+    "original": "小鯛さす柳凉しや海士が軒",
+    "reading": "こだいさす やなぎすずしや あまがのき"
+   },
+   {
+    "id": "basho-yube-asa-uri",
+    "original": "夕にも朝にもつかず瓜のはな",
+    "reading": "ゆうべにも あさにもつかず うりのはな"
+   },
+   {
+    "id": "basho-konoatari",
+    "original": "このあたり目に見ゆるもの皆凉し",
+    "reading": "このあたり めにみゆるもの みなすずし"
+   },
+   {
+    "id": "basho-magusa-natsuno",
+    "original": "秣刈る人をしをりの夏野哉",
+    "reading": "まぐさかる ひとをしおりの なつのかな"
+   },
+   {
+    "id": "basho-yanagigori-makuwa",
+    "original": "柳行李片荷は凉し初眞桑",
+    "reading": "やなぎごり かたにはすずし はつまくわ"
+   },
+   {
+    "id": "basho-kazekaoru-haori",
+    "original": "風かをる羽織は襟もつくろはず",
+    "reading": "かぜかおる はおりはえりも つくろわず"
+   },
+   {
+    "id": "basho-fuji-ogi",
+    "original": "不二の風や扇にのせて江戶土產",
+    "reading": "ふじのかぜや おうぎにのせて えどみやげ"
+   },
+   {
+    "id": "basho-matsusugi-kaze",
+    "original": "松杉をほめてや風の薰る音",
+    "reading": "まつすぎを ほめてやかぜの かおるおと"
+   },
+   {
+    "id": "basho-minazuki-atsusa",
+    "original": "水無月は腹病やみの暑哉",
+    "reading": "みなづきは ふくびょうやみの あつさかな"
+   },
+   {
+    "id": "basho-kasa-shitasuzumi",
+    "original": "命なり僅の笠の下納凉",
+    "reading": "いのちなり わずかのかさの したすずみ"
+   },
+   {
+    "id": "basho-kisakata-nebu",
+    "original": "象潟や雨に西施が合歡の花",
+    "reading": "きさかたや あめにせいしが ねぶのはな"
+   },
+   {
+    "id": "basho-yugao-kanpyo",
+    "original": "夕顏に干瓢むいて遊びけり",
+    "reading": "ゆうがおに かんぴょうむいて あそびけり"
+   },
+   {
+    "id": "basho-shimajima",
+    "original": "島々や千々に碎けて夏の海",
+    "reading": "しまじまや ちぢにくだけて なつのうみ"
+   },
+   {
+    "id": "basho-hirugao-kometsuki",
+    "original": "晝顏に米搗凉む哀なり",
+    "reading": "ひるがおに こめつきすずむ あわれなり"
+   },
+   {
+    "id": "basho-meshi-aogu",
+    "original": "飯あふぐ嚊が馳走や夕納凉",
+    "reading": "めしあおぐ かかがちそうや ゆうすずみ"
+   },
+   {
+    "id": "basho-ka-chiisaki",
+    "original": "我宿は蚊の小きを馳走哉",
+    "reading": "わがやどは かのちいさきを ちそうかな"
+   },
+   {
+    "id": "basho-shiokujira",
+    "original": "水無月や鯛はあれども鹽鯨",
+    "reading": "みなづきや たいはあれども しおくじら"
+   },
+   {
+    "id": "basho-nadeshiko-ishi",
+    "original": "醉うて寐ん撫子咲ける石の上",
+    "reading": "ようてねん なでしこさける いしのうえ"
+   },
+   {
+    "id": "basho-shiokoshi-tsuru",
+    "original": "汐越や鶴脛ぬれて海凉し",
+    "reading": "しおこしや つるはぎぬれて うみすずし"
+   },
+   {
+    "id": "basho-uchiwa-ushiromuki",
+    "original": "團扇とりてあふがん人の後向",
+    "reading": "うちわとりて あおがんひとの うしろむき"
+   },
+   {
+    "id": "basho-yugao-mado",
+    "original": "夕顏や醉うて顏出す窓の穴",
+    "reading": "ゆうがおや ようてかおだす まどのあな"
+   },
+   {
+    "id": "basho-nomi-shirami",
+    "original": "蚤虱馬の尿する枕もと",
+    "reading": "のみしらみ うまのばりする まくらもと"
+   },
+   {
+    "id": "basho-kodomora-uri",
+    "original": "子供等よ晝顏咲きぬ瓜むかん",
+    "reading": "こどもらよ ひるがおさきぬ うりむかん"
+   },
+   {
+    "id": "basho-himuro-yanagi",
+    "original": "水の奧氷室尋ぬる柳かな",
+    "reading": "みずのおく ひむろたずぬる やなぎかな"
+   },
+   {
+    "id": "basho-hiki-koe",
+    "original": "這ひ出でよかいやが下の蟾の聲",
+    "reading": "はいいでよ かいやがしたの ひきのこえ"
+   },
+   {
+    "id": "basho-suma-natsu",
+    "original": "月はあれど留守のやうなり須磨の夏",
+    "reading": "つきはあれど るすのようなり すまのなつ"
+   },
+   {
+    "id": "basho-yamakage-uri",
+    "original": "山陰や身をやしなはん瓜畠",
+    "reading": "やまかげや みをやしなわん うりばたけ"
+   },
+   {
+    "id": "basho-shika-tsuno",
+    "original": "二俣にわかれそめけり鹿の角",
+    "reading": "ふたまたに わかれそめけり しかのつの"
+   },
+   {
+    "id": "basho-hirugao-mijikayo",
+    "original": "晝顏のみじか夜眠る晝間哉",
+    "reading": "ひるがおの みじかよねむる ひるまかな"
+   },
+   {
+    "id": "basho-natsubaori",
+    "original": "別ればや笠手に提げて夏羽織",
+    "reading": "わかればや かさてにさげて なつばおり"
+   },
+   {
+    "id": "basho-ubune",
+    "original": "面白うてやがて悲き鵜舟哉",
+    "reading": "おもしろうて やがてかなしき うぶねかな"
+   },
+   {
+    "id": "basho-yubare-nami",
+    "original": "夕晴や櫻にすゞむ波の花",
+    "reading": "ゆうばれや さくらにすずむ なみのはな"
+   },
+   {
+    "id": "basho-uritsukuru-kimi",
+    "original": "瓜つくる君があれなと夕納凉",
+    "reading": "うりつくる きみがあれなと ゆうすずみ"
+   },
+   {
+    "id": "basho-natsunoyo-hiyashi",
+    "original": "夏の夜や崩れて明けし冷し物",
+    "reading": "なつのよや くずれてあけし ひやしもの"
+   },
+   {
+    "id": "basho-seminokara",
+    "original": "梢よりあだに落ちけり蟬の殼",
+    "reading": "こずえより あだにおちけり せみのから"
+   },
+   {
+    "id": "basho-mizuumi-kumo",
+    "original": "湖や暑さを惜む雲の峰",
+    "reading": "みずうみや あつさをおしむ くものみね"
+   },
+   {
+    "id": "basho-kiyotaki-matsuba",
+    "original": "淸瀧や波に散りてん靑松葉",
+    "reading": "きよたきや なみにちりてん あおまつば"
+   },
+   {
+    "id": "basho-yugao-fukube",
+    "original": "夕顏や秋は色々の瓢かな",
+    "reading": "ゆうがおや あきはいろいろの ふくべかな"
+   },
+   {
+    "id": "basho-akichikaki",
+    "original": "秋近き心の寄るや四疊半",
+    "reading": "あきちかき こころのよるや よじょうはん"
+   },
+   {
+    "id": "basho-meigetsu-ike",
+    "original": "明月や池をめぐりて夜もすがら",
+    "reading": "めいげつや いけをめぐりて よもすがら"
+   },
+   {
+    "id": "basho-meigetsu-shio",
+    "original": "名月や門にさし來る潮がしら",
+    "reading": "めいげつや かどにさしくる しおがしら"
+   },
+   {
+    "id": "basho-kumo-oriori",
+    "original": "雲をり〳〵人を休める月見哉",
+    "reading": "くもおりおり ひとをやすめる つきみかな"
+   },
+   {
+    "id": "basho-izayoi-ebi",
+    "original": "十六夜や海老煮る程の宵の闇",
+    "reading": "いざよいや えびにるほどの よいのやみ"
+   },
+   {
+    "id": "basho-akisuzushi",
+    "original": "秋凉し手每にむけや瓜茄子",
+    "reading": "あきすずし てごとにむけや うりなすび"
+   },
+   {
+    "id": "basho-ushibeya",
+    "original": "牛部屋に蚊の聲弱し秋の風",
+    "reading": "うしべやに かのこえよわし あきのかぜ"
+   },
+   {
+    "id": "basho-tonbo",
+    "original": "蜻蛉やとりつきかねし草の上",
+    "reading": "とんぼうや とりつきかねし くさのうえ"
+   },
+   {
+    "id": "basho-mukuge-uma",
+    "original": "道ばたの木槿は馬に喰はれけり",
+    "reading": "みちばたの むくげはうまに くわれけり"
+   },
+   {
+    "id": "basho-asagao-meshi",
+    "original": "蕣に我れは飯くふ男かな",
+    "reading": "あさがおに われはめしくう おとこかな"
+   },
+   {
+    "id": "basho-shiratsuyu-hagi",
+    "original": "白露もこぼさぬ萩のうねり哉",
+    "reading": "しらつゆも こぼさぬはぎの うねりかな"
+   },
+   {
+    "id": "basho-hitotsuya",
+    "original": "ひとつ家に遊女も寐たり萩と月",
+    "reading": "ひとつやに ゆうじょもねたり はぎとつき"
+   },
+   {
+    "id": "basho-komatsu-hagi",
+    "original": "しほらしき名や小松吹く萩芒",
+    "reading": "しおらしき なやこまつふく はぎすすき"
+   },
+   {
+    "id": "basho-inazuma-goi",
+    "original": "稻妻や闇の方ゆく五位の聲",
+    "reading": "いなずまや やみのかたゆく ごいのこえ"
+   },
+   {
+    "id": "basho-inoshishi-nowaki",
+    "original": "猪もともに吹かるゝ野分かな",
+    "reading": "いのししも ともにふかるる のわきかな"
+   },
+   {
+    "id": "basho-minomushi",
+    "original": "簑虫の音を聞きにこよ草の庵",
+    "reading": "みのむしの ねをききにこよ くさのいお"
+   },
+   {
+    "id": "basho-shiraga-korogi",
+    "original": "白髮ぬく枕の下やきり〴〵す",
+    "reading": "しらがぬく まくらのしたや きりぎりす"
+   },
+   {
+    "id": "basho-nowaki-kiku",
+    "original": "見處のあれや野分の後の菊",
+    "reading": "みどころの あれやのわきの のちのきく"
+   },
+   {
+    "id": "basho-amagaya-itodo",
+    "original": "蜑が家は小蝦にまじる竈馬哉",
+    "reading": "あまがやは こえびにまじる いとどかな"
+   },
+   {
+    "id": "basho-kirisame-fuyo",
+    "original": "霧雨の空を芙蓉の天氣哉",
+    "reading": "きりさめの そらをふようの てんきかな"
+   },
+   {
+    "id": "basho-shukaido",
+    "original": "秋海棠西瓜の色に咲きにけり",
+    "reading": "しゅうかいどう すいかのいろに さきにけり"
+   },
+   {
+    "id": "basho-kusa-iroiro",
+    "original": "草色々おの〳〵花の手柄哉",
+    "reading": "くさいろいろ おのおのはなの てがらかな"
+   },
+   {
+    "id": "basho-ran-cho",
+    "original": "蘭の香や蝶の翼にたきものす",
+    "reading": "らんのかや ちょうのつばさに たきものす"
+   },
+   {
+    "id": "basho-wasenoka",
+    "original": "早稻の香や分け入る右は有磯海",
+    "reading": "わせのかや わけいるみぎは ありそうみ"
+   },
+   {
+    "id": "basho-inasuzume",
+    "original": "稻雀茶の木畠や逃げ處",
+    "reading": "いなすずめ ちゃのきばたけや にげどころ"
+   },
+   {
+    "id": "basho-yokiie-suzume",
+    "original": "よき家や雀喜ぶ背戶の粟",
+    "reading": "よきいえや すずめよろこぶ せどのあわ"
+   },
+   {
+    "id": "basho-inekaru-koro",
+    "original": "世の中は稻刈る頃か草の庵",
+    "reading": "よのなかは いねかるころか くさのいお"
+   },
+   {
+    "id": "basho-tazura-tsuru",
+    "original": "刈りかけし田面の鶴や里の秋",
+    "reading": "かりかけし たづらのつるや さとのあき"
+   },
+   {
+    "id": "basho-inekoki-kiku",
+    "original": "稻こきの姥も目出たし菊の花",
+    "reading": "いねこきの うばもめでたし きくのはな"
+   },
+   {
+    "id": "basho-shiragiku",
+    "original": "白菊の目に立てゝ見る塵もなし",
+    "reading": "しらぎくの めにたててみる ちりもなし"
+   },
+   {
+    "id": "basho-kiku-ishiya",
+    "original": "菊の花咲くや石屋の石の間",
+    "reading": "きくのはな さくやいしやの いしのあい"
+   },
+   {
+    "id": "basho-asacha-kiku",
+    "original": "朝茶のむ僧靜かなり菊のはな",
+    "reading": "あさちゃのむ そうしずかなり きくのはな"
+   },
+   {
+    "id": "basho-okiagaru-kiku",
+    "original": "起上がる菊ほのか也水のあと",
+    "reading": "おきあがる きくほのかなり みずのあと"
+   },
+   {
+    "id": "basho-kotobako",
+    "original": "琴箱や古物店の背戶の菊",
+    "reading": "ことばこや ふるものだなの せどのきく"
+   },
+   {
+    "id": "basho-kiku-namasu",
+    "original": "蝶も來て酢を吸ふ菊の鱠哉",
+    "reading": "ちょうもきて すをすうきくの なますかな"
+   },
+   {
+    "id": "basho-kakinoki",
+    "original": "里深く柿の木持たぬ家もなし",
+    "reading": "さとふかく かきのきもたぬ いえもなし"
+   },
+   {
+    "id": "basho-kuri-ugatsu",
+    "original": "夜ひそかに虫は月下の栗を穿つ",
+    "reading": "よるひそかに むしはげっかの くりをうがつ"
+   },
+   {
+    "id": "basho-takegari",
+    "original": "菌狩やあぶない事に夕時雨",
+    "reading": "たけがりや あぶないことに ゆうしぐれ"
+   },
+   {
+    "id": "basho-matsutake",
+    "original": "松茸や知らぬ木の葉のへばり付",
+    "reading": "まつたけや しらぬこのはの へばりつく"
+   },
+   {
+    "id": "basho-soba-hana",
+    "original": "蕎麥はまだ花でもてなす山路哉",
+    "reading": "そばはまだ はなでもてなす やまじかな"
+   },
+   {
+    "id": "basho-mikazuki-soba",
+    "original": "三日月に地は朧なり蕎麥の花",
+    "reading": "みかづきに ちはおぼろなり そばのはな"
+   },
+   {
+    "id": "basho-kirishigure",
+    "original": "霧時雨富士を見ぬ日ぞ面白き",
+    "reading": "きりしぐれ ふじをみぬひぞ おもしろき"
+   },
+   {
+    "id": "basho-tsuki-hayashi",
+    "original": "月早し梢は雨を持ながら",
+    "reading": "つきはやし こずえはあめを もちながら"
+   },
+   {
+    "id": "basho-tsuki-no-tomo",
+    "original": "川上と此川下や月の友",
+    "reading": "かわかみと このかわしもや つきのとも"
+   },
+   {
+    "id": "basho-yoru-no-shika",
+    "original": "ひいとなく尻聲悲し夜の鹿",
+    "reading": "ひいとなく しりごえかなし よるのしか"
+   },
+   {
+    "id": "basho-kiri-uzura",
+    "original": "桐の木に鶉なくなる塀の中",
+    "reading": "きりのきに うずらなくなる へいのうち"
+   },
+   {
+    "id": "basho-kinuta-hokuto",
+    "original": "聲澄みて北斗に響く砧哉",
+    "reading": "こえすみて ほくとにひびく きぬたかな"
+   },
+   {
+    "id": "basho-nochi-no-tsuki",
+    "original": "木曾の瘦もまだなほらぬに後の月",
+    "reading": "きそのやせも まだなおらぬに のちのつき"
+   },
+   {
+    "id": "basho-keito",
+    "original": "雞頭や雁の來る時尙赤し",
+    "reading": "けいとうや かりのくるとき なおあかし"
+   },
+   {
+    "id": "basho-byogan",
+    "original": "病雁の夜寒に落ちて旅寐哉",
+    "reading": "びょうがんの よさむにおちて たびねかな"
+   },
+   {
+    "id": "basho-akinoyo-hanashi",
+    "original": "秋の夜をうち崩したる噺哉",
+    "reading": "あきのよを うちくずしたる はなしかな"
+   },
+   {
+    "id": "basho-kokonotabi",
+    "original": "九度起ても月の七つかな",
+    "reading": "ここのたび おきてもつきの ななつかな"
+   },
+   {
+    "id": "basho-shikaku-kage",
+    "original": "我宿は四角な影を窓の月",
+    "reading": "わがやどは しかくなかげを まどのつき"
+   },
+   {
+    "id": "basho-nyumen",
+    "original": "乳麵の下焚きつくる夜寒哉",
+    "reading": "にゅうめんの したたきつくる よさむかな"
+   },
+   {
+    "id": "basho-daikon-karashi",
+    "original": "身にしみて大根からし秋の風",
+    "reading": "みにしみて だいこんからし あきのかぜ"
+   },
+   {
+    "id": "basho-tsuta-momiji",
+    "original": "蔦の葉は昔めきたる紅葉哉",
+    "reading": "つたのはは むかしめきたる もみじかな"
+   },
+   {
+    "id": "basho-hozuki",
+    "original": "鬼灯は實も葉もからも紅葉哉",
+    "reading": "ほおずきは みもはもからも もみじかな"
+   },
+   {
+    "id": "basho-kakehashi-tsuta",
+    "original": "棧や命をからむ蔦かつら",
+    "reading": "かけはしや いのちをからむ つたかずら"
+   },
+   {
+    "id": "basho-konomi-kusanomi",
+    "original": "籠り居て木實草の實拾はゞや",
+    "reading": "こもりいて このみくさのみ ひろわばや"
+   },
+   {
+    "id": "basho-kiso-tochi",
+    "original": "木曾の橡浮世の人の土產哉",
+    "reading": "きそのとち うきよのひとの みやげかな"
+   },
+   {
+    "id": "basho-enomi-muku",
+    "original": "榎の實散るむくの羽音や朝嵐",
+    "reading": "えのみちる むくのはおとや あさあらし"
+   },
+   {
+    "id": "basho-shijukara",
+    "original": "老の名のありとも知らで四十雀",
+    "reading": "おいのなの ありともしらで しじゅうから"
+   },
+   {
+    "id": "basho-saruhiki",
+    "original": "猿引は猿の小袖を砧かな",
+    "reading": "さるひきは さるのこそでを きぬたかな"
+   },
+   {
+    "id": "basho-hisago",
+    "original": "ものひとつ瓢はかろき我が世哉",
+    "reading": "ものひとつ ひさごはかろき わがよかな"
+   },
+   {
+    "id": "basho-chiru-yanagi",
+    "original": "散る柳あるじも我れも鐘を聞く",
+    "reading": "ちるやなぎ あるじもわれも かねをきく"
+   },
+   {
+    "id": "basho-maneki-susuki",
+    "original": "何事も招き果てたる芒かな",
+    "reading": "なにごとも まねきはてたる すすきかな"
+   },
+   {
+    "id": "basho-namushi",
+    "original": "胡蝶にもならで秋經る菜虫哉",
+    "reading": "こちょうにも ならであきふる なむしかな"
+   },
+   {
+    "id": "basho-akimohaya",
+    "original": "秋も早ばらつく雨に月の形",
+    "reading": "あきもはや ばらつくあめに つきのなり"
+   },
+   {
+    "id": "basho-yu-no-nagori",
+    "original": "溫泉の名殘今宵は肌の寒からん",
+    "reading": "ゆのなごり こよいははだの さむからん"
+   },
+   {
+    "id": "basho-kochira-muke",
+    "original": "こちら向け我も淋しき秋の暮",
+    "reading": "こちらむけ われもさびしき あきのくれ"
+   },
+   {
+    "id": "basho-shinimosenu",
+    "original": "死もせぬ旅寢の果よ秋の暮",
+    "reading": "しにもせぬ たびねのはてよ あきのくれ"
+   },
+   {
+    "id": "basho-miokuri",
+    "original": "見送りのうしろや淋し秋の暮",
+    "reading": "みおくりの うしろやさびし あきのくれ"
+   },
+   {
+    "id": "basho-kumo-ni-tori",
+    "original": "此秋は何で年寄る雲に鳥",
+    "reading": "このあきは なんでとしよる くもにとり"
+   },
+   {
+    "id": "basho-matsukaze-noki",
+    "original": "松風の軒をめぐりて秋暮れぬ",
+    "reading": "まつかぜの のきをめぐりて あきくれぬ"
+   },
+   {
+    "id": "basho-aomikan",
+    "original": "ゆく秋の尙たのもしや靑蜜柑",
+    "reading": "ゆくあきの なおたのもしや あおみかん"
+   },
+   {
+    "id": "basho-yukuaki-kuriiga",
+    "original": "行く秋や手を廣げたる栗の毬",
+    "reading": "ゆくあきや てをひろげたる くりのいが"
+   },
+   {
+    "id": "basho-yukuaki-futon",
+    "original": "ゆく秋や身にひきまとふ三布蒲團",
+    "reading": "ゆくあきや みにひきまとう みのぶとん"
+   },
+   {
+    "id": "basho-yukuaki-hamaguri",
+    "original": "蛤の二見に別れゆく秋ぞ",
+    "reading": "はまぐりの ふたみにわかれ ゆくあきぞ"
+   },
+   {
+    "id": "basho-tabibito",
+    "original": "旅人と我名呼ばれん初時雨",
+    "reading": "たびびとと わがなよばれん はつしぐれ"
+   },
+   {
+    "id": "basho-hatsushigure",
+    "original": "初時雨猿も小簑をほしげなり",
+    "reading": "はつしぐれ さるもこみのを ほしげなり"
+   },
+   {
+    "id": "basho-shigure-arakabu",
+    "original": "時雨るゝや田の荒株の黑む程",
+    "reading": "しぐるるや たのあらかぶの くろむほど"
+   },
+   {
+    "id": "basho-kogarashi-hobare",
+    "original": "凩や頰腫いたむ人の顏",
+    "reading": "こがらしや ほおばれいたむ ひとのかお"
+   },
+   {
+    "id": "basho-kogarashi-iwa",
+    "original": "凩に岩吹き尖る杉間哉",
+    "reading": "こがらしに いわふきとがる すぎまかな"
+   },
+   {
+    "id": "basho-kaeribana",
+    "original": "木枯に匂ひやつけしかへり花",
+    "reading": "こがらしに においやつけし かえりばな"
+   },
+   {
+    "id": "basho-sanjaku-konoha",
+    "original": "三尺の山も嵐の木の葉かな",
+    "reading": "さんじゃくの やまもあらしの このはかな"
+   },
+   {
+    "id": "basho-kusanotane",
+    "original": "花皆枯れて哀をこぼす草の種",
+    "reading": "はなみなかれて あわれをこぼす くさのたね"
+   },
+   {
+    "id": "basho-kuzunoha-shimo",
+    "original": "葛の葉の表見せけりけさの霜",
+    "reading": "くずのはの おもてみせけり けさのしも"
+   },
+   {
+    "id": "basho-fuyugomori-hashira",
+    "original": "冬籠又寄り添はんこの柱",
+    "reading": "ふゆごもり またよりそわん このはしら"
+   },
+   {
+    "id": "basho-hioke-nadeshiko",
+    "original": "霜の後なでしこ咲ける火桶哉",
+    "reading": "しもののち なでしこさける ひおけかな"
+   },
+   {
+    "id": "basho-shiodai",
+    "original": "鹽鯛の齒ぐきも寒し魚の棚",
+    "reading": "しおだいの はぐきもさむし うおのたな"
+   },
+   {
+    "id": "basho-shiwasu-karasu",
+    "original": "何にこの師走の市にゆく烏",
+    "reading": "なににこの しわすのいちに ゆくからす"
+   },
+   {
+    "id": "basho-toshinoichi",
+    "original": "年の市線香買に出でばやな",
+    "reading": "としのいち せんこうかいに いでばやな"
+   },
+   {
+    "id": "basho-susuhaki-daiku",
+    "original": "煤掃は己が棚つる大工かな",
+    "reading": "すすはきは おのがたなつる だいくかな"
+   },
+   {
+    "id": "basho-mochinooto",
+    "original": "有明も三十日に近し餠の音",
+    "reading": "ありあけも みそかにちかし もちのおと"
+   },
+   {
+    "id": "basho-furusato-hesonoo",
+    "original": "古里や臍の緖になく年の暮",
+    "reading": "ふるさとや へそのおになく としのくれ"
+   },
+   {
+    "id": "basho-toshikurenu",
+    "original": "年暮れぬ笠着て草鞋穿きながら",
+    "reading": "としくれぬ かさきてわらじ はきながら"
+   },
+   {
+    "id": "basho-ganjitsu-tagoto",
+    "original": "元日に田每の日こそ戀しけれ",
+    "reading": "がんじつに たごとのひこそ こいしけれ"
+   },
+   {
+    "id": "basho-futsuka",
+    "original": "二日にもぬかりはせじな花の春",
+    "reading": "ふつかにも ぬかりはせじな はなのはる"
+   },
+   {
+    "id": "basho-horai",
+    "original": "蓬萊に聞かばや伊勢の初便",
+    "reading": "ほうらいに きかばやいせの はつだより"
+   },
+   {
+    "id": "basho-otsue",
+    "original": "大津繪の筆のはじめは何佛",
+    "reading": "おおつえの ふでのはじめは なにぼとけ"
+   },
+   {
+    "id": "basho-saru-men",
+    "original": "年々や猿に着せたる猿の面",
+    "reading": "としどしや さるにきせたる さるのめん"
+   },
+   {
+    "id": "basho-harutachite",
+    "original": "春立つてまだ九日の野山哉",
+    "reading": "はるたって まだここのかの のやまかな"
+   },
+   {
+    "id": "basho-wakana",
+    "original": "菎蒻に今日は賣勝つ若菜哉",
+    "reading": "こんにゃくに きょうはうりかつ わかなかな"
+   },
+   {
+    "id": "basho-karazake-kan",
+    "original": "乾鮭も空也の瘦も寒の中",
+    "reading": "からざけも くうやのやせも かんのうち"
+   },
+   {
+    "id": "basho-nebuka-shiroku",
+    "original": "葱白く洗ひ上げたる寒さ哉",
+    "reading": "ねぶかしろく あらいあげたる さむさかな"
+   },
+   {
+    "id": "basho-go-tenugui",
+    "original": "松葉を焚いて手拭あぶる寒さ哉",
+    "reading": "ごをたいて てぬぐいあぶる さむさかな"
+   },
+   {
+    "id": "basho-uzumibi",
+    "original": "埋火や壁には客の影法師",
+    "reading": "うずみびや かべにはきゃくの かげぼうし"
+   },
+   {
+    "id": "basho-yukinokumo",
+    "original": "京まではまだ半空や雪の雲",
+    "reading": "きょうまでは まだなかぞらや ゆきのくも"
+   },
+   {
+    "id": "basho-fuyunoame",
+    "original": "面白し雪にやならん冬の雨",
+    "reading": "おもしろし ゆきにやならん ふゆのあめ"
+   },
+   {
+    "id": "basho-uma-yuki",
+    "original": "馬をさへ眺むる雪のあした哉",
+    "reading": "うまをさえ ながむるゆきの あしたかな"
+   },
+   {
+    "id": "basho-hakone-yuki",
+    "original": "箱根越す人もあるらし今朝の雪",
+    "reading": "はこねこす ひともあるらし けさのゆき"
+   },
+   {
+    "id": "basho-kirigirisu-kotatsu",
+    "original": "きり〴〵す忘れ音になく火燵かな",
+    "reading": "きりぎりす わすれねになく こたつかな"
+   },
+   {
+    "id": "basho-onozumi",
+    "original": "小野炭や手習ふ人の灰せゝり",
+    "reading": "おのずみや てならうひとの はいぜせり"
+   },
+   {
+    "id": "basho-tamaarare",
+    "original": "いざ子供走りありかん玉霰",
+    "reading": "いざこども はしりありかん たまあられ"
+   },
+   {
+    "id": "basho-ishiyama-arare",
+    "original": "石山の石にたばしる霰かな",
+    "reading": "いしやまの いしにたばしる あられかな"
+   },
+   {
+    "id": "basho-futari-tabine",
+    "original": "寒けれど二人旅寢ぞ賴母しき",
+    "reading": "さむけれど ふたりたびねぞ たのもしき"
+   },
+   {
+    "id": "basho-kamome",
+    "original": "水寒く寐入り兼ねたる鷗哉",
+    "reading": "みずさむく ねいりかねたる かもめかな"
+   },
+   {
+    "id": "basho-hoshizaki",
+    "original": "星崎の闇を見よとやなく千鳥",
+    "reading": "ほしざきの やみをみよとや なくちどり"
+   },
+   {
+    "id": "basho-yuki-nebuka",
+    "original": "今朝の雪根深を園の栞哉",
+    "reading": "けさのゆき ねぶかをそのの しおりかな"
+   },
+   {
+    "id": "basho-karasu-yuki",
+    "original": "常憎む烏も雪のあした哉",
+    "reading": "つねにくむ からすもゆきの あしたかな"
+   },
+   {
+    "id": "basho-yukimaruge",
+    "original": "君火たけよきもの見せむ雪丸",
+    "reading": "きみひたけ よきものみせん ゆきまるげ"
+   },
+   {
+    "id": "basho-natto",
+    "original": "納豆きる音暫し待て鉢叩",
+    "reading": "なっとうきる おとしばしまて はちたたき"
+   },
+   {
+    "id": "basho-kame-koori",
+    "original": "甁破るゝ夜の氷の寐覺哉",
+    "reading": "かめわるる よるのこおりの ねざめかな"
+   },
+   {
+    "id": "basho-namako",
+    "original": "生きながら一つに氷る生海鼠哉",
+    "reading": "いきながら ひとつにこおる なまこかな"
+   },
+   {
+    "id": "basho-take-shimo",
+    "original": "夜すがらや竹氷らする今朝の霜",
+    "reading": "よすがらや たけこおらする けさのしも"
+   },
+   {
+    "id": "basho-fuyuniwa",
+    "original": "冬庭や月もいとなる虫の吟",
+    "reading": "ふゆにわや つきもいとなる むしのぎん"
+   },
+   {
+    "id": "basho-taka-irago",
+    "original": "鷹ひとつ見つけて嬉し伊良古崎",
+    "reading": "たかひとつ みつけてうれし いらござき"
+   },
+   {
+    "id": "basho-daikon-kiku",
+    "original": "菊の後大根の外更になし",
+    "reading": "きくののち だいこんのほか さらになし"
+   },
+   {
+    "id": "basho-arare-hinokigasa",
+    "original": "いかめしき音や霰の檜笠",
+    "reading": "いかめしき おとやあられの ひのきがさ"
+   },
+   {
+    "id": "basho-arare-furugashiwa",
+    "original": "霰きくや此身はもとの古柏",
+    "reading": "あられきくや このみはもとの ふるがしわ"
+   },
+   {
+    "id": "basho-yukinokasa",
+    "original": "市人にいでこれ賣らん雪の笠",
+    "reading": "いちびとに いでこれうらん ゆきのかさ"
+   },
+   {
+    "id": "basho-sake-yuki",
+    "original": "酒のめばいとゞ寐られぬ夜の雪",
+    "reading": "さけのめば いとどねられぬ よるのゆき"
+   },
+   {
+    "id": "basho-kamiko-yukimi",
+    "original": "ためつけて雪見にまかる紙子哉",
+    "reading": "ためつけて ゆきみにまかる かみこかな"
+   },
+   {
+    "id": "basho-kamo-ashi",
+    "original": "毛衣につゝみてぬくし鴨の足",
+    "reading": "けごろもに つつみてぬくし かものあし"
+   },
+   {
+    "id": "basho-daikohiki",
+    "original": "鞍壺に小坊主のるや大根引",
+    "reading": "くらつぼに こぼうずのるや だいこひき"
+   },
+   {
+    "id": "basho-fugujiru",
+    "original": "ふぐ汁や鯛もあるのに無分別",
+    "reading": "ふぐじるや たいもあるのに むふんべつ"
+   },
+   {
+    "id": "basho-kageboshi-koori",
+    "original": "すくみゆくや馬上に氷る影法師",
+    "reading": "すくみゆくや ばしょうにこおる かげぼうし"
+   },
+   {
+    "id": "basho-irori",
+    "original": "五つ六つ茶の子に並ぶ圍爐裡哉",
+    "reading": "いつつむつ ちゃのこにならぶ いろりかな"
+   },
+   {
+    "id": "basho-kannoame",
+    "original": "雁さわぐ鳥羽の田面や寒の雨",
+    "reading": "かりさわぐ とばのたづらや かんのあめ"
+   },
+   {
+    "id": "basho-futarimishi-yuki",
+    "original": "二人見し雪はことしも降りけるか",
+    "reading": "ふたりみし ゆきはことしも ふりけるか"
+   },
+   {
+    "id": "basho-hahaki",
+    "original": "庭はきて雪を忘るゝ箒哉",
+    "reading": "にわはきて ゆきをわするる ははきかな"
+   },
+   {
+    "id": "basho-kareobana",
+    "original": "ともかくもならでや雪の枯尾花",
+    "reading": "ともかくも ならでやゆきの かれおばな"
+   },
+   {
+    "id": "basho-hoya-susuki",
+    "original": "雪散るや穗屋の芒の刈り殘し",
+    "reading": "ゆきちるや ほやのすすきの かりのこし"
+   },
+   {
+    "id": "basho-kiku-koori",
+    "original": "一露もこぼさぬ菊の氷かな",
+    "reading": "ひとつゆも こぼさぬきくの こおりかな"
+   },
+   {
+    "id": "basho-kangiku",
+    "original": "寒菊や小糠のかゝる臼のはた",
+    "reading": "かんぎくや こぬかのかかる うすのはた"
+   },
+   {
+    "id": "basho-kinbyo",
+    "original": "金屛の松の古びや冬籠",
+    "reading": "きんびょうの まつのふるびや ふゆごもり"
+   },
+   {
+    "id": "basho-ibuki-fuyugomori",
+    "original": "折々に伊吹を見てや冬籠",
+    "reading": "おりおりに いぶきをみてや ふゆごもり"
+   },
+   {
+    "id": "basho-okigotatsu",
+    "original": "住みつかぬ旅の心や置火燵",
+    "reading": "すみつかぬ たびのこころや おきごたつ"
+   },
+   {
+    "id": "basho-yane-shimo",
+    "original": "火を焚いて今宵は屋根の霜消さん",
+    "reading": "ひをたいて こよいはやねの しもけさん"
+   },
+   {
+    "id": "basho-kakashi-sode",
+    "original": "かりて寢ん案山子の袖や夜半の霜",
+    "reading": "かりてねん かかしのそでや よわのしも"
+   },
+   {
+    "id": "basho-suisenka",
+    "original": "其匂ひ桃よりしろし水仙花",
+    "reading": "そのにおい ももよりしろし すいせんか"
+   },
+   {
+    "id": "basho-fuyubotan",
+    "original": "冬牡丹千鳥よ雪のほとゝぎす",
+    "reading": "ふゆぼたん ちどりよゆきの ほととぎす"
+   },
+   {
+    "id": "basho-mugi-hatakemura",
+    "original": "麥生へてよきかくれ家や畠村",
+    "reading": "むぎはえて よきかくれがや はたけむら"
+   },
+   {
+    "id": "basho-ume-fuyugomori",
+    "original": "先祝へ梅を心のふゆ籠",
+    "reading": "まずいわえ うめをこころの ふゆごもり"
+   },
+   {
+    "id": "basho-tanbai",
+    "original": "香を探る梅に藏見る軒端哉",
+    "reading": "かをさぐる うめにくらみる のきばかな"
+   },
+   {
+    "id": "basho-ume-tsubaki",
+    "original": "うち寄りて花活さぐれ梅つばき",
+    "reading": "うちよりて はないけさぐれ うめつばき"
+   },
+   {
+    "id": "basho-kikunosake",
+    "original": "草の戶や日暮れて暮れし菊の酒",
+    "reading": "くさのとや ひぐれてくれし きくのさけ"
+   }
   ]
+ }
 }
