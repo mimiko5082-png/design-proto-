@@ -9,12 +9,14 @@ from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 def go(page,target):
- # There is no tab bar: the camera screen links to the other two screens beside the shutter,
- # and they return through the camera button at the bottom centre.
- if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
- elif target=='home':
-  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
- if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
+ # No tab bar. みんなの記録 (the former friends feed and calendar) opens from the calendar button on the camera
+ # screen and returns through the camera button at the bottom centre.
+ # Like the old tab press, every call mounts the destination afresh.
+ if page.locator('.screen-nav').count():
+  page.locator('.screen-nav [data-nav=home]').click()
+  if target=='home':return
+ page.locator('.capture-stage [data-nav=friends]').click()
+ if target=='home':page.locator('.screen-nav [data-nav=home]').click()
 ROOT=Path(__file__).resolve().parent.parent
 SHARE=os.environ.get('CAMERA_TEST_SHARE')=='1'
 subprocess.run(['npm','--prefix','preview','run','share'] if SHARE else ['node','preview/build.mjs'],cwd=ROOT,check=True)
@@ -127,7 +129,7 @@ try:
   page.evaluate('() => { navigator.mediaDevices.getUserMedia=window.realGetCamera; }')
   page.locator('[data-haiku-action=retake]').click()
   expect(page.locator('[data-haiku-action=camera-shoot]')).to_be_enabled(timeout=15000)
-  page.locator('.capture-nav [data-nav=calendar]').evaluate('button=>button.click()')
+  page.locator('.capture-stage [data-nav=friends]').evaluate('button=>button.click()')
   expect(page.locator('.reading-mode-calendar')).to_be_visible()
   assert page.evaluate('window.cameraTracks.every(t=>t.readyState==="ended")')
   expect(page.locator('.local-calendar-photo')).to_have_count(1)

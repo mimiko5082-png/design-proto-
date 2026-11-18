@@ -8,12 +8,14 @@ from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 def go(page,target):
- # There is no tab bar: the camera screen links to the other two screens beside the shutter,
- # and they return through the camera button at the bottom centre.
- if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
- elif target=='home':
-  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
- if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
+ # No tab bar. みんなの記録 (the former friends feed and calendar) opens from the calendar button on the camera
+ # screen and returns through the camera button at the bottom centre.
+ # Like the old tab press, every call mounts the destination afresh.
+ if page.locator('.screen-nav').count():
+  page.locator('.screen-nav [data-nav=home]').click()
+  if target=='home':return
+ page.locator('.capture-stage [data-nav=friends]').click()
+ if target=='home':page.locator('.screen-nav [data-nav=home]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['npm','--prefix','preview','run','share'],cwd=ROOT,check=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -35,7 +37,7 @@ try:
   expect(page.locator('.haiku-topic')).to_be_visible()
   expect(page.locator('.home-view .reading-growth')).to_have_count(0)
   expect(page.locator('.tabbar [data-nav=garden]')).to_have_count(0)
-  expect(page.locator('.capture-nav [data-nav]')).to_have_count(2)
+  expect(page.locator('.capture-stage [data-nav=friends]')).to_have_count(1)
   expect(page.locator('.home-view h1')).to_have_text('今日のお題')
   expect(page.locator('.photo-capture-actions')).to_be_hidden()
   expect(page.locator('[data-photo-note]')).to_have_count(0)

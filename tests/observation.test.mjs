@@ -8,7 +8,7 @@ import worker, { handleRequest } from "../ai-service/worker.mjs";
 import { TEXT_MODEL } from "../ai-service/free-ai.mjs";
 
 function app(storage = new Map(), perspectiveRequester = requestPerspective) {
-  const screen = { innerHTML: "", addEventListener() {} };
+  const screen = { innerHTML: "", dataset: {}, addEventListener() {} };
   const element = { addEventListener() {}, classList: { add() {}, remove() {} } };
   const tabbar = { ...element, hidden: false };
   const source = readFileSync(new URL("../basho-app.js", import.meta.url), "utf8").replace(/^import .*;\n/gm, "");
@@ -161,12 +161,17 @@ test("public place is rounded and survives cloud serialization; old entries neve
   assert.equal(a.cloudEntry({id: "old"}).place, undefined);
   for (const value of [{lat: NaN, lng: 139}, {lat: 90, lng: 139}, {lat: "35", lng: 139}]) assert.equal(normalizePlace(value), null);
 });
-test("legacy map navigation migrates to the reading calendar", () => {
+test("legacy map and calendar navigation migrate to the single records screen", () => {
   const a = app(); a.navigate("map");
-  assert.equal(a.state.view, "calendar");
+  assert.equal(a.state.view, "friends");
   assert.match(a.screen.innerHTML, /basho-reading mode="calendar"/);
   const reloaded = app(a.storage);
-  assert.equal(reloaded.state.view, "calendar");
+  assert.equal(reloaded.state.view, "friends");
+  a.navigate("calendar");
+  assert.equal(a.state.view, "friends");
+  const stored = new Map(a.storage);
+  for (const [key, value] of stored) stored.set(key, value.replace('"view":"friends"', '"view":"calendar"'));
+  assert.equal(app(stored).state.view, "friends");
 });
 
 test("condition A saves after the first observation without contacting AI or sharing study identity", async () => {

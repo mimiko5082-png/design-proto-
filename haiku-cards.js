@@ -1,5 +1,5 @@
 import { publishCard, sharingProfile } from './sharing-client.js?v=78';
-import { openPostCompletion, dateMarkup, verseLines, verseMarkup } from './photo-postcard.js';
+import { openPostCompletion, dateMarkup, verseLines, verseMarkup, verseChars } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { preparePhoto } from './haiku-service.js';
@@ -40,7 +40,11 @@ const ICON_FLIP='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" str
 const ICON_LIBRARY='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l4.8-4.3 3.6 3.1 2.4-2 5.2 4.3"/></svg>';
 const ICON_SEND='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 3L10.2 13.8"/><path d="M21 3l-6.6 18-4.2-7.2L3 9.6 21 3z"/></svg>';
 const ICON_SENT='<svg class="icon-sent" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4.5 12.5l5 5L19.5 7"/></svg>';
+const ICON_RECORDS='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17h2"/></svg>';
 const ICON_CLOSE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const SHARED_KEY='basho_shared_cards_v1';
+function sharedCards(){try{const list=JSON.parse(localStorage.getItem(SHARED_KEY)||'[]');return Array.isArray(list)?list.filter(id=>typeof id==='string'):[];}catch{return [];}}
+function rememberShared(id){try{localStorage.setItem(SHARED_KEY,JSON.stringify([id,...sharedCards().filter(item=>item!==id)].slice(0,40)));}catch{}}
 class HaikuCards extends HTMLElement {
   connectedCallback() {
     this.day = japanDay(); this.topic = dailyTopic(this.day);
@@ -118,7 +122,7 @@ class HaikuCards extends HTMLElement {
       if (!this.isConnected || revision !== this.selection) return;
       const card = cards.find(card => card.id === `photo-challenge-${this.day}`);
       if (card) {
-        this.card = card; this.image = card.image; this.caption = card.caption || ''; if (!this.noteEdited) this.reflection = card.reflection || ''; this.saved = true;
+        this.card = card; this.image = card.image; this.caption = card.caption || ''; if (!this.noteEdited) this.reflection = card.reflection || ''; this.saved = true; this.shared = sharedCards().includes(card.id);
         const savedTopic = topicById(card.topicId);
         if (savedTopic) this.topic = { ...savedTopic, modern: card.modern || savedTopic.modern, original: card.original || savedTopic.original };
       }
@@ -243,7 +247,6 @@ class HaikuCards extends HTMLElement {
     try { const image = await preparePhoto(file); if (revision === this.selection) { this.image = image; this.cameraError = ''; } }
     catch (error) { if (revision === this.selection) this.error = error.message; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false; this.render(); } }
-    if(revision===this.selection && this.isConnected && !this.error && sharingProfile()?.confirmed)await this.save({automatic:true});
   }
   async publishSavedCard(card) {
     if(window.BASHO_PHOTO_PREVIEW && !window.BASHO_FRIENDS_FIREBASE?.apiKey) return false;
@@ -251,7 +254,7 @@ class HaikuCards extends HTMLElement {
       const result=await publishCard(card);
       if(!this.isConnected || card.day!==this.day) return !!result;
       this.shared=!!result;this.shareFailed=!result; this.publishError=result?'':'写真はこの端末に保存しました。友達への投稿はまだです。ログインして、もう一度投稿してください。';
-      if(result) { this.message='参加している友達に写真を共有しました。'; window.dispatchEvent(new Event('basho-sharing-updated')); }
+      if(result) { rememberShared(card.id); this.message='参加している友達に写真を共有しました。'; window.dispatchEvent(new Event('basho-sharing-updated')); }
       else this.message='この端末に保存しました。写真は公開していません。';
       return !!result;
     }catch(error){
@@ -268,7 +271,7 @@ class HaikuCards extends HTMLElement {
     this.busy = true;this.posting=true; this.error = ''; this.render();
     try {
       if (this.saved) {
-        if(!this.hasPendingChanges()){await this.publishSavedCard(this.card);return;}
+        if(!this.hasPendingChanges()){if(await this.publishSavedCard(this.card))this.showRecords();return;}
         const updated = await replaceCardPhoto(this.card.id, this.image, this.reflection, this.caption);
         window.dispatchEvent(new Event('basho-reading-updated'));
         if (revision !== this.selection || !this.isConnected) return;
@@ -276,7 +279,7 @@ class HaikuCards extends HTMLElement {
         this.card = updated;
         this.image = this.card.image; this.caption = this.card.caption || ''; this.reflection = this.card.reflection || '';
         this.message = photoChanged ? '写真を変更しました。カレンダーにも反映しました。' : 'ひとことを保存しました。';
-        await this.publishSavedCard(updated);
+        if(await this.publishSavedCard(updated))this.showRecords();
         window.dispatchEvent(new Event('basho-reading-updated'));
         return;
       }
@@ -293,11 +296,17 @@ class HaikuCards extends HTMLElement {
       this.message = added ? '今日の写真を保存しました。' : '今日の写真は保存済みです。';
       const published=await this.publishSavedCard(this.card);
       if(revision!==this.selection || !this.isConnected)return;
-      if(!automatic && added && (published || (window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey&&!window.BASHO_SHARING_DEMO))) openPostCompletion(this.card,{published});
+      const previewOnly=window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey&&!window.BASHO_SHARING_DEMO;
+      if(published || previewOnly) this.showRecords();
+      if(!automatic && added && (published || previewOnly)) openPostCompletion(this.card,{published});
       window.dispatchEvent(new Event('basho-reading-updated'));
     } catch { if (revision === this.selection) this.error = '保存できませんでした。空き容量やブラウザの保存設定を確認してください。'; }
     finally { if (revision === this.selection && this.isConnected) { this.busy = false;this.posting=false; this.render(); } }
   }
+  // Sending is followed by everyone's photographs for the same day.
+  showRecords() { window.dispatchEvent(new Event('basho-show-posts')); }
+  // Today's photograph has been sent (or cannot be sent from here): the screen shows it as the day's record.
+  isRecorded() { return !!this.saved && !!this.image && !this.busy && !this.hasPendingChanges() && !this.canPostSaved(); }
   hasPendingChanges() {
     return !!this.saved && (this.image !== this.card.image || this.caption.trim() !== (this.card.caption || ''));
   }
@@ -326,22 +335,23 @@ class HaikuCards extends HTMLElement {
   render() {
     const pending = this.hasPendingChanges();
     // While the camera runs (first shot or retake) the stage is the viewfinder.
-    const live = !!(this.cameraOpening || this.cameraStream), showPhoto = !!this.image && !live;
+    const live = !!(this.cameraOpening || this.cameraStream), showPhoto = !!this.image && !live, recorded = showPhoto && this.isRecorded();
+    const verse = verseLines(this.topic);
     this.innerHTML = `<section class="haiku-create photo-capture-home neo-capture">
     <input class="photo-capture-input" id="basho-photo-file" type="file" aria-label="写真を撮る・選ぶ" data-haiku-photo accept="image/jpeg,image/png,image/webp" capture="${this.cameraFacing}" ${this.busy||this.restoring?'disabled':''}>
     <div class="capture-stage ${showPhoto?'has-photo':live?'no-photo is-live':'no-photo'}">
     ${showPhoto?`<img class="haiku-photo capture-full-image" src="${esc(this.image)}" alt="今日のお題に合わせた写真">`:`<div class="capture-full-image capture-ambient city-backdrop" role="img" aria-label="窓の明かりと雨上がりの路地を描いた撮影前の街の背景">${CITY_BACKGROUND}<span class="ambient-grain" aria-hidden="true"></span></div>${live?'<video class="capture-full-image capture-live" data-camera-video autoplay muted playsinline aria-label="カメラの映像"></video>':''}`}
-    <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><button type="button" class="photo-words" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint"><span class="photo-original">${verseMarkup(verseLines(this.topic))}</span><span class="photo-modern">${esc(this.topic.modern)}</span><span class="visually-hidden">（タップでヒントを表示）</span></button><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
+    <article class="haiku-topic capture-prompt"><h1 class="visually-hidden">今日のお題</h1><button type="button" class="photo-words" data-haiku-action="hint" aria-expanded="${this.showHint}" aria-controls="basho-photo-hint"><span class="photo-original" style="--verse-chars:${verseChars(verse)}">${verseMarkup(verse)}</span><span class="photo-modern">${esc(this.topic.modern)}</span><span class="visually-hidden">（タップでヒントを表示）</span></button><p class="haiku-hint" id="basho-photo-hint" data-photo-hint ${this.showHint?'':'hidden'}>${esc(this.topic.photoHint)}</p></article>
     ${dateMarkup(this.saved&&showPhoto?this.card:{day:this.day,createdAt:Date.now()},'capture-date')}
-    ${showPhoto?`<label class="photo-caption-field"><small>もう一言だけ</small><textarea data-photo-caption rows="2" maxlength="120" aria-label="写真にひとこと（任意）" placeholder="見つけたことを、ひとこと。" ${this.busy?'disabled':''}>${esc(this.caption)}</textarea></label>`
+    ${recorded?`${this.caption?`<p class="photo-caption-fixed">${esc(this.caption)}</p>`:''}<p class="capture-bubble">今日は記録済<br>他の人の記録を見てみよう</p><button type="button" class="photo-capture-empty capture-records-main" data-nav="friends" aria-label="みんなの記録を見る"><span class="camera-shutter" aria-hidden="true">${ICON_RECORDS}</span></button>`
+      :showPhoto?`<label class="photo-caption-field"><small>もう一言だけ</small><textarea data-photo-caption rows="2" maxlength="120" aria-label="写真にひとこと（任意）" placeholder="見つけたことを、ひとこと。" ${this.busy?'disabled':''}>${esc(this.caption)}</textarea></label>`
       :live?`<button type="button" data-haiku-action="camera-shoot" class="photo-capture-empty" aria-label="撮影する" ${this.cameraReady&&!this.cameraCapturing?'':'disabled'}><span class="camera-shutter" aria-hidden="true"></span><strong data-camera-status role="status" ${this.cameraReady?'class="visually-hidden"':''}>${this.cameraReady?(this.cameraFacingKnown?`${this.cameraFacing==='user'?'内カメ':'外カメ'}で撮影中`:'カメラ映像を表示しています'):'カメラを準備しています…'}</strong></button>`
       :`<button type="button" data-haiku-action="camera" class="photo-capture-empty" ${this.busy||this.restoring?'disabled':''}><span class="camera-shutter" aria-hidden="true"></span><strong>${this.restoring?'写真を読み込んでいます…':this.busy?'写真を準備しています…':'タップしてカメラを開く'}</strong></button>`}
-    <div class="photo-capture-actions" ${showPhoto?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!showPhoto||this.busy||(this.saved&&!pending&&!this.canPostSaved())?'disabled':''}>${this.saveMarkup()}</button></div>
+    <div class="photo-capture-actions" ${showPhoto&&!recorded?'':'hidden'}><button type="button" class="outline-button" data-haiku-action="retake" ${this.busy?'disabled':''}>撮り直す</button><button type="button" class="main-button" data-haiku-action="save" ${!showPhoto||this.busy||(this.saved&&!pending&&!this.canPostSaved())?'disabled':''}>${this.saveMarkup()}</button></div>
     ${showPhoto?'':`<div class="capture-extra-actions">${live?`<button type="button" data-haiku-action="camera-flip" aria-label="カメラを切り替える" ${this.cameraReady?'':'disabled'}>${ICON_FLIP}</button>`:''}${live&&this.image?`<button type="button" data-haiku-action="camera-close" aria-label="撮り直しをやめて写真に戻る">${ICON_CLOSE}</button>`:`<button type="button" data-haiku-action="pick-file" aria-label="端末の写真から選ぶ" ${this.busy||this.restoring?'disabled':''}>${ICON_LIBRARY}</button>`}</div>`}
-    <nav class="capture-nav" aria-label="ほかの画面"><button type="button" data-nav="calendar"><span>自分の</span><strong>記録</strong></button><button type="button" data-nav="friends"><span>みんなの</span><strong>今日</strong></button></nav>
+    ${recorded?'':`<button type="button" class="capture-records" data-nav="friends" aria-label="みんなの記録を見る">${ICON_RECORDS}</button>`}
     <div class="capture-notices">${this.cameraError?`<p class="reading-error" role="alert">${esc(this.cameraError)}</p><div class="camera-facing-options" role="group" aria-label="カメラを選んで再試行"><button type="button" data-haiku-action="camera-environment">外カメを開く</button><button type="button" data-haiku-action="camera-user">内カメを開く</button></div><button type="button" class="outline-button" data-haiku-action="pick-file">端末のカメラ・写真選択を使う</button>`:''}${this.publishError?`<p class="reading-error" role="alert">${esc(this.publishError)}</p>`:''}<p class="haiku-status" role="status" aria-live="polite">${esc(this.message)}</p>${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}<button type="button" class="outline-button" data-haiku-action="cancel-photo" data-pending-edit ${pending?'':'hidden'}>変更をやめる</button></div>
     </div>
-    ${window.BASHO_PHOTO_PREVIEW&&!window.BASHO_FRIENDS_FIREBASE?.apiKey?'':'<p class="public-audience">ログインして撮影すると、写真は友達の投稿とカレンダーに自動で反映されます。ひとことは後から更新できます。</p>'}
     </section>`;
     // Re-rendering replaces the <video>; give the running stream back to the new element.
     const video=this.querySelector('[data-camera-video]');

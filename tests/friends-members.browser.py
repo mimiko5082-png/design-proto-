@@ -78,7 +78,7 @@ try:
   page.reload(wait_until='networkidle')
   expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_be_visible()
   page.get_by_role('button',name='この招待で参加する',exact=True).click()
-  expect(page.locator('.friend-status')).to_contain_text('友達の投稿とカレンダーの両方')
+  expect(page.locator('.friend-status')).to_contain_text('「みんなの記録」で見られます')
   page.evaluate("window.testPosts=[{id:'friend-photo',name:'招待した友達',day:'2026-11-17',image:'./assets/kotoba-forest.png',caption:'友達から届いた写真',createdAt:1794873600000,stampCount:0,commentCount:0}]")
   page.get_by_role('button',name='更新',exact=True).click()
   expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
@@ -97,10 +97,9 @@ try:
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_have_count(0)
   expect(page.get_by_role('button',name='カレンダーの招待リンクを作る',exact=True)).to_have_count(0)
-  expect(page.get_by_role('button',name='友達の招待リンクを作る',exact=True)).to_have_count(0)
+  # みんなの記録 is the one screen now, so the calendar view also carries the friends invitation.
+  expect(page.get_by_role('button',name='友達の招待リンクを作る',exact=True)).to_have_count(1)
   expect(page.locator('[data-public-action=join], [data-public-action=create-group], [data-invite-input]')).to_have_count(0)
-  page.evaluate("document.addEventListener('click',event=>{if(event.target.closest('[data-nav=friends]'))document.querySelector('basho-public-feed').replaceWith(document.createElement('basho-public-feed'));});")
-  page.get_by_role('button',name='友達の招待・参加を開く',exact=True).click()
   page.get_by_role('button',name='友達の招待リンクを作る',exact=True).click()
   expect(page.get_by_role('textbox',name='招待リンク',exact=True)).to_have_value(base+'/members-test#invite=test-invite')
   assert page.evaluate('window.inviteArgs.length')==0

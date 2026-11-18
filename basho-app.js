@@ -12,8 +12,8 @@ let bashoFirebaseReady = false;
 const screen = document.getElementById("screen");
 const toast = document.getElementById("toast");
 const tabbar = document.querySelector(".tabbar");
-// 友達の投稿とカレンダーから撮影画面へ戻る、画面下中央のボタン。
-const SCREEN_NAV = '<nav class="screen-nav" aria-label="撮影に戻る"><button type="button" data-nav="home" aria-label="撮影に戻る"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.2" r="3.4"/></svg></button></nav>';
+// 「みんなの記録」から撮影画面へ戻る、画面下中央のボタン（撮影画面のシャッターと同じ位置）。
+const SCREEN_NAV = '<nav class="screen-nav" aria-label="撮影に戻る"><button type="button" class="screen-nav-camera" data-nav="home" aria-label="撮影に戻る"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.2" r="3.4"/></svg></button></nav>';
 
 const gazes = [
   {
@@ -217,6 +217,7 @@ screen.addEventListener("click", (event) => {
   if (navTarget) navigate(navTarget.dataset.nav);
 });
 
+
 screen.addEventListener("input", (event) => {
   if (event.target.matches("[data-completed-reflection]")) {
     updateStudyReflection(event.target.dataset.entryId, event.target.dataset.completedReflection, event.target.value);
@@ -252,7 +253,7 @@ tabbar.addEventListener("click", (event) => {
 });
 
 window.addEventListener('basho-show-posts',()=>navigate('friends'));
-window.addEventListener('basho-show-calendar',()=>navigate('calendar'));
+window.addEventListener('basho-show-calendar',()=>navigate('friends'));
 
 function render() {
   const views = {
@@ -267,8 +268,8 @@ function render() {
     update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
-    calendar: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-fcm-settings></basho-fcm-settings></details>'}</div>${SCREEN_NAV}`,
-    friends: () => `<div class="view"><basho-friends></basho-friends></div>${SCREEN_NAV}`,
+    // 「みんなの記録」: その日の自分と友達の写真、日付を選ぶ暦、友達の招待、通知の設定を1画面にまとめる。
+    friends: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-fcm-settings></basho-fcm-settings></details>'}</div>${SCREEN_NAV}`,
     entry: renderEntry,
     share: renderShare,
     book: renderBook,
@@ -905,8 +906,8 @@ function logStudyEvent(action, view = state.view) {
 }
 
 function navigate(view) {
-  if (["notebook", "garden"].includes(view)) view = "calendar";
-  if (view === "map") view = "calendar";
+  // The former calendar, notebook, garden and map screens all live in みんなの記録 now.
+  if (["notebook", "garden", "map", "calendar"].includes(view)) view = "friends";
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
     if (view === "note") state.observationSeconds = 30;
@@ -1307,7 +1308,7 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
-    if (["map", "notebook", "garden"].includes(state.view)) state.view = "calendar";
+    if (["map", "notebook", "garden", "calendar"].includes(state.view)) state.view = "friends";
     const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "friends", "entry", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];

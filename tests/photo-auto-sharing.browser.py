@@ -1,4 +1,4 @@
-"""The capture button posts to friends, with local recovery after failure/cancellation."""
+"""The send button posts today's photograph to friends once, with local recovery after failure/cancellation."""
 import json,os,threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
@@ -49,22 +49,46 @@ try:
   base=f'http://127.0.0.1:{server.server_port}'
   page=context.new_page();page.on('pageerror',lambda error:errors.append(str(error)))
   page.goto(base+'/capture-test',wait_until='networkidle')
-  page.evaluate('window.holdPublish=true')
+  # Choosing a photograph never sends it: one photograph a day is sent deliberately with the send button.
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-forest.png'))
+  expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
+  page.wait_for_timeout(400)
+  assert len(attempts)==0
+  page.locator('[data-photo-caption]').fill('友達に届く写真')
+  # A failed upload keeps the photograph on this device with an explicit retry.
+  page.evaluate('window.failPublish=true')
+  page.locator('[data-haiku-action=save]').click()
+  expect(page.get_by_role('alert')).to_contain_text('この端末には保存済み')
+  expect(page.locator('.post-complete-dialog')).to_have_count(0)
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('公開を再試行する')
+  expect(page.locator('.capture-bubble')).to_have_count(0)
+  page.reload(wait_until='networkidle')
+  expect(page.locator('[data-photo-caption]')).to_have_value('友達に届く写真')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
+  expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
+  # Cancelling login leaves an explicit, retryable local-only result.
+  page.evaluate('window.failPublish=false;window.cancelSignIn=true')
+  page.locator('[data-haiku-action=save]').click()
+  expect(page.get_by_role('alert')).to_contain_text('友達への投稿はまだです')
+  expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
+  assert len(attempts)==0
+  # The send is guarded while it runs, reaches friends once, and then fixes the screen as today's record.
+  page.evaluate('window.cancelSignIn=false;window.holdPublish=true')
+  page.locator('[data-haiku-action=save]').click()
   expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
   expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿しています…')
   page.wait_for_function('typeof window.releasePublish==="function"')
   page.evaluate('document.querySelector("[data-haiku-action=save]").click();window.releasePublish()')
-  expect(page.locator('.haiku-status')).to_contain_text('参加している友達に写真を共有しました')
-  expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  assert len(attempts)==1
+  expect(page.locator('.capture-bubble')).to_contain_text('今日は記録済')
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿済み')
+  expect(page.locator('[data-haiku-action=save]')).to_be_hidden()
+  expect(page.locator('[data-haiku-action=retake]')).to_be_hidden()
+  expect(page.locator('[data-photo-caption]')).to_have_count(0)
+  expect(page.locator('.photo-caption-fixed')).to_have_text('友達に届く写真')
+  assert len(attempts)==1 and len(posts)==1
   assert attempts[0]['image'].startswith('data:image/')
   assert 'reflection' not in attempts[0]
-  page.evaluate('window.holdPublish=false')
-  page.locator('[data-photo-caption]').fill('友達に届く写真')
-  page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿済み')
-  expect(page.locator('[data-haiku-action=save]')).to_be_disabled()
   viewer_context=browser.new_context()
   viewer_context.route('**/firebase-friends.js*',lambda route:route.fulfill(content_type='text/javascript',body=MOCK))
   viewer_context.route('**/test-posts',api)
@@ -75,31 +99,12 @@ try:
   expect(viewer.locator('[data-public-action=publish-local]')).to_have_count(0)
   viewer.evaluate("const calendar=document.createElement('basho-public-feed');calendar.setAttribute('calendar','');calendar.setAttribute('day','"+next(iter(posts))+"');document.querySelector('basho-public-feed').replaceWith(calendar)")
   expect(viewer.locator('.postcard-caption')).to_have_text('友達に届く写真')
-  # Replacing the photo retains the previous shared version if uploading fails.
-  page.evaluate('window.failPublish=true;window.holdPublish=false')
-  page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-lake.png'))
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('公開を再試行する')
-  page.locator('[data-photo-caption]').fill('撮り直した写真')
-  page.locator('[data-haiku-action=save]').click()
-  expect(page.get_by_role('alert')).to_contain_text('この端末には保存済み')
-  expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('公開を再試行する')
+  # The record stays fixed after a reload and nothing is sent again.
   page.reload(wait_until='networkidle')
-  expect(page.locator('[data-photo-caption]')).to_have_value('撮り直した写真')
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
-  expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
-  # Cancelling login leaves an explicit, retryable local-only result.
-  page.evaluate('window.cancelSignIn=true')
-  page.locator('[data-haiku-action=save]').click()
-  expect(page.get_by_role('alert')).to_contain_text('友達への投稿はまだです')
-  expect(page.locator('[data-haiku-action=save]')).to_be_enabled()
-  page.evaluate('window.cancelSignIn=false')
-  page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿済み')
-  assert len(attempts)==3 and len(posts)==1
-  viewer.get_by_role('button',name='更新',exact=True).click()
-  expect(viewer.locator('.postcard-caption')).to_have_text('撮り直した写真')
+  expect(page.locator('.capture-bubble')).to_contain_text('他の人の記録を見てみよう')
+  expect(page.locator('[data-haiku-action=save]')).to_be_hidden()
+  assert len(attempts)==1 and len(posts)==1
   assert not errors,errors
   browser.close()
-  print('Automatic photo post: selecting a photo reaches friends and calendar without a post/share click, busy guard, local retention, reload retry, cancelled login and idempotent replacement passed.')
+  print('Deliberate photo post: nothing is sent on selection; failure and cancelled login stay retryable; one guarded send reaches friends and calendar and fixes the day\'s record across reloads.')
 finally:server.shutdown()

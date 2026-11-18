@@ -5,12 +5,14 @@ from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 def go(page,target):
- # There is no tab bar: the camera screen links to the other two screens beside the shutter,
- # and they return through the camera button at the bottom centre.
- if page.locator('.screen-nav').count():page.locator('.screen-nav [data-nav=home]').click()
- elif target=='home':
-  page.locator('.capture-nav [data-nav=calendar]').click();page.locator('.screen-nav [data-nav=home]').click()
- if target!='home':page.locator(f'.capture-nav [data-nav={target}]').click()
+ # No tab bar. みんなの記録 (the former friends feed and calendar) opens from the calendar button on the camera
+ # screen and returns through the camera button at the bottom centre.
+ # Like the old tab press, every call mounts the destination afresh.
+ if page.locator('.screen-nav').count():
+  page.locator('.screen-nav [data-nav=home]').click()
+  if target=='home':return
+ page.locator('.capture-stage [data-nav=friends]').click()
+ if target=='home':page.locator('.screen-nav [data-nav=home]').click()
 ROOT=Path(__file__).resolve().parent.parent
 subprocess.run(['npm','--prefix','preview','run','share'],cwd=ROOT,check=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -45,12 +47,13 @@ try:
   go(page,'home')
   expect(page.locator('[data-haiku-action=camera]')).to_be_enabled()
   page.locator('[data-haiku-photo]').set_input_files(str(ROOT/'assets/kotoba-sunset.png'))
-  expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿済み')
+  # Nothing is sent until the send button; sending moves to みんなの記録.
+  expect(page.locator('[data-haiku-action=save]')).to_have_text('投稿する')
   page.locator('[data-photo-caption]').fill('プレビューの一枚')
   page.locator('[data-haiku-action=save]').click()
-  expect(page.locator('.haiku-status')).to_contain_text('プレビューに投稿しました')
-  expect(page.locator('.post-complete-dialog')).to_have_count(0)
-  go(page,'friends')
+  expect(page.locator('.feed-heading h1')).to_have_text('みんなの記録')
+  expect(page.locator('.post-complete-dialog')).to_contain_text('プレビューに投稿しました')
+  page.locator('.post-later').click()
   expect(page.locator('.feed-post')).to_have_count(3)
   expect(page.locator('.friend-own-caption')).to_have_text('プレビューの一枚')
   page.reload(wait_until='networkidle')

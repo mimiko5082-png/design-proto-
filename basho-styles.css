@@ -4016,7 +4016,6 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .neo-capture .photo-capture-actions > button { min-height: 50px; padding: 0 10px; border-radius: 999px; font-size: 15px; }
 .neo-capture .photo-capture-actions .outline-button { border: 1px solid #ffffff66; background: #0b0e0b99; color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 
-.neo-capture > .public-audience { margin: 10px var(--gutter) 12px; font-size: 12px; line-height: 1.6; color: var(--text-3); }
 .neo-capture .haiku-status { margin: 0 var(--gutter) 10px; font-size: 13px; line-height: 1.6; color: var(--green); }
 .neo-capture > .outline-button, .neo-capture > .reading-error { width: auto; margin: 10px var(--gutter) 0; }
 .neo-capture > .camera-facing-options { margin: 10px var(--gutter) 0; }
@@ -4253,12 +4252,13 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
    The frame, set like a sports poster: one thick green border, and every word
    in the border's colour — heavy italic, no shadow, pushed against the edge.
    芭蕉の原句 is the headline (three stacked lines), its modern reading sits
-   beneath it, the date runs large down the right edge. No tab bar: the two
-   other screens are the words beside the shutter.
+   beneath it, the date runs large down the right edge. No tab bar: before today's
+   photograph a calendar button sits bottom-left; once it is sent, the shutter itself
+   becomes the way to みんなの記録.
    ========================================================================== */
 :root { --frame-color: var(--green); --frame-w: clamp(10px, 3vw, 14px); --tabbar-h: 0px; }
 .tabbar { display: none !important; }
-.view { padding-bottom: calc(112px + var(--safe-bottom)); }
+.view { padding-bottom: calc(132px + var(--safe-bottom)); }
 .toast { bottom: calc(104px + var(--safe-bottom)); }
 
 /* ---- 撮影: the whole screen is the framed viewfinder ---- */
@@ -4272,7 +4272,7 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .capture-live { background: transparent; }
 .capture-live.is-front-camera { transform: scaleX(-1); }
 
-.neo-capture .capture-prompt { inset: 0 48px auto 0; padding: 0; }
+.neo-capture .capture-prompt { inset: 0 56px auto 0; padding: 0; }
 .photo-words {
   display: block; width: 100%; padding: 0; border: 0; border-radius: 0;
   background: none; color: var(--frame-color);
@@ -4286,22 +4286,22 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
   text-shadow: none;
 }
 .postcard-original { font-size: min(10vw, 40px); }
-/* The longest line of a verse is seven characters: size it to fill the width beside the date. */
+/* Each verse is sized so that its own longest line (--verse-chars, 4 to 7) fills the width beside the date. */
 @supports (width: 1cqw) {
-  .photo-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 54px) / 6.75), 52px); }
-  .postcard-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 50px) / 7.4), 46px); }
+  .photo-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 66px) / (var(--verse-chars, 7) * .957)), 56px); }
+  .postcard-original { font-size: min(calc((100cqw - 2 * var(--frame-w) - 58px) / (var(--verse-chars, 7) * .957)), 50px); }
 }
 .photo-original > span, .postcard-original > span { display: block; white-space: nowrap; }
 .neo-capture .photo-modern, .postcard-prompt {
   display: block; position: static; width: auto; max-width: 100%;
-  margin: 9px 0 0; padding: 0 0 0 3px; border: 0;
+  margin: 10px 0 0; padding: 0 0 0 3px; border: 0;
   color: var(--frame-color);
-  font: italic 900 15px/1.32 var(--font-ui); letter-spacing: -.01em;
+  font: italic 900 17px/1.32 var(--font-ui); letter-spacing: -.01em;
   text-shadow: none; overflow-wrap: anywhere;
 }
 .photo-words::after {
   content: "＋ ヒント"; display: block; margin: 8px 0 0; padding-left: 3px;
-  font: italic 900 11px/1 var(--font-ui); letter-spacing: .04em; opacity: .85;
+  font: italic 900 12.5px/1 var(--font-ui); letter-spacing: .04em; opacity: .85;
 }
 .photo-words[aria-expanded="true"]::after { content: "－ ヒント"; }
 .capture-prompt .haiku-hint {
@@ -4309,7 +4309,7 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
   margin: 8px 0 0; padding: 8px 12px 8px 6px;
   border: 0; border-radius: 0;
   background: var(--frame-color); color: var(--green-ink);
-  font: italic 800 14px/1.45 var(--font-ui);
+  font: italic 800 16px/1.45 var(--font-ui);
 }
 
 .capture-date, .postcard-date {
@@ -4317,30 +4317,22 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
   display: flex; align-items: center; gap: 8px;
   writing-mode: vertical-rl;
   color: var(--frame-color);
-  font: italic 900 14px/1 var(--font-ui); letter-spacing: .02em;
+  font: italic 900 16px/1 var(--font-ui); letter-spacing: .02em;
   text-shadow: none; opacity: 1;
 }
-.capture-date .date-day, .postcard-date .date-day { font-size: min(11.4vw, 46px); line-height: .92; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-.capture-date::after, .postcard-date::after { content: attr(data-weekday); font-size: 14px; }
+.capture-date .date-day, .postcard-date .date-day { font-size: min(13.3vw, 52px); line-height: .92; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.capture-date::after, .postcard-date::after { content: attr(data-weekday); font-size: 16px; }
 
-/* Bottom: 自分の記録 — shutter — みんなの今日 */
-.capture-nav {
-  position: absolute; z-index: 3; left: 0; right: 0; bottom: 0;
-  display: flex; justify-content: space-between; align-items: flex-end;
-  padding-bottom: var(--safe-bottom);
-  pointer-events: none;
+/* Bottom: みんなの記録 (calendar) bottom-left before today's photograph — shutter — camera tools bottom-right. */
+.capture-records {
+  position: absolute; z-index: 3; left: 8px; bottom: calc(14px + var(--safe-bottom));
+  display: grid; place-items: center;
+  width: 52px; height: 52px; padding: 0;
+  border: 2px solid var(--frame-color); border-radius: 50%;
+  background: none; color: var(--frame-color);
 }
-.capture-nav button {
-  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
-  min-width: 104px; min-height: 76px; padding: 14px 6px 1px 2px;
-  border: 0; border-radius: 0; background: none;
-  color: var(--frame-color);
-  font: italic 900 13px/1.05 var(--font-ui); letter-spacing: -.02em;
-  pointer-events: auto;
-}
-.capture-nav button:last-child { align-items: flex-end; padding: 14px 4px 1px 6px; }
-.capture-nav strong { font: inherit; font-size: 30px; line-height: .98; letter-spacing: -.05em; }
-.capture-nav button:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+.capture-records svg, .capture-records-main svg { display: block; }
+.capture-records:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .neo-capture .photo-capture-empty {
   left: 50%; bottom: calc(16px + var(--safe-bottom));
   width: auto; padding: 0; gap: 8px;
@@ -4353,11 +4345,11 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .photo-capture-empty:disabled .camera-shutter { opacity: .5; }
 .neo-capture .photo-capture-empty strong { font: italic 900 12px/1.2 var(--font-ui); letter-spacing: 0; text-shadow: none; white-space: nowrap; }
 .capture-extra-actions {
-  left: auto; right: 6px; bottom: calc(96px + var(--safe-bottom));
+  left: auto; right: 8px; bottom: calc(14px + var(--safe-bottom));
   flex-direction: column; justify-content: flex-end; gap: 10px;
 }
 .capture-extra-actions button {
-  width: 42px; height: 42px;
+  width: 48px; height: 48px;
   border: 2px solid var(--frame-color); border-radius: 50%;
   background: none; color: var(--frame-color);
   -webkit-backdrop-filter: none; backdrop-filter: none;
@@ -4367,12 +4359,12 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 
 /* After the shot: one line of your own in the same voice, then post. */
 .neo-capture .photo-caption-field { left: 3px; right: 104px; bottom: calc(104px + var(--safe-bottom)); color: var(--frame-color); }
-.neo-capture .photo-caption-field > small { color: var(--frame-color); font: italic 900 11px/1.3 var(--font-ui); letter-spacing: .02em; }
+.neo-capture .photo-caption-field > small { color: var(--frame-color); font: italic 900 13px/1.3 var(--font-ui); letter-spacing: .02em; }
 .neo-capture .photo-caption-field textarea {
   margin-top: 2px; padding: 2px 0 6px;
   border: 0; border-bottom: 3px solid var(--frame-color); border-radius: 0;
   background: none; color: var(--frame-color);
-  font: italic 900 22px/1.22 var(--font-ui); letter-spacing: -.02em;
+  font: italic 900 25px/1.22 var(--font-ui); letter-spacing: -.02em;
 }
 .neo-capture .photo-caption-field textarea::placeholder { color: var(--frame-color); opacity: .6; }
 .neo-capture .photo-caption-field textarea:focus { outline: none; border-bottom-color: #fff; }
@@ -4399,7 +4391,24 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
   -webkit-backdrop-filter: none; backdrop-filter: none;
   font-size: 13px;
 }
-.neo-capture > .public-audience { margin: 12px var(--gutter) 28px; }
+/* Once today's photograph is sent the screen is its record: the shutter becomes the calendar, with a prompt above it. */
+.capture-records-main .camera-shutter { display: grid; place-items: center; color: var(--green-ink); }
+.capture-bubble {
+  position: absolute; z-index: 3; left: 50%; bottom: calc(112px + var(--safe-bottom));
+  margin: 0; padding: 9px 16px 8px; transform: translateX(-50%);
+  background: var(--frame-color); color: var(--green-ink);
+  font: italic 900 15px/1.35 var(--font-ui); letter-spacing: -.01em; text-align: center; white-space: nowrap;
+}
+.capture-bubble::after {
+  content: ""; position: absolute; left: 50%; top: 100%; margin-left: -9px;
+  border: 9px solid transparent; border-top-color: var(--frame-color); border-bottom: 0;
+}
+.photo-caption-fixed {
+  position: absolute; z-index: 2; left: 3px; right: 60px; bottom: calc(198px + var(--safe-bottom));
+  margin: 0; color: var(--frame-color);
+  font: italic 900 25px/1.22 var(--font-ui); letter-spacing: -.02em;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
 /* Messages and recovery actions sit inside the frame, above the caption. */
 .capture-notices {
   position: absolute; z-index: 4; left: 0; right: 58px; bottom: calc(204px + var(--safe-bottom));
@@ -4418,32 +4427,50 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .photo-postcard, .friends-feature .photo-postcard { border: var(--frame-w) solid var(--frame-color); aspect-ratio: 3 / 4; }
 .photo-postcard::before { display: none; }
 .photo-postcard::after { background: linear-gradient(180deg,#00000073 0%,transparent 42%,transparent 64%,#0000008c 100%); }
-.postcard-words { position: absolute; z-index: 2; inset: 0 44px auto 0; }
-.postcard-prompt { margin-top: 7px; font-size: 13px; }
-.postcard-date .date-day { font-size: min(9.6vw, 39px); }
+.postcard-words { position: absolute; z-index: 2; inset: 0 50px auto 0; }
+.postcard-prompt { margin-top: 8px; font-size: 15px; }
+.postcard-date, .postcard-date::after { font-size: 14px; }
+.postcard-date .date-day { font-size: min(11.3vw, 44px); }
 .postcard-caption, .friend-own-photo .friend-own-caption {
   left: 0; right: 0; bottom: 0; padding: 0 48px 5px 3px;
   background: none; color: var(--frame-color);
-  font: italic 900 20px/1.22 var(--font-ui); letter-spacing: -.02em;
+  font: italic 900 23px/1.22 var(--font-ui); letter-spacing: -.02em;
 }
 
 /* ---- 友達の投稿・カレンダー: back to the camera, bottom centre ---- */
-.screen-nav { position: absolute; z-index: 30; left: 50%; bottom: calc(18px + var(--safe-bottom)); transform: translateX(-50%); }
-.screen-nav button {
-  display: grid; place-items: center;
-  width: 68px; height: 68px;
-  border: 4px solid var(--bg); border-radius: 50%;
-  background: var(--frame-color); color: var(--green-ink);
-  box-shadow: 0 0 0 3px var(--frame-color);
+/* みんなの記録 returns to the camera through one button where the shutter sits. */
+.screen-nav { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; height: 0; pointer-events: none; }
+.screen-nav::before {
+  content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 132px;
+  background: linear-gradient(180deg, transparent, #0b0e0bf0 52%, #0b0e0b);
+  pointer-events: none;
 }
-.screen-nav button:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+.screen-nav-camera {
+  position: absolute; left: 50%; bottom: calc(16px + var(--frame-w) + var(--safe-bottom));
+  display: grid; place-items: center;
+  width: 76px; height: 76px;
+  transform: translateX(-50%);
+  border: 4px solid var(--frame-color); border-radius: 50%;
+  background: var(--frame-color); color: var(--green-ink);
+  box-shadow: inset 0 0 0 4px #0b0e0b;
+  pointer-events: auto;
+}
+.screen-nav-camera:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+/* The chosen day's photographs come first; the month to pick another day follows them. */
+.shared-selected-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.shared-selected-date button {
+  flex: none; min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  background: var(--surface); color: var(--text-2);
+  font: 600 13px/1.2 var(--font-ui);
+}
+.reading-calendar.shared-calendar { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--hairline); scroll-margin-top: 12px; }
 .friends-feature h1, .reading-mode-calendar .public-feed .feed-heading h1 { font: italic 900 30px/1.1 var(--font-ui); letter-spacing: -.04em; }
 
 @media (max-width: 360px) {
-  .capture-nav strong { font-size: 26px; }
-  .capture-nav button { min-width: 88px; }
-  .neo-capture .photo-caption-field textarea { font-size: 19px; }
-  .postcard-caption { font-size: 17px; }
+  .neo-capture .photo-caption-field textarea, .photo-caption-fixed { font-size: 21px; }
+  .postcard-caption { font-size: 19px; }
+  .capture-bubble { font-size: 13px; }
 }
 @media (max-height: 640px) {
   .neo-capture .capture-stage { min-height: 420px; }
