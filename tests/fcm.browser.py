@@ -95,6 +95,8 @@ try:
   expect(page.locator('[data-fcm-status]')).to_contain_text('この端末で通知を受信しました')
   assert page.evaluate('window.notices.length')==1
   assert page.evaluate('window.notices[0].options.data.url')==base+'/'
+  assert page.evaluate('window.notices[0].options.silent')==False
+  assert page.evaluate('window.notices[0].options.vibrate')==[200,100,200]
   page.evaluate("window.failDisplay=true;window.receiveFcm({data:{title:'テスト',body:'表示失敗の確認'}})")
   expect(page.locator('[data-fcm-status]')).to_contain_text('端末で表示できませんでした')
   page.evaluate('window.failDisplay=false')

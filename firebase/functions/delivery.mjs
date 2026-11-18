@@ -19,7 +19,7 @@ export function fcmMessage(token,kind,day,testId){
   if(kind==='test'&&Number.isSafeInteger(testId))data.tag+=`-${testId}`;
   return {token,data,notification:{title:data.title,body:data.body},webpush:{
     headers:{TTL:kind==='test'?'300':'3600',Urgency:'high'},
-    notification:{tag:data.tag,renotify:false,icon:APP_URL+'assets/kotoba-icon-192.png',badge:APP_URL+'assets/kotoba-icon-192.png'},
+    notification:{tag:data.tag,renotify:false,silent:false,vibrate:[200,100,200],icon:APP_URL+'assets/kotoba-icon-192.png',badge:APP_URL+'assets/kotoba-icon-192.png'},
     fcmOptions:{link:APP_URL},
   }};
 }

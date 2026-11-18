@@ -18,7 +18,7 @@ function showFcmNotification(payload){
   const data={...payload.data,...payload.notification};
   if(typeof data.title!=='string'||typeof data.body!=='string')return;
   return self.registration.showNotification(data.title.slice(0,120),{
-    body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,
+    body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,silent:false,vibrate:[200,100,200],
     icon:new URL('assets/kotoba-icon-192.png',self.registration.scope).href,
     badge:new URL('assets/kotoba-icon-192.png',self.registration.scope).href,
     data:{url:new URL('./',self.registration.scope).href},

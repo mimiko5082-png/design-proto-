@@ -9,6 +9,7 @@ test('FCM worker shows one data notification and restricts clicks to the GitHub 
  vm.runInNewContext(code,{self,URL,console,importScripts(){},firebase:{initializeApp(){},messaging(){return {onBackgroundMessage(fn){background=fn;}};}}});
  await background({data:{title:'お題',body:'朝のお知らせ',url:'https://evil.example',tag:'morning'}});
  assert.equal(shown.length,1);assert.equal(shown[0].options.data.url,self.registration.scope);assert.equal(shown[0].options.renotify,false);
+ assert.equal(shown[0].options.silent,false);assert.deepEqual(Array.from(shown[0].options.vibrate),[200,100,200]);
  // Notification payloads are displayed by Firebase itself; the callback must not duplicate them.
  await background({notification:{title:'朝',body:'お題'},data:{title:'朝',body:'お題'}});
  assert.equal(shown.length,1);
@@ -24,4 +25,5 @@ test('offline Firebase CDN failure retains native FCM data-message delivery',asy
  assert.equal(shown.length,1);assert.equal(shown[0].title,'夜の通知');
  listeners.push({data:{json:()=>({notification:{title:'朝の通知',body:'お題を見よう'},data:{tag:'morning'}})},waitUntil(task){done=task;}});await done;
  assert.equal(shown.length,2);assert.equal(shown[1].title,'朝の通知');assert.equal(shown[1].options.tag,'morning');
+ assert.equal(shown[1].options.silent,false);
 });

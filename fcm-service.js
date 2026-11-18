@@ -40,7 +40,7 @@ export async function fcmSession(){
   const [sdk,functionsSDK]=await Promise.all(['firebase-messaging.js','firebase-functions.js'].map(file=>import(/* @vite-ignore */`https://www.gstatic.com/firebasejs/${VERSION}/${file}`)));
   if(!await sdk.isSupported())throw Object.assign(new Error('Unsupported'),{code:'messaging/unsupported-browser'});
   const messaging=sdk.getMessaging(session.auth.app),functions=functionsSDK.getFunctions(session.auth.app,window.BASHO_FCM?.region||'asia-northeast1');
-  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm6',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
+  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm7',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
   await navigator.serviceWorker.ready;
   const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name,{timeout:15000})({deviceId:deviceID(),...data})).data;
   return {sdk,messaging,registration,call};
@@ -76,7 +76,7 @@ export function startFcmReceiver(session){
   stopForeground=session.sdk.onMessage(session.messaging,async payload=>{
     const data=payload.data||{};
     if(typeof data.title!=='string'||typeof data.body!=='string')return;
-    try{await session.registration.showNotification(data.title.slice(0,120),{body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,icon:new URL('./assets/kotoba-icon-192.png',import.meta.url).href,data:{url:new URL('./',import.meta.url).href}});window.dispatchEvent(new Event('basho-fcm-received'));}
+    try{await session.registration.showNotification(data.title.slice(0,120),{body:data.body.slice(0,300),tag:String(data.tag||'basho-fcm').slice(0,100),renotify:false,silent:false,vibrate:[200,100,200],icon:new URL('./assets/kotoba-icon-192.png',import.meta.url).href,data:{url:new URL('./',import.meta.url).href}});window.dispatchEvent(new Event('basho-fcm-received'));}
     catch{window.dispatchEvent(new Event('basho-fcm-display-error'));}
   });
 }

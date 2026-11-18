@@ -11,6 +11,7 @@ test('FCM schedule is exactly 08:00 and 23:50 in Japan, independent of UTC midni
  const message=fcmMessage(token,'night','2026-11-17');
  assert.equal(message.data.url,APP_URL);assert.deepEqual(message.notification,{title:message.data.title,body:message.data.body});assert.equal(message.data.tag,'basho-fcm-2026-11-17-night');
  assert.equal(message.webpush.headers.Urgency,'high');assert.equal(message.webpush.notification.tag,message.data.tag);assert.equal(message.webpush.fcmOptions.link,APP_URL);
+ assert.equal(message.webpush.notification.silent,false);assert.deepEqual(message.webpush.notification.vibrate,[200,100,200]);
  assert.equal(message.webpush.headers.TTL,'3600');assert.ok(!JSON.stringify(message.data).includes(token));
 });
 test('separate notification tests alert independently without changing scheduled deduplication tags',()=>{
