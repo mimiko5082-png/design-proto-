@@ -4476,3 +4476,16 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
   .neo-capture .capture-stage { min-height: 420px; }
   .capture-stage.has-photo .photo-modern, .capture-stage.has-photo .photo-words::after { display: none; }
 }
+
+/* みんなの記録 heading: refresh and notification settings as icon buttons. */
+.feed-heading .feed-icon-button {
+  order: 2; flex: none;
+  display: grid; place-items: center;
+  width: 42px; height: 42px; padding: 0;
+  border: 1px solid var(--hairline); border-radius: 50%;
+  background: var(--surface); color: var(--text);
+}
+.feed-icon-button svg { display: block; }
+.feed-icon-button:disabled { opacity: .45; }
+.feed-icon-button:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.view > details.place-attach { scroll-margin-top: 12px; }

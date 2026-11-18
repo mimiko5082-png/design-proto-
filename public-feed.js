@@ -70,6 +70,13 @@ class PublicFeed extends HTMLElement {
       this.day=button.dataset.day;this.selected=null;this.details=null;this.draft='';this.status='';
       this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;this.dispatchEvent(new CustomEvent('basho-calendar-day-changed',{bubbles:true,detail:this.day}));this.render();this.closest('.view')?.scrollTo?.({top:0});return;
     }
+    if(action==='notifications'){
+      // The settings live below this feed in the same screen; open them and bring them into view.
+      const settings=this.closest('.view')?.querySelector('details.place-attach');
+      if(settings){settings.open=true;settings.scrollIntoView({block:'start',behavior:'smooth'});settings.querySelector('summary')?.focus({preventScroll:true});}
+      else{this.status=window.BASHO_PHOTO_PREVIEW?'プレビューでは通知の設定は使えません。':'通知の設定を開けませんでした。';this.render();}
+      return;
+    }
     if(action==='jump-calendar'){this.querySelector('.shared-calendar')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
     if(action==='calendar-month'||action==='calendar-today'){
       this.month=action==='calendar-today'?japanDay().slice(0,7):shiftMonth(this.month,Number(button.dataset.delta));
@@ -156,7 +163,8 @@ class PublicFeed extends HTMLElement {
     }).join('')}</div>${this.cursor?'<p class="reading-help">この月の投稿には続きがあります。下の「もっと見る」で追加してください。</p>':''}</section>`:'';
     const dateHeading=this.calendar?`<h2 class="shared-selected-date"><span>${esc(this.day.replaceAll('-',' / '))} · ${shown.length}枚</span><button type="button" data-public-action="jump-calendar">日付を選ぶ</button></h2>`:'';
     // みんなの記録: the chosen day's photographs first, then the month to pick another day, then account and invitations.
-    const heading=`<header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v80</small><h1>みんなの記録</h1><button class="outline-button" data-public-action="refresh" ${this.loading?'disabled':''}>更新</button></header>`;
+    // The heading carries two icon buttons: refresh, and (on みんなの記録) a bell that opens the notification settings below.
+    const heading=`<header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v82</small><h1>みんなの記録</h1><button type="button" class="feed-icon-button" data-public-action="refresh" aria-label="更新" ${this.loading?'disabled':''}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.3L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.3L20 15.5"/><path d="M20 20v-4.5h-4.5"/></svg></button>${this.calendar?`<button type="button" class="feed-icon-button" data-public-action="notifications" aria-label="通知の設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 1.6 6 2 6.5H4c.4-.5 2-2 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg></button>`:''}</header>`;
     const calendarHelp=this.calendar?'<p class="reading-help">日付を選ぶと、その日の自分と友達の写真を見られます。</p>':'';
     const prompt=`<article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article>`;
     const audience=`<p class="public-audience">${demo?'共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。':'Googleでログインし、招待リンクから参加した友達だけに共有されます。'}</p>`;
@@ -165,7 +173,7 @@ class PublicFeed extends HTMLElement {
     const notices=`<p class="friend-status" role="status">${esc(this.status)}</p>${this.localError?`<p class="reading-error" role="alert">${esc(this.localError)}</p>`:''}${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!shown.length?`<p class="public-empty">${this.calendar?'この日の投稿はまだありません。':'今日の投稿はまだありません。最初の一枚を撮ってみよう。'}</p>`:''}`;
     const posts=`<div class="friend-photo-grid">${shown.map(post=>post.localOnly?this.localPost(post):`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(this.calendar?{...post,createdAt:null}:post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount} · 名前を見る</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}`;
     const retention=`<small class="public-retention">${demo?'プレビューでは実際のサーバーへの公開・送信は行いません。':'共有した写真は削除するまでグループに残ります。端末に保存した写真はカレンダーに残ります。'}</small>`;
-    this.innerHTML=`<section class="friends-feature public-feed">${heading}${this.calendar?`${dateHeading}${prompt}${notices}${posts}${monthView}${calendarHelp}<div class="calendar-account">${audience}${identity}${controls}${joinForm}${members}</div>`:`${prompt}${audience}${identity}${controls}${joinForm}${members}${notices}${posts}`}${retention}</section>`;
+    this.innerHTML=`<section class="friends-feature public-feed">${heading}${this.calendar?`${dateHeading}${notices}${posts}${monthView}${calendarHelp}<div class="calendar-account">${audience}${identity}${controls}${joinForm}${members}</div>`:`${prompt}${audience}${identity}${controls}${joinForm}${members}${notices}${posts}`}${retention}</section>`;
   }
 }
 customElements.define('basho-public-feed',PublicFeed);
