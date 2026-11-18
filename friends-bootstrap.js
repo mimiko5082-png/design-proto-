@@ -1,4 +1,4 @@
-import {friendsSession,pendingInvite,refreshFriendsGroup} from './firebase-friends.js?v=77';
+import {friendsSession,pendingInvite,refreshFriendsGroup} from './firebase-friends.js?v=78';
 pendingInvite(); // Preserve a link before login or navigation can remove its fragment.
 if(!window.BASHO_SHARING_DEMO)friendsSession().catch(()=>{});
 const openInvitation=()=>{

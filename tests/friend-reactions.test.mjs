@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadReactions, toggleReaction, addComment, removeComment } from '../friend-reactions.js';
+import { loadReactions, toggleReaction, addComment, removeComment, namedReactions } from '../friend-reactions.js';
 const setup = () => {
   const data = new Map();
   const storage = { getItem:key=>data.get(key)||null, setItem:(key,value)=>data.set(key,value) };
   return {storage,data};
 };
 const day='2026-10-29', topic='basho-samidare', post='sample-aoi';
+test('past UID-only reactions resolve names, keep ownership and never return member credentials',()=>{
+ const result=namedReactions({stamps:{heart:{alice:true,bob:true,former:true,off:false}},comments:{new:{author:'bob',name:'投稿時の名前',text:'すてき',createdAt:2},old:{author:'alice',text:'ありがとう',createdAt:1}}},{alice:{name:'自分',invite:'PRIVATE'},bob:{name:'友達 <img src=x>'}},'alice');
+ assert.deepEqual(result.stamps.find(item=>item.stamp==='heart'),{stamp:'heart',count:3,members:[{name:'自分',own:true},{name:'友達 <img src=x>',own:false},{name:'名前不明の友達',own:false}]});
+ assert.deepEqual(result.mine,['heart']);assert.equal(result.comments[0].name,'自分');assert.equal(result.comments[1].name,'投稿時の名前');
+ assert.ok(!JSON.stringify(result).includes('PRIVATE'));assert.ok(!JSON.stringify(result).includes('bob'));assert.equal(result.comments[0].author,undefined);
+});
 test('each stamp is a local per-photo toggle, isolated by day and topic', () => {
   const {storage}=setup();
   assert.deepEqual(toggleReaction(storage,day,topic,post,'view').stamps,['view']);

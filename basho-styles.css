@@ -3537,6 +3537,11 @@ basho-haiku { display: block; }
 .friend-detail textarea { display: block; box-sizing: border-box; width: 100%; margin: 6px 0 12px; padding: 12px; border: 1px solid #cbd5c0; border-radius: 12px; font: inherit; color: inherit; background: #fff; resize: vertical; }
 .friend-detail form > small { display: block; margin-top: 8px; font-size: 10px; }
 .friend-comments { padding: 0; list-style: none; }
+.friend-reactors { margin: 20px 0; }
+.friend-reactors ul { padding: 0; list-style: none; }
+.friend-reactors li { padding: 10px 0; border-bottom: 1px solid #273d2b; }
+.friend-reactors p { margin: 6px 0; line-height: 1.7; }
+.friend-reactors, .friend-comments strong { overflow-wrap: anywhere; }
 .friend-comments li { border-top: 1px solid #e0e4d6; padding: 14px 0; }
 .friend-comment-author { font-size: 10px; color: #727a65; }
 .friend-comments p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; font-size: 13px; line-height: 1.7; }

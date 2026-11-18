@@ -26,6 +26,7 @@ export const createFriendsGroup=async()=>{};
 export async function createFriendsInvite(...args){window.inviteArgs=args;return new URL('#invite=test-invite',location.href).href;}
 export const joinFriendsGroup=async()=>{window.testJoined=true;window.joinCount++;history.replaceState(null,'',location.pathname);window.dispatchEvent(new Event('basho-sharing-updated'));};
 export async function firebaseSharingAPI(action){
+ if(action==='detail')return {mine:[],stamps:[{stamp:'heart',count:1,members:[{name:'友達 <img src=x onerror=alert(1)>',own:false}]}],comments:[{id:'safe-comment',name:'ひとことの友達',text:'いい写真だね',own:false}]};
  if(action==='members'){
   if(window.testWait)await new Promise(resolve=>window.resolveMembers=resolve);
   if(window.testError)throw new Error('参加者を取得できませんでした');
@@ -81,8 +82,19 @@ try:
   page.evaluate("window.testPosts=[{id:'friend-photo',name:'招待した友達',day:'2026-11-17',image:'./assets/kotoba-forest.png',caption:'友達から届いた写真',createdAt:1794873600000,stampCount:0,commentCount:0}]")
   page.get_by_role('button',name='更新',exact=True).click()
   expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
+  page.locator('.friend-photo-tile').click()
+  expect(page.get_by_role('region',name='リアクションしてくれた友達')).to_contain_text('友達 <img src=x onerror=alert(1)>')
+  expect(page.locator('.friend-reactors img')).to_have_count(0)
+  expect(page.locator('.friend-comments')).to_contain_text('ひとことの友達')
+  page.get_by_role('button',name='閉じる',exact=True).click()
   page.evaluate("const calendar=document.createElement('basho-public-feed');calendar.setAttribute('calendar','');calendar.setAttribute('day','2026-11-17');document.querySelector('basho-public-feed').replaceWith(calendar)")
   expect(page.locator('.postcard-caption')).to_have_text('友達から届いた写真')
+  page.locator('.friend-photo-tile').click()
+  expect(page.get_by_role('region',name='リアクションしてくれた友達')).to_contain_text('友達 <img src=x onerror=alert(1)>')
+  expect(page.locator('.friend-comments')).to_contain_text('ひとことの友達')
+  for width in [320,390]:
+   page.set_viewport_size({'width':width,'height':844})
+   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_have_count(0)
   expect(page.get_by_role('button',name='カレンダーの招待リンクを作る',exact=True)).to_have_count(0)
   expect(page.get_by_role('button',name='友達の招待リンクを作る',exact=True)).to_have_count(0)

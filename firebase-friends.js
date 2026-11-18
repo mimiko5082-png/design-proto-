@@ -1,5 +1,5 @@
 import { sharedPhotoDay, readSharedCalendar } from './sharing-calendar.js?v=76';
-import { REACTIONS } from './friend-reactions.js';
+import { REACTIONS, namedReactions } from './friend-reactions.js';
 import { japanDay } from './reading-store.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import {GROUP_KEY,restoreFriendsGroup,syncFriendsGroup} from './friends-membership.js';
@@ -147,7 +147,8 @@ export async function firebaseSharingAPI(action,data={}){
     if(!/^[A-Za-z0-9_-]{1,180}$/.test(data.photoId||''))throw new FriendsError('写真を選択してください。');
     if(action==='detail'){
       const post=(await get(ref(s.db,photoPath))).val();if(!post)throw new FriendsError('写真は削除されています。');
-      return {comments:Object.entries(post.comments||{}).map(([id,c])=>({...c,id,own:c.author===uid})).sort((a,b)=>a.createdAt-b.createdAt),stamps:REACTIONS.map(r=>({stamp:r.id,count:Object.keys(post.stamps?.[r.id]||{}).length})),mine:REACTIONS.filter(r=>post.stamps?.[r.id]?.[uid]===true).map(r=>r.id)};
+      const members=(await get(ref(s.db,`${base}/members`))).val()||{};
+      return namedReactions(post,members,uid);
     }
     if(action==='stamp'){
       if(!REACTIONS.some(r=>r.id===data.stamp))throw new FriendsError('スタンプを選択してください。');

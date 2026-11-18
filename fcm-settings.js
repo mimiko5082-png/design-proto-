@@ -1,4 +1,4 @@
-import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=77';
+import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=78';
 import {notificationEnvironment,notificationError,fcmSession,refreshFcmDevice,enableFcm,disableFcm,startFcmReceiver} from './fcm-service.js';
 class FcmSettings extends HTMLElement{
   connectedCallback(){

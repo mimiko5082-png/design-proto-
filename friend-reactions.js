@@ -9,6 +9,19 @@ export const REACTIONS = [
   { id: 'smile', emoji: '☺️', label: 'ほっこり' },
   { id: 'flower', emoji: '🌸', label: '季節を感じた' },
 ];
+// Resolve existing UID-only stamps using this private group's member names.
+export function namedReactions(post,members,uid){
+  const person=id=>({name:typeof members?.[id]?.name==='string'&&members[id].name.trim()?members[id].name:'名前不明の友達',own:id===uid});
+  const stamps=REACTIONS.map(reaction=>{
+    const people=Object.entries(post.stamps?.[reaction.id]||{}).filter(([,active])=>active===true).map(([id])=>person(id));
+    return {stamp:reaction.id,count:people.length,members:people};
+  });
+  const comments=Object.entries(post.comments||{}).map(([id,comment])=>({
+    id,name:typeof comment.name==='string'&&comment.name.trim()?comment.name:person(comment.author).name,
+    text:comment.text,createdAt:comment.createdAt,own:comment.author===uid,
+  })).sort((a,b)=>a.createdAt-b.createdAt);
+  return {comments,stamps,mine:REACTIONS.filter(reaction=>post.stamps?.[reaction.id]?.[uid]===true).map(reaction=>reaction.id)};
+}
 const keyFor = (day, topicId, postId) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !/^[a-z0-9-]{1,80}$/.test(topicId) || !/^sample-[a-z0-9-]{1,80}$/.test(postId)) throw Error('Invalid photo');
   return `basho_friend_preview_v1:${day}:${topicId}:${postId}`;

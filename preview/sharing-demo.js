@@ -28,7 +28,7 @@ export async function demoAPI(action,input={}) {
  }
  const record=state.posts.find(post=>post.id===input.photoId);if(!record)throw Error('このプレビューの投稿が見つかりません。');
  const result=detail(state,record.id);
- if(action==='detail')return result;
+ if(action==='detail')return {...result,stamps:result.stamps.map(item=>({...item,members:item.count?[{name:member?.name||'あなた',own:true}]:[]}))};
  if(action==='stamp') {
   result.mine=result.mine.filter(id=>id!==input.stamp);if(input.active)result.mine.push(input.stamp);
   result.stamps=result.mine.map(stamp=>({stamp,count:1}));
