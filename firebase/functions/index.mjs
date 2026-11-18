@@ -66,7 +66,7 @@ export const fcmTestNotification=onCall({...callable,timeoutSeconds:45},async re
       const latest=await delayedTestRecord(ref,record);
       if(latest.reason)throw new HttpsError('failed-precondition','待機中に通知登録が変更されました。',{reason:latest.reason});
     }
-    try{await messaging().send(fcmMessage(record.token,'test',japanDay()));}
+    try{await messaging().send(fcmMessage(record.token,'test',japanDay(),at));}
     catch(error){
       if(terminalTokenError(error))await ref.transaction(current=>current?.token===record.token?null:undefined);
       const code=/^[a-z-]+\/[a-z0-9-]+$/.test(error?.code||'')?error.code:'messaging/unknown-error';

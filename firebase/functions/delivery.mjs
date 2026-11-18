@@ -12,9 +12,12 @@ export function notificationData(kind,day){
     body:kind==='test'?'毎日8:00と23:50に、芭蕉のまなざしからお知らせします。':night?'今日の一枚を撮ったり、友達の写真を振り返ったりしてみよう。':'いつもの道に、まだ気づいていない一枚があるかも。今日のお題を見てみよう。',
     tag:`basho-fcm-${day}-${kind}`,url:APP_URL};
 }
-export function fcmMessage(token,kind,day){
+export function fcmMessage(token,kind,day,testId){
   // Data-only: the foreground/background handlers each display exactly one notification.
-  return {token,data:notificationData(kind,day),webpush:{headers:{TTL:kind==='test'?'300':'3600',Urgency:'normal'}}};
+  const data=notificationData(kind,day);
+  // Separate test attempts must alert again rather than silently replace an old test.
+  if(kind==='test'&&Number.isSafeInteger(testId))data.tag+=`-${testId}`;
+  return {token,data,webpush:{headers:{TTL:kind==='test'?'300':'3600',Urgency:'normal'}}};
 }
 export function terminalTokenError(error){return ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error?.code);}
 export async function deliverDevice(ref,record,kind,day,{send,clock=Date.now}){
