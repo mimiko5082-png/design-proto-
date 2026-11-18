@@ -11,4 +11,5 @@ test('FCM callable endpoints reject anonymous/non-Google callers and invalid dev
   await assert.rejects(functions[name].run({auth:{uid:'alice',token:{firebase:{sign_in_provider:'google.com'}}},data:{deviceId:'../alice'}}),error=>error.code==='invalid-argument');
  }
  await assert.rejects(functions.fcmRegisterDevice.run({auth:{uid:'alice',token:{firebase:{sign_in_provider:'google.com'}}},data:{deviceId:'a'.repeat(32),token:'bad'}}),error=>error.code==='invalid-argument');
+ for(const delaySeconds of [-1,1,11,600,'10'])await assert.rejects(functions.fcmTestNotification.run({auth:{uid:'alice',token:{firebase:{sign_in_provider:'google.com'}}},data:{deviceId:'a'.repeat(32),delaySeconds}}),error=>error.code==='invalid-argument');
 });

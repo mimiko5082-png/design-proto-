@@ -5,6 +5,7 @@ import {onCall,HttpsError} from 'firebase-functions/v2/https';
 import {onSchedule} from 'firebase-functions/v2/scheduler';
 import {setGlobalOptions} from 'firebase-functions/v2';
 import {withLiveDevice} from './live-device.mjs';
+import {delayedTestRecord} from './delayed-test.mjs';
 import {validRegistration,fcmMessage,japanDay,sendScheduled,SCHEDULES,terminalTokenError} from './delivery.mjs';
 initializeApp({databaseURL:process.env.FIREBASE_DATABASE_URL||'https://basho-friends-default-rtdb.asia-southeast1.firebasedatabase.app'});
 setGlobalOptions({region:'asia-northeast1',maxInstances:3});
@@ -31,7 +32,7 @@ export const fcmRegisterDevice=onCall(callable,async request=>{
 });
 export const fcmDeviceStatus=onCall(callable,async request=>{
   const {uid,deviceId}=identity(request),ref=db().ref(`fcmDevices/${deviceId}`),record=(await ref.get()).val();
-  return {enabled:record?.uid===uid&&record.enabled===true,times:['08:00','23:50'],timeZone:'Asia/Tokyo'};
+  return {enabled:record?.uid===uid&&record.enabled===true,supportsDelayedTest:true,times:['08:00','23:50'],timeZone:'Asia/Tokyo'};
 });
 export const fcmDisableDevice=onCall(callable,async request=>{
   const {uid,deviceId}=identity(request),ref=db().ref(`fcmDevices/${deviceId}`);let forbidden=false;
@@ -39,8 +40,11 @@ export const fcmDisableDevice=onCall(callable,async request=>{
   if(forbidden)throw new HttpsError('permission-denied','この端末の通知を停止できません。');
   return {enabled:false};
 });
-export const fcmTestNotification=onCall(callable,async request=>{
-  const {uid,deviceId}=identity(request),ref=db().ref(`fcmDevices/${deviceId}`),at=Date.now();
+export const fcmTestNotification=onCall({...callable,timeoutSeconds:45},async request=>{
+  const {uid,deviceId}=identity(request);
+  const delaySeconds=request.data.delaySeconds??0;
+  if(delaySeconds!==0&&delaySeconds!==10)throw new HttpsError('invalid-argument','テストの待ち時間が正しくありません。');
+  const ref=db().ref(`fcmDevices/${deviceId}`),at=Date.now();
   return withLiveDevice(ref,async()=>{
     let rejection;
     const claim=await ref.transaction(current=>{
@@ -58,6 +62,10 @@ export const fcmTestNotification=onCall(callable,async request=>{
       throw new HttpsError('failed-precondition','テスト通知の送信条件を確認してください。',details);
     }
     const record=claim.snapshot.val();
+    if(delaySeconds===10){
+      const latest=await delayedTestRecord(ref,record);
+      if(latest.reason)throw new HttpsError('failed-precondition','待機中に通知登録が変更されました。',{reason:latest.reason});
+    }
     try{await messaging().send(fcmMessage(record.token,'test',japanDay()));}
     catch(error){
       if(terminalTokenError(error))await ref.transaction(current=>current?.token===record.token?null:undefined);

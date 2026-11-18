@@ -40,13 +40,14 @@ export async function fcmSession(){
   const [sdk,functionsSDK]=await Promise.all(['firebase-messaging.js','firebase-functions.js'].map(file=>import(/* @vite-ignore */`https://www.gstatic.com/firebasejs/${VERSION}/${file}`)));
   if(!await sdk.isSupported())throw Object.assign(new Error('Unsupported'),{code:'messaging/unsupported-browser'});
   const messaging=sdk.getMessaging(session.auth.app),functions=functionsSDK.getFunctions(session.auth.app,window.BASHO_FCM?.region||'asia-northeast1');
-  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm4',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
+  const registration=await navigator.serviceWorker.register(new URL('./sw.js?v=fcm5',import.meta.url),{scope:new URL('./',import.meta.url).href,updateViaCache:'none'});
   await navigator.serviceWorker.ready;
-  const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name,{timeout:15000})({deviceId:deviceID(),...data})).data;
+  const call=async(name,data={})=>(await functionsSDK.httpsCallable(functions,name,{timeout:name==='fcmTestNotification'&&data.delaySeconds===10?40000:15000})({deviceId:deviceID(),...data})).data;
   return {sdk,messaging,registration,call};
 }
 export async function refreshFcmDevice(session){
   const status=await session.call('fcmDeviceStatus');session.registered=!!status.enabled;
+  session.supportsDelayedTest=status.supportsDelayedTest===true;
   if(status.enabled && Notification.permission==='granted'){
     const token=await session.sdk.getToken(session.messaging,{vapidKey:window.BASHO_FCM.vapidKey,serviceWorkerRegistration:session.registration});
     if(!token)throw new Error('Missing token');
