@@ -52,8 +52,9 @@ test('disabled and stale devices are not sent; abandoned leases expire using act
  assert.equal(await deliverDevice(memoryRef(record),record,'morning','2026-11-17',{clock:()=>now,send:async()=>{}}),'sent');
 });
 test('scheduled delivery pages through more than 200 devices and retains the intended date on retry',async()=>{
+ // Like Realtime Database, this snapshot stops enumerating when the callback returns a truthy value.
  const records=Array.from({length:205},(_,n)=>({key:String(n).padStart(4,'0'),ref:memoryRef(device()),val:device}));let sent=0;
- const db={ref(path){assert.equal(path,'fcmDevices');let after='';return {orderByKey(){return this;},startAfter(key){after=key;return this;},limitToFirst(size){return {async get(){return {forEach(fn){records.filter(row=>row.key>after).slice(0,size).forEach(fn);}};}};}};}};
+ const db={ref(path){assert.equal(path,'fcmDevices');let after='';return {orderByKey(){return this;},startAfter(key){after=key;return this;},limitToFirst(size){return {async get(){return {forEach(fn){return records.filter(row=>row.key>after).slice(0,size).some(row=>!!fn(row));}};}};}};}};
  const counts=await sendScheduled(db,async message=>{sent++;assert.equal(message.data.tag,'basho-fcm-2026-11-16-night');},'night',()=>now,Date.parse('2026-11-16T14:50:00Z'));
  assert.equal(sent,205);assert.equal(counts.failed,0);
 });

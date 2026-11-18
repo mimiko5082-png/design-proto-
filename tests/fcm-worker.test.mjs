@@ -13,6 +13,10 @@ test('FCM worker shows one data notification and restricts clicks to the GitHub 
  // Notification payloads are displayed by Firebase itself; the callback must not duplicate them.
  await background({notification:{title:'朝',body:'お題'},data:{title:'朝',body:'お題'}});
  assert.equal(shown.length,1);
+ // While the app is visible the SDK only forwards to the page, so the push event itself must still
+ // display once; iOS revokes subscriptions whose pushes end without a notification.
+ let pushed;listeners.push({data:{json:()=>({notification:{title:'夜',body:'振り返ろう'},data:{title:'夜',body:'振り返ろう',tag:'basho-fcm-2026-11-18-night'}})},waitUntil(task){pushed=task;}});await pushed;
+ assert.equal(shown.length,2);assert.equal(shown[1].options.tag,'basho-fcm-2026-11-18-night');assert.equal(shown[1].options.renotify,false);
  let finished,stopped=false;listeners.notificationclick({stopImmediatePropagation(){stopped=true;},notification:{close(){}},waitUntil(task){finished=task;}});await finished;
  assert.equal(stopped,true);
  assert.deepEqual(opened,[self.registration.scope]);

@@ -24,10 +24,12 @@ function showFcmNotification(payload){
     data:{url:new URL('./',self.registration.scope).href},
   });
 }
-let firebaseReady=false;
 self.addEventListener('push',event=>{
-  if(firebaseReady||!event.data)return;
-  // Native fallback for both notification and legacy data-only messages.
+  if(!event.data)return;
+  // Always display from the push event itself, also while the Firebase SDK is available.
+  // The SDK only forwards a message to the page while the app is visible, and iOS revokes a
+  // subscription after pushes that end without a notification. The shared tag (renotify:false)
+  // lets the SDK's or the page's own display replace this one without a second alert.
   event.waitUntil((async()=>{let payload;try{payload=event.data.json();}catch{return;}await showFcmNotification(payload);})());
 });
 try{
@@ -38,7 +40,6 @@ try{
     // Older deployed senders may still send data-only payloads.
     if(!payload.notification)return showFcmNotification(payload);
   });
-  firebaseReady=true;
 }catch{
   console.warn('FCM SDK unavailable; using the native data-message notification handler.');
 }

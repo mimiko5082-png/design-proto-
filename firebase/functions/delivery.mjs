@@ -55,7 +55,7 @@ export async function sendScheduled(db,send,kind,clock=Date.now,scheduledAt=cloc
   const counts={sent:0,skipped:0,expired:0,failed:0},day=japanDay(scheduledAt);let after;
   for(;;){
     let query=db.ref('fcmDevices').orderByKey();if(after)query=query.startAfter(after);
-    const snapshot=await query.limitToFirst(200).get(),rows=[];snapshot.forEach(child=>rows.push(child));
+    const snapshot=await query.limitToFirst(200).get(),rows=[];snapshot.forEach(child=>{rows.push(child);});
     if(!rows.length)break;
     for(let start=0;start<rows.length;start+=20){
       await Promise.all(rows.slice(start,start+20).map(async row=>{
