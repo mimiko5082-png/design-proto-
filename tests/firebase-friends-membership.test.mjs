@@ -12,6 +12,10 @@ test('member list includes friends without posts, sorts by joining time and omit
   assert.deepEqual(await readFriendsMembers(s,'friends','alice'),[
     {name:'Alice',joinedAt:100,own:true},{name:'Bob',joinedAt:200,own:false},{name:'Old',joinedAt:null,own:false},
   ]);
+  // Today's posting time is attached by member without exposing who is who beyond the name.
+  assert.deepEqual(await readFriendsMembers(s,'friends','alice',{bob:1234,stranger:5}),[
+    {name:'Alice',joinedAt:100,own:true,postedAt:null},{name:'Bob',joinedAt:200,own:false,postedAt:1234},{name:'Old',joinedAt:null,own:false,postedAt:null},
+  ]);
   s.dbSDK.get=async()=>{throw new Error('PERMISSION_DENIED');};
   await assert.rejects(readFriendsMembers(s,'friends','eve'),/PERMISSION_DENIED/);
 });

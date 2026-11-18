@@ -1,4 +1,4 @@
-import { publishCard, sharingProfile } from './sharing-client.js?v=78';
+import { publishCard, sharingProfile } from './sharing-client.js?v=83';
 import { openPostCompletion, dateMarkup, verseLines, verseMarkup, verseChars } from './photo-postcard.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';

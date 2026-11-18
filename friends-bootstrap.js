@@ -1,8 +1,8 @@
-import {friendsSession,pendingInvite,refreshFriendsGroup} from './firebase-friends.js?v=78';
+import {friendsSession,pendingInvite,refreshFriendsGroup} from './firebase-friends.js?v=83';
 pendingInvite(); // Preserve a link before login or navigation can remove its fragment.
 if(!window.BASHO_SHARING_DEMO)friendsSession().catch(()=>{});
 const openInvitation=()=>{
-  if(pendingInvite())window.dispatchEvent(new Event('basho-show-posts'));
+  if(pendingInvite())window.dispatchEvent(new Event('basho-show-invite')); // The invitation screen says who invited and offers to join.
   else if(location.search.includes('calendar=shared'))window.dispatchEvent(new Event('basho-show-calendar'));
 };
 window.addEventListener('load',openInvitation);

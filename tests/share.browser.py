@@ -100,9 +100,10 @@ try:
   expect(page.locator('[data-haiku-action=save]')).to_have_text('友達に投稿する')
   expect(page.locator('[data-haiku-photo]')).to_have_count(1)
   # The normal single-file preview now requires Firebase for friends sharing.
-  # Offline, local photos remain readable and the login control stays available.
+  # Offline, local photos remain readable and the way to log in stays available.
   go(page,'friends')
-  expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
+  # Login now lives on the 友達 screen; the strip under the heading leads there.
+  expect(page.locator('.records-friends')).to_contain_text('友達とつながる');expect(page.locator('.records-friends')).to_have_attribute('data-nav','group')
   expect(page.get_by_role('button',name='参加中の友達を見る',exact=True)).to_have_count(0)
   expect(page.locator('.public-local')).to_have_count(0)
   go(page,'calendar')

@@ -1,16 +1,17 @@
 import { monthCells, shiftMonth, validDay } from './reading-store.js';
 import { calendarPosts } from './sharing-calendar.js?v=76';
-import { friendsSession, friendsGroup, pendingInvite, stageFriendsInvite, createFriendsGroup, createFriendsInvite, joinFriendsGroup, friendsSignOut, friendlyError } from './firebase-friends.js?v=78';
+import { friendsSession, friendsGroup, pendingInvite, stageFriendsInvite, createFriendsGroup, createFriendsInvite, joinFriendsGroup, friendsSignOut, friendlyError } from './firebase-friends.js?v=83';
 import { postcardMarkup, escapeText as esc } from './photo-postcard.js';
 import { REACTIONS } from './friend-reactions.js';
 import { dailyTopic } from './haiku-catalog.js';
 import { japanDay } from './reading-store.js';
 import { loadCards } from './haiku-store.js';
-import { sharingAPI, sharingProfile, ensureSharingProfile, publishCard } from './sharing-client.js?v=78';
+import { sharingAPI, sharingProfile, ensureSharingProfile, publishCard } from './sharing-client.js?v=83';
 class PublicFeed extends HTMLElement {
   connectedCallback() {
     this.calendar=this.hasAttribute('calendar');this.day=validDay(this.getAttribute('day'))?this.getAttribute('day'):japanDay();this.month=this.day.slice(0,7);this.localCards=[];this.posts=[];this.selected=null;this.details=null;this.error='';this.status='';this.loading=false;this.busy=false;this.draft='';this.revision=0;
     this.membersOpen=false;this.members=null;this.membersError='';this.membersLoading=false;this.membersRequest=(this.membersRequest||0)+1;
+    this.people=null;this.peopleAt=0;this.peopleRequest=(this.peopleRequest||0)+1;
     this.addEventListener('click',this.click=e=>this.handle(e));
     this.addEventListener('input',this.input=e=>{if(e.target.matches('[data-public-comment]')){this.draft=e.target.value;this.commentId=null;}if(e.target.matches('[data-invite-input]'))this.inviteDraft=e.target.value;});
     this.addEventListener('submit',this.submit=e=>{if(e.target.matches('[data-public-form]')){e.preventDefault();this.mutate('comment',{commentId:this.commentId || (this.commentId=crypto.randomUUID().replaceAll('-','')),text:this.draft},'ひとことを送りました。');}});
@@ -18,13 +19,13 @@ class PublicFeed extends HTMLElement {
     window.addEventListener('focus',this.refresh);window.addEventListener('basho-reading-updated',this.refresh);window.addEventListener('basho-sharing-updated',this.refresh);
     this.timer=setInterval(this.refresh,30000);this.load();
     if(!window.BASHO_SHARING_DEMO) friendsSession().then(()=>this.load()).catch(()=>{});
-    this.authReset=()=>{++this.revision;++this.membersRequest;this.membersOpen=false;this.members=null;this.membersError='';this.membersLoading=false;this.loading=false;this.busy=false;this.posts=[];this.selected=null;this.details=null;this.inviteURL='';this.local=null;this.cursor=null;this.render();};
+    this.authReset=()=>{++this.revision;++this.membersRequest;++this.peopleRequest;this.people=null;this.peopleAt=0;this.membersOpen=false;this.members=null;this.membersError='';this.membersLoading=false;this.loading=false;this.busy=false;this.posts=[];this.selected=null;this.details=null;this.inviteURL='';this.local=null;this.cursor=null;this.render();};
     window.addEventListener('basho-auth-changed',this.authReset);
   }
   disconnectedCallback(){window.removeEventListener('basho-auth-changed',this.authReset);this.revision++;this.membersRequest++;clearInterval(this.timer);window.removeEventListener('focus',this.refresh);window.removeEventListener('basho-reading-updated',this.refresh);window.removeEventListener('basho-sharing-updated',this.refresh);}
   async load(more=false) {
     if(this.membersOpen&&!this.membersLoading)this.loadMembers();
-    const revision=++this.revision;this.loading=true;this.error='';this.render();
+    const revision=++this.revision;this.loading=true;this.error='';this.render();this.loadPeople();
     try {
       try{const cards=await loadCards();if(revision!==this.revision || !this.isConnected)return;this.localCards=cards;this.localError='';}
       catch{this.localError='この端末の写真を読み込めませんでした。保存設定を確認して、更新してください。';}
@@ -38,6 +39,31 @@ class PublicFeed extends HTMLElement {
       this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;
     }catch(error){if(revision===this.revision){this.error=error.message;this.posts=[];this.selected=null;this.details=null;this.cursor=null;}}
     finally{if(revision===this.revision&&this.isConnected){this.loading=false;this.render();}}
+  }
+  // みんなの記録 shows who takes part in a strip under the heading; a failure only leaves the strip without faces.
+  async loadPeople(force=false) {
+    if(!this.calendar||window.BASHO_SHARING_DEMO||!sharingProfile()?.confirmed||!friendsGroup())return;
+    if(!force&&this.people&&Date.now()-this.peopleAt<60000)return;
+    const request=++this.peopleRequest,group=friendsGroup(),uid=sharingProfile()?.id;
+    try{
+      const result=await sharingAPI('members');
+      if(request===this.peopleRequest&&this.isConnected&&group===friendsGroup()&&uid===sharingProfile()?.id){this.people=result.members;this.peopleAt=Date.now();if(!this.loading)this.render();}
+    }catch{/* The strip falls back to its plain label. */}
+  }
+  peopleStrip() {
+    const demo=window.BASHO_SHARING_DEMO;let profile=null;try{profile=sharingProfile();}catch{}
+    const tints=['#c9a24a','#9fb4c8','#d48f7a','#b7a5d6','#8fc7b4'];
+    const face=(member,index)=>`<span class="avatar${member.own?' avatar-own':''}" ${member.own?'':`style="background:${tints[(index+tints.length-1)%tints.length]}"`}>${member.own?'自':esc(Array.from(member.name||'友')[0])}</span>`;
+    const help='<button type="button" class="records-help" data-nav="guide" aria-label="使い方を見る">？</button>';
+    const strip=(label,action,faces,target,name)=>`<div class="records-people"><button type="button" class="records-friends" data-nav="${target}" aria-label="${esc(name)}">${faces?`<span class="avatar-stack" aria-hidden="true">${faces}</span>`:''}<span class="records-friends-label">${esc(label)}</span><span class="records-friends-action">${esc(action)}</span></button>${help}</div>`;
+    if(demo){
+      const names=[...new Set(this.posts.filter(post=>!post.own).map(post=>post.name))].slice(0,3);
+      const people=[{own:true,name:profile?.name||'自分'},...names.map(name=>({name}))];
+      return strip(`友達 ${people.length}人`,'＋ 招待',people.map(face).join(''),'group',`友達 ${people.length}人。招待と参加者を開く`);
+    }
+    if(!profile?.confirmed||!friendsGroup())return strip(pendingInvite()?'招待が届いています':'友達とつながる',pendingInvite()?'参加する':'はじめる','',pendingInvite()?'invited':'group',pendingInvite()?'届いている招待を開く':'友達とつながる設定を開く');
+    const people=this.people||[];
+    return strip(people.length?`友達 ${people.length}人`:'友達','＋ 招待',people.slice(0,4).map(face).join(''),'group',people.length?`友達 ${people.length}人。招待と参加者を開く`:'招待と参加者を開く');
   }
   async loadMembers() {
     const request=++this.membersRequest,group=friendsGroup(),uid=sharingProfile()?.id;
@@ -68,16 +94,8 @@ class PublicFeed extends HTMLElement {
     if(action==='members-refresh')return this.loadMembers();
     if(action==='calendar-day'){
       this.day=button.dataset.day;this.selected=null;this.details=null;this.draft='';this.status='';
-      this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;this.dispatchEvent(new CustomEvent('basho-calendar-day-changed',{bubbles:true,detail:this.day}));this.render();this.closest('.view')?.scrollTo?.({top:0});return;
+      this.local=this.localCards.find(card=>card.day===this.day&&['photo-challenge','photo-ai'].includes(card.creation))||null;this.dispatchEvent(new CustomEvent('basho-calendar-day-changed',{bubbles:true,detail:this.day}));this.render();return;
     }
-    if(action==='notifications'){
-      // The settings live below this feed in the same screen; open them and bring them into view.
-      const settings=this.closest('.view')?.querySelector('details.place-attach');
-      if(settings){settings.open=true;settings.scrollIntoView({block:'start',behavior:'smooth'});settings.querySelector('summary')?.focus({preventScroll:true});}
-      else{this.status=window.BASHO_PHOTO_PREVIEW?'プレビューでは通知の設定は使えません。':'通知の設定を開けませんでした。';this.render();}
-      return;
-    }
-    if(action==='jump-calendar'){this.querySelector('.shared-calendar')?.scrollIntoView({block:'start',behavior:'smooth'});return;}
     if(action==='calendar-month'||action==='calendar-today'){
       this.month=action==='calendar-today'?japanDay().slice(0,7):shiftMonth(this.month,Number(button.dataset.delta));
       this.day=action==='calendar-today'?japanDay():this.month+'-01';this.selected=null;this.details=null;this.posts=[];this.status='';this.dispatchEvent(new CustomEvent('basho-calendar-day-changed',{bubbles:true,detail:this.day}));return this.load();
@@ -99,7 +117,7 @@ class PublicFeed extends HTMLElement {
       }catch(error){this.error=friendlyError(error).message;}
       finally{this.busy=false;this.accessAction=null;const failure=this.error;await this.load();if(failure){this.error=failure;this.render();}}return;
     }
-    if(action==='refresh')return this.load();if(action==='more')return this.load(true);
+    if(action==='refresh'){this.loadPeople(true);return this.load();}if(action==='more')return this.load(true);
     if(action==='profile'){try{if(await ensureSharingProfile())await this.load();}catch(error){this.error=error.message;this.render();}return;}
     if(action==='publish-local') {
       if(button.dataset.card&&!confirm(`${this.day}の写真とひとことを、参加している友達に共有しますか？`))return;
@@ -161,19 +179,20 @@ class PublicFeed extends HTMLElement {
       const photos=allPosts.filter(p=>p.day===day),photo=photos[0];
       return `<button class="${photo?'has-photo':''} ${day===this.day?'selected':''} ${day===today?'is-today':''}" data-public-action="calendar-day" data-day="${day}" aria-pressed="${day===this.day}" aria-label="${day}、写真${photos.length}枚">${photo?`<img class="calendar-day-photo" src="${esc(photo.image)}" alt="">`:''}<span class="calendar-day-number">${Number(day.slice(8))}</span><small class="shared-day-count">${photos.length?photos.length+'枚':'·'}</small></button>`;
     }).join('')}</div>${this.cursor?'<p class="reading-help">この月の投稿には続きがあります。下の「もっと見る」で追加してください。</p>':''}</section>`:'';
-    const dateHeading=this.calendar?`<h2 class="shared-selected-date"><span>${esc(this.day.replaceAll('-',' / '))} · ${shown.length}枚</span><button type="button" data-public-action="jump-calendar">日付を選ぶ</button></h2>`:'';
-    // みんなの記録: the chosen day's photographs first, then the month to pick another day, then account and invitations.
-    // The heading carries two icon buttons: refresh, and (on みんなの記録) a bell that opens the notification settings below.
-    const heading=`<header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v82</small><h1>みんなの記録</h1><button type="button" class="feed-icon-button" data-public-action="refresh" aria-label="更新" ${this.loading?'disabled':''}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.3L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.3L20 15.5"/><path d="M20 20v-4.5h-4.5"/></svg></button>${this.calendar?`<button type="button" class="feed-icon-button" data-public-action="notifications" aria-label="通知の設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 1.6 6 2 6.5H4c.4-.5 2-2 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg></button>`:''}</header>`;
-    const calendarHelp=this.calendar?'<p class="reading-help">日付を選ぶと、その日の自分と友達の写真を見られます。</p>':'';
+    const weekday=validDay(this.day)?'日月火水木金土'[new Date(this.day+'T00:00:00Z').getUTCDay()]:'';
+    const dateHeading=this.calendar?`<h2 class="shared-selected-date"><span>${Number(this.day.slice(5,7))}/${Number(this.day.slice(8))}（${weekday}）・${shown.length}枚</span><small>日付をタップで切り替え</small></h2>`:'';
+    // みんなの記録: heading with refresh and the bell (its own screen), the friends strip, the month, then the chosen day's photographs.
+    const heading=`<header class="feed-heading"><small class="friends-release" aria-label="共有機能のバージョン">共有 v83</small><h1>みんなの記録</h1><button type="button" class="feed-icon-button" data-public-action="refresh" aria-label="更新" ${this.loading?'disabled':''}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.3L4 8.5"/><path d="M4 4v4.5h4.5"/><path d="M4 13a8 8 0 0 0 14.3 4.3L20 15.5"/><path d="M20 20v-4.5h-4.5"/></svg></button>${this.calendar?`<button type="button" class="feed-icon-button" data-nav="notify" aria-label="通知の設定"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 1.6 6 2 6.5H4c.4-.5 2-2 2-6.5z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg></button>`:''}</header>`;
     const prompt=`<article class="friends-prompt"><p>${esc(dailyTopic(this.day).original)}</p></article>`;
     const audience=`<p class="public-audience">${demo?'共有画面の体験用です。サンプル投稿を表示し、操作はこの端末内だけに保存します。':'Googleでログインし、招待リンクから参加した友達だけに共有されます。'}</p>`;
     const identity=`${profile?.confirmed?`<p class="public-identity">投稿者：${esc(profile.name)}</p>`:`<button class="outline-button" data-public-action="profile">${demo?'表示名を登録して参加する':'Googleでログインする'}</button>`}`;
     const members=`${!demo&&profile?.confirmed&&friendsGroup()?`<button class="outline-button" data-public-action="members" aria-expanded="${this.membersOpen}">${this.membersOpen?'参加中の友達を閉じる':'参加中の友達を見る'}</button>${this.membersPanel()}`:''}`;
-    const notices=`<p class="friend-status" role="status">${esc(this.status)}</p>${this.localError?`<p class="reading-error" role="alert">${esc(this.localError)}</p>`:''}${this.error?`<p class="reading-error" role="alert">${esc(this.error)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!this.error&&!shown.length?`<p class="public-empty">${this.calendar?'この日の投稿はまだありません。':'今日の投稿はまだありません。最初の一枚を撮ってみよう。'}</p>`:''}`;
+    const connected=demo||(profile?.confirmed&&friendsGroup());
+    const failure=this.calendar&&!connected?'':this.error;
+    const notices=`<p class="friend-status" role="status">${esc(this.status)}</p>${this.localError?`<p class="reading-error" role="alert">${esc(this.localError)}</p>`:''}${failure?`<p class="reading-error" role="alert">${esc(failure)}</p>`:''}${this.loading?'<p class="reading-help">投稿を読み込んでいます…</p>':''}${!this.loading&&!failure&&!shown.length?`<p class="public-empty">${this.calendar?'この日の投稿はまだありません。':'今日の投稿はまだありません。最初の一枚を撮ってみよう。'}</p>`:''}`;
     const posts=`<div class="friend-photo-grid">${shown.map(post=>post.localOnly?this.localPost(post):`<article class="feed-post ${post.own?'friend-own-photo':''}"><header class="feed-post-author"><span>${esc(Array.from(post.name)[0])}</span><strong>${esc(post.name)}${post.own?' · あなた':''}</strong><small>${new Date(post.createdAt+9*3600000).toISOString().slice(11,16)}</small>${post.own?`<button data-public-action="delete-photo" data-photo="${post.id}">削除</button>`:''}</header><button class="friend-photo-tile" data-public-action="open" data-photo="${post.id}" aria-label="${esc(post.name)}の写真へのリアクションを開く">${postcardMarkup(this.calendar?{...post,createdAt:null}:post,{captionClass:post.own?'friend-own-caption':''})}</button><button class="public-reaction-count" data-public-action="open" data-photo="${post.id}">リアクション ${post.stampCount} · ひとこと ${post.commentCount} · 名前を見る</button>${this.selected===post.id?this.detail(post):''}</article>`).join('')}</div>${this.cursor?`<button class="outline-button" data-public-action="more" ${this.loading?'disabled':''}>もっと見る</button>`:''}`;
     const retention=`<small class="public-retention">${demo?'プレビューでは実際のサーバーへの公開・送信は行いません。':'共有した写真は削除するまでグループに残ります。端末に保存した写真はカレンダーに残ります。'}</small>`;
-    this.innerHTML=`<section class="friends-feature public-feed">${heading}${this.calendar?`${dateHeading}${notices}${posts}${monthView}${calendarHelp}<div class="calendar-account">${audience}${identity}${controls}${joinForm}${members}</div>`:`${prompt}${audience}${identity}${controls}${joinForm}${members}${notices}${posts}`}${retention}</section>`;
+    this.innerHTML=`<section class="friends-feature public-feed">${heading}${this.calendar?`${this.peopleStrip()}${monthView}${dateHeading}${notices}${posts}`:`${prompt}${audience}${identity}${controls}${joinForm}${members}${notices}${posts}`}${retention}</section>`;
   }
 }
 customElements.define('basho-public-feed',PublicFeed);

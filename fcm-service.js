@@ -1,4 +1,4 @@
-import {friendsSession} from './firebase-friends.js?v=78';
+import {friendsSession} from './firebase-friends.js?v=83';
 import {notificationSupport,applicationKey} from './notification-service.js';
 const VERSION='12.11.0',KEY='basho_fcm_device_v1';
 export function notificationEnvironment(){

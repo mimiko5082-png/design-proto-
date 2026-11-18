@@ -2,8 +2,8 @@ import { sharedPhotoDay, readSharedCalendar } from './sharing-calendar.js?v=76';
 import { REACTIONS, namedReactions } from './friend-reactions.js';
 import { japanDay } from './reading-store.js';
 import { dailyTopic, topicById } from './haiku-catalog.js';
-import {GROUP_KEY,restoreFriendsGroup,syncFriendsGroup} from './friends-membership.js';
-import {readPendingInvite,rememberInvite,forgetInvite} from './friends-invites.js';
+import {GROUP_KEY,restoreFriendsGroup,syncFriendsGroup} from './friends-membership.js?v=83';
+import {readPendingInvite,rememberInvite,forgetInvite,readInviteMeta,forgetInviteMeta} from './friends-invites.js?v=83';
 let sessionPromise, currentUser=null, ready=false;
 export class FriendsError extends Error {}
 const changed=()=>window.dispatchEvent(new Event('basho-sharing-updated'));
@@ -11,7 +11,11 @@ export function friendsProfile(){return currentUser?{id:currentUser.uid,name:cur
 export function friendsGroup(){return currentUser?(localStorage.getItem(`${GROUP_KEY}:${currentUser.uid}`)||''):'';}
 export function friendsConfigured(){const c=window.BASHO_FRIENDS_FIREBASE;return c?.projectId==='basho-friends' && !!c.apiKey && !!c.appId && /^https:\/\/basho-friends[-a-z0-9]*\.asia-southeast1\.firebasedatabase\.app\/?$/.test(c.databaseURL||'') && c.authDomain==='basho-friends.firebaseapp.com';}
 export function pendingInvite(){return readPendingInvite(location.href,localStorage);}
-export function stageFriendsInvite(value){const token=rememberInvite(value,location.href,localStorage);if(!token)throw new FriendsError('友達から届いた招待リンクを、そのまま貼り付けてください。');const url=new URL(location.href);url.hash=new URLSearchParams({invite:token}).toString();history.replaceState(null,'',url.href);changed();return token;}
+// Inviter name, member count and expiry carried by the link; a label for the invitation screen, never an authority.
+export function pendingInviteMeta(){const token=pendingInvite();return token?readInviteMeta(location.href,localStorage,token):null;}
+// The person chose not to use the invitation: drop it from this device and from the address bar.
+export function discardFriendsInvite(){const token=pendingInvite();forgetInvite(localStorage,token);forgetInviteMeta(localStorage,token);const url=new URL(location.href);url.hash='';url.searchParams.delete('invite');history.replaceState(null,'',url.href);changed();}
+export function stageFriendsInvite(value){const token=rememberInvite(value,location.href,localStorage);if(!token)throw new FriendsError('友達から届いた招待リンクを、そのまま貼り付けてください。');try{readInviteMeta(new URL(String(value).trim(),location.href).href,localStorage,token);}catch{}const url=new URL(location.href);url.hash=new URLSearchParams({invite:token}).toString();history.replaceState(null,'',url.href);changed();return token;}
 export async function friendsSession(){
   if(!friendsConfigured())throw new FriendsError('Firebaseの接続設定待ちです。basho-friends のWebアプリ設定を登録後に利用できます。');
   if(!sessionPromise)sessionPromise=(async()=>{
@@ -58,12 +62,14 @@ export async function friendsServerNow(session, clock=Date.now){
 export async function readFriendsMembership(session, group, uid){
   return (await session.dbSDK.get(session.dbSDK.ref(session.db,`groups/${group}/members/${uid}`))).exists();
 }
-export async function readFriendsMembers(session, group, uid){
+export async function readFriendsMembers(session, group, uid, posted){
+  // `posted` maps a member to the time of today's photograph; the identifiers themselves never leave this function.
   const snapshot=await session.dbSDK.get(session.dbSDK.ref(session.db,`groups/${group}/members`));
   return Object.entries(snapshot.val()||{}).map(([id,member])=>({
     name:typeof member?.name==='string'?member.name:'友達',
     joinedAt:typeof member?.joinedAt==='number' && Number.isFinite(member.joinedAt) && member.joinedAt>0 && member.joinedAt<=8640000000000000?member.joinedAt:null,
     own:id===uid,
+    ...(posted?{postedAt:Number.isFinite(posted[id])?posted[id]:null}:{}),
   })).sort((a,b)=>(a.joinedAt??Infinity)-(b.joinedAt??Infinity)||a.name.localeCompare(b.name,'ja'));
 }
 async function requireFriendsMembership(session){
@@ -82,14 +88,32 @@ async function requireFriendsMembership(session){
   return group;
 }
 export async function createFriendsInvite(){
-  const s=await authorized(),id=await requireFriendsMembership(s);
+  const s=await authorized(),id=await requireFriendsMembership(s),uid=currentUser.uid,from=currentUser.displayName||'';
+  let count=0;try{count=(await readFriendsMembers(s,id,uid)).length;}catch{/* The link still works without the member count. */}
   const token=key()+key(),expiresAt=await friendsServerNow(s)+7*86400000-60000;
   try{await s.dbSDK.set(s.dbSDK.ref(s.db,`invites/${token}`),{groupId:id,owner:currentUser.uid,expiresAt});}
   catch(error){
     if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('グループへの参加は確認できましたが、招待リンクの保存が拒否されました。basho-friendsの公開済みルールのinvites部分を確認してください。');
     throw error;
   }
-  const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token}).toString();return url.href;
+  // The name, count and expiry let the invitation screen greet the friend before login.
+  const url=new URL(location.href);url.search='';url.hash=new URLSearchParams({invite:token,...(from?{from:Array.from(from).slice(0,20).join('')}:{}),...(count?{n:String(count)}:{}),exp:String(expiresAt)}).toString();return url.href;
+}
+export const LAST_MEMBER='このグループにいるのは、いまあなただけです。一人のときは抜けられません。別のグループには、招待リンクから参加できます。';
+// Leaving removes only one's own membership. Photographs already sent stay with the group.
+export async function leaveFriendsGroup(){
+  const s=await authorized(),uid=currentUser.uid,group=friendsGroup();
+  if(!group)throw new FriendsError('参加しているグループがありません。');
+  // The last person stays: nobody could open or delete the group's photographs afterwards.
+  let alone=false;try{alone=(await readFriendsMembers(s,group,uid)).length<2;}catch{}
+  if(alone)throw new FriendsError(LAST_MEMBER);
+  try{await s.dbSDK.remove(s.dbSDK.ref(s.db,`groups/${group}/members/${uid}`));}
+  catch(error){
+    if(/permission.denied/i.test(String(error?.code||error?.message||'')))throw new FriendsError('グループを抜ける操作が拒否されました。時間をおいてもう一度お試しください。');
+    throw error;
+  }
+  try{await s.dbSDK.remove(s.dbSDK.ref(s.db,`userGroups/${uid}`));}catch{/* The pointer is checked against membership on restore, so a stale one grants nothing. */}
+  localStorage.removeItem(`${GROUP_KEY}:${uid}`);changed();return true;
 }
 export async function joinFriendsGroup(){
   const s=await authorized(),uid=currentUser.uid,name=currentUser.displayName||'友達',token=pendingInvite();if(!/^[a-f0-9]{64}$/.test(token))throw new FriendsError('有効な招待リンクから開いてください。');
@@ -103,7 +127,7 @@ export async function joinFriendsGroup(){
   if(!existing.exists())await s.dbSDK.set(member,{name,joinedAt:s.dbSDK.serverTimestamp(),invite:token});
   if(currentUser?.uid!==uid)throw new FriendsError('ログイン中のアカウントが変わりました。もう一度参加してください。');
   localStorage.setItem(`${GROUP_KEY}:${uid}`,invite.groupId);const synced=await syncFriendsGroup(s,uid,invite.groupId);
-  forgetInvite(localStorage,token);const url=new URL(location.href);url.hash='';url.searchParams.delete('invite');history.replaceState(null,'',url.href);changed();return {synced};
+  forgetInvite(localStorage,token);forgetInviteMeta(localStorage,token);const url=new URL(location.href);url.hash='';url.searchParams.delete('invite');history.replaceState(null,'',url.href);changed();return {synced};
 }
 export function friendlyError(error){
   if(error instanceof FriendsError)return error;
@@ -123,7 +147,10 @@ export async function firebaseSharingAPI(action,data={}){
     const decorate=post=>({...post,own:post.author===uid,original:(topicById(post.topicId)||dailyTopic(post.day)).original,modern:(topicById(post.topicId)||dailyTopic(post.day)).modern,lines:(topicById(post.topicId)||dailyTopic(post.day)).lines,stampCount:Object.values(post.stamps||{}).reduce((n,v)=>n+Object.keys(v).length,0),commentCount:Object.keys(post.comments||{}).length});
     if(action==='members'){
       await requireFriendsMembership(s);
-      return {members:await readFriendsMembers(s,group,uid)};
+      const posted={};
+      try{const today=(await get(query(ref(s.db,`${base}/photos`),orderByChild('day'),equalTo(day)))).val()||{};for(const post of Object.values(today))if(typeof post?.author==='string')posted[post.author]=post.createdAt;}
+      catch{/* The member list is still useful without today's status. */}
+      return {members:await readFriendsMembers(s,group,uid,posted)};
     }
     if(action==='calendar'){
       await requireFriendsMembership(s);

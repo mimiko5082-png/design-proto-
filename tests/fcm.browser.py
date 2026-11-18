@@ -56,11 +56,13 @@ try:
   page.goto(base+'/fcm-test',wait_until='networkidle')
   enable=page.get_by_role('button',name='通知を受け取る',exact=True)
   expect(enable).to_be_enabled()
+  state=page.locator('[data-fcm-state]');expect(state).to_have_text('まだ受け取っていません')
   assert page.evaluate('window.permissionRequests')==0
   # An old VAPID subscription is retired only when the user opts into FCM.
   page.evaluate('window.oldSubscription={options:{applicationServerKey:new Uint8Array([1,2,3]).buffer},unsubscribe:async()=>{window.retired=true;return true;}}')
   enable.click()
   expect(page.locator('[data-fcm-status]')).to_contain_text('登録しました')
+  expect(state).to_have_text('受け取っています');expect(page.locator('[data-fcm-card]')).to_have_class('notify-card is-on')
   assert page.evaluate('window.permissionInGesture')
   assert page.evaluate('window.retired')
   assert page.evaluate('window.functionRegion')=='asia-northeast1'
@@ -100,8 +102,9 @@ try:
   page.evaluate("window.failDisplay=true;window.receiveFcm({data:{title:'テスト',body:'表示失敗の確認'}})")
   expect(page.locator('[data-fcm-status]')).to_contain_text('端末で表示できませんでした')
   page.evaluate('window.failDisplay=false')
-  page.get_by_role('button',name='この端末の通知を停止',exact=True).click()
+  page.get_by_role('button',name='この端末の通知を止める',exact=True).click()
   expect(page.locator('[data-fcm-status]')).to_contain_text('通知を停止しました')
+  expect(state).to_have_text('まだ受け取っていません')
   assert not page.evaluate('window.serverEnabled')
   # Permission denial never registers a device.
   before=page.evaluate('window.calls.filter(c=>c.name==="fcmRegisterDevice").length')
@@ -122,12 +125,13 @@ try:
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.evaluate('window.fcmUser=null;window.dispatchEvent(new Event("basho-auth-changed"))')
   expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
+  expect(state).to_have_text('ログインが必要です')
   expect(enable).to_be_disabled()
   # The iPhone installation instruction is shown once, with no permission request.
   page.add_init_script("Object.defineProperty(navigator,'userAgent',{value:'iPhone'});Object.defineProperty(navigator,'standalone',{value:false});")
   page.reload(wait_until='networkidle')
   expect(page.locator('[data-fcm-status]')).to_contain_text('ホーム画面に追加')
-  expect(page.locator('[data-fcm-ios-help]')).to_be_hidden()
+  expect(page.locator('[data-fcm-state]')).to_have_text('ホーム画面に追加が必要です')
   assert page.evaluate('window.permissionRequests')==0
   assert not errors,errors
   browser.close()

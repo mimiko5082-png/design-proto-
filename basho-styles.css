@@ -4458,12 +4458,6 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .screen-nav-camera:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 /* The chosen day's photographs come first; the month to pick another day follows them. */
 .shared-selected-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
-.shared-selected-date button {
-  flex: none; min-height: 36px; padding: 0 14px;
-  border: 1px solid var(--hairline); border-radius: 999px;
-  background: var(--surface); color: var(--text-2);
-  font: 600 13px/1.2 var(--font-ui);
-}
 .reading-calendar.shared-calendar { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--hairline); scroll-margin-top: 12px; }
 .friends-feature h1, .reading-mode-calendar .public-feed .feed-heading h1 { font: italic 900 30px/1.1 var(--font-ui); letter-spacing: -.04em; }
 
@@ -4488,4 +4482,233 @@ basho-haiku, basho-friends, basho-public-feed, basho-reading, basho-fcm-settings
 .feed-icon-button svg { display: block; }
 .feed-icon-button:disabled { opacity: .45; }
 .feed-icon-button:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
-.view > details.place-attach { scroll-margin-top: 12px; }
+
+/* ==========================================================================
+   みんなの記録 with the month back on top, and the screens around it:
+   通知, 友達 (invite, join, leave), the invitation, and はじめての5枚.
+   The camera frame and the posted cards are untouched.
+   ========================================================================== */
+basho-friends-screen, basho-invited, basho-onboarding { display: block; }
+.avatar {
+  flex: none; display: grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #9fb4c8; color: var(--green-ink);
+  font: 900 13px/1 var(--font-ui);
+}
+.avatar-own { background: var(--green); }
+.avatar-stack { display: flex; }
+.avatar-stack .avatar { border: 2px solid var(--surface); }
+.avatar-stack .avatar + .avatar { margin-left: -8px; }
+
+/* ---- みんなの記録: friends strip, then the month, then the day ---- */
+.records-people { display: flex; align-items: center; gap: 10px; margin: 14px var(--gutter) 0; }
+.records-friends {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 12px 0 8px;
+  border: 1px solid var(--hairline); border-radius: 0;
+  background: var(--surface); color: var(--text);
+  font: 700 14px/1.2 var(--font-ui); text-align: left;
+}
+.records-friends-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px; }
+.avatar-stack + .records-friends-label { padding-left: 0; }
+.records-friends-action { flex: none; color: var(--green); font: italic 900 13px/1 var(--font-ui); }
+.records-help {
+  flex: none; width: 48px; height: 48px; padding: 0;
+  border: 1px solid var(--hairline); border-radius: 0;
+  background: var(--surface); color: var(--text);
+  font: italic 900 20px/1 var(--font-ui);
+}
+.records-friends:focus-visible, .records-help:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.reading-calendar.shared-calendar { margin-top: 16px; padding-top: 0; border-top: 0; }
+.reading-month button { width: 40px; height: 40px; border-radius: 50%; font-size: 16px; }
+.public-feed .shared-calendar > [data-public-action="calendar-today"] { min-height: 30px; margin: 6px 0 8px auto; }
+.reading-days button, .shared-calendar .reading-days button { aspect-ratio: auto; height: 42px; border-radius: 8px; }
+.shared-selected-date { align-items: baseline; margin-top: 16px; font: 900 16px/1.5 var(--font-ui); letter-spacing: .04em; }
+.shared-selected-date small { flex: none; color: #9aa596; font: 500 12px/1.5 var(--font-ui); letter-spacing: 0; }
+
+/* ---- Shared parts of 通知 and 友達 ---- */
+.view.flow-view { padding: calc(18px + var(--safe-top)) var(--gutter) calc(28px + var(--safe-bottom)); min-height: 100%; }
+.flow-page { display: flex; flex-direction: column; min-height: calc(100svh - 46px - var(--safe-top) - var(--safe-bottom)); color: var(--text); font-family: var(--font-ui); }
+@supports (height: 1cqh) { .flow-page { min-height: calc(100cqh - 46px - var(--safe-top) - var(--safe-bottom)); } }
+.flow-head { display: flex; align-items: center; gap: 12px; }
+.flow-head h1 { margin: 0; color: var(--text); font: italic 900 30px/1.1 var(--font-ui); letter-spacing: -.04em; }
+.flow-back {
+  flex: none; display: grid; place-items: center;
+  width: 42px; height: 42px; padding: 0;
+  border: 1px solid var(--hairline); border-radius: 50%;
+  background: var(--surface); color: var(--text);
+}
+.flow-back:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+.flow-label { margin: 24px 0 0; color: var(--text-2); font: 900 14px/1.5 var(--font-ui); letter-spacing: .06em; }
+.flow-lead { margin: 16px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.7; }
+.flow-note { margin: 12px 0 0; color: #9aa596; font-size: 12px; line-height: 1.6; }
+.flow-status { margin: 12px 0 0; color: var(--green); font-size: 13px; font-weight: 700; line-height: 1.6; }
+.flow-status:empty { display: none; }
+.flow-error { margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--danger-line); background: var(--danger-bg); color: var(--danger-text); font-size: 13px; line-height: 1.6; }
+.flow-foot { margin-top: auto; padding-top: 24px; }
+.flow-primary, .flow-outline, .flow-quiet {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: 56px; padding: 6px 14px;
+  border: 0; border-radius: 0;
+  background: var(--green); color: var(--green-ink);
+  font: italic 900 18px/1.25 var(--font-ui); text-align: center;
+}
+.flow-outline { min-height: 52px; border: 2px solid var(--green); background: none; color: var(--green); font-size: 16px; }
+.flow-quiet { min-height: 46px; border: 1px solid #3a463a; background: none; color: var(--text-2); font: 700 14px/1.3 var(--font-ui); }
+.flow-text { display: block; min-height: 44px; padding: 0; border: 0; background: none; color: var(--text-2); font: 500 13px/1.4 var(--font-ui); text-decoration: underline; text-underline-offset: 3px; }
+.flow-primary:disabled, .flow-outline:disabled, .flow-quiet:disabled, .flow-text:disabled { opacity: .5; }
+.flow-primary:focus-visible, .flow-outline:focus-visible, .flow-quiet:focus-visible, .flow-text:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ---- 通知 ---- */
+.notify-card { margin: 20px 0 0; padding: 16px; border: 1px solid var(--hairline); background: var(--surface); }
+.notify-card.is-on { border: 2px solid var(--green); }
+.notify-card-label { margin: 0; color: var(--text-2); font-size: 13px; font-weight: 700; }
+.notify-card-state { margin: 4px 0 0; color: var(--text); font: italic 900 26px/1.2 var(--font-ui); letter-spacing: -.03em; }
+.notify-card.is-on .notify-card-state { color: var(--green); }
+.notify-card .flow-primary { margin-top: 14px; }
+.notify-card .flow-quiet { margin-top: 10px; }
+.notify-card-status { margin: 10px 0 0; color: var(--text-2); font-size: 12px; line-height: 1.6; }
+.notify-card .flow-text { margin-top: 2px; }
+.notify-times { margin: 8px 0 0; border-top: 1px solid var(--hairline); }
+.notify-times > div { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.notify-times dt { flex: none; width: 86px; color: var(--green); font: italic 900 30px/1 var(--font-ui); letter-spacing: -.04em; }
+.notify-times dd { margin: 0; font-size: 14px; line-height: 1.5; }
+.notify-tips { margin: 8px 0 0; padding: 0 0 0 18px; font-size: 13px; line-height: 1.8; }
+
+/* ---- 友達 ---- */
+.invite-card { margin: 20px 0 0; padding: 16px; background: var(--green); color: var(--green-ink); }
+.invite-card h2 { margin: 0; font: italic 900 26px/1.15 var(--font-ui); letter-spacing: -.03em; }
+.invite-card p { margin: 8px 0 0; font-size: 13px; font-weight: 700; line-height: 1.6; }
+.invite-card .invite-note { margin-top: 10px; font-size: 12px; font-weight: 500; }
+.invite-send, .invite-copy {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; border-radius: 0;
+  font: italic 900 18px/1.25 var(--font-ui);
+}
+.invite-send { min-height: 56px; margin-top: 14px; border: 0; background: var(--green-ink); color: var(--green); }
+.invite-copy { min-height: 44px; margin-top: 8px; border: 2px solid var(--green-ink); background: none; color: var(--green-ink); font-size: 14px; }
+.invite-send:disabled, .invite-copy:disabled { opacity: .6; }
+.invite-send:focus-visible, .invite-copy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.invite-link { display: block; margin-top: 10px; font-size: 12px; font-weight: 700; }
+.invite-link input { display: block; width: 100%; height: 44px; margin-top: 4px; padding: 0 10px; border: 2px solid var(--green-ink); border-radius: 0; background: #ffffff38; color: var(--green-ink); font: 500 16px/1 var(--font-mono); }
+.people-list { margin: 8px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--hairline); }
+.people-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.people-list .avatar { width: 38px; height: 38px; font-size: 15px; }
+.people-name { flex: 1; min-width: 0; }
+.people-name strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 700; }
+.people-name small { color: #9aa596; font-size: 12px; }
+.people-today { flex: none; color: #9aa596; font-size: 12px; }
+.people-today.is-done { color: var(--green); font-weight: 700; }
+.leave-link { display: block; min-height: 44px; padding: 0; border: 0; background: none; color: #ffb4a1; font: 700 14px/1.4 var(--font-ui); text-decoration: underline; text-underline-offset: 3px; }
+.account-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text-2); font-size: 13px; }
+.account-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-line button { flex: none; min-height: 44px; padding: 0 0 0 12px; border: 0; background: none; color: var(--text-2); font: 500 13px/1.4 var(--font-ui); text-decoration: underline; text-underline-offset: 3px; }
+.setup-step { display: flex; align-items: center; gap: 12px; margin: 16px 0 0; }
+.setup-step.is-done { padding: 12px 14px; border: 2px solid var(--green); background: var(--surface); color: var(--green); }
+.setup-step.is-plain { margin-top: 14px; }
+.setup-step + .flow-primary { margin-top: 12px; }
+.step-number { flex: none; display: grid; place-items: center; width: 30px; height: 30px; background: var(--green); color: var(--green-ink); font: italic 900 16px/1 var(--font-ui); }
+.step-text { flex: 1; min-width: 0; color: var(--text); font-size: 14px; line-height: 1.5; }
+.step-text strong { display: block; font-size: 15px; font-weight: 900; }
+.step-text small { color: var(--text-2); font-size: 14px; }
+.setup-card { margin: 12px 0 0; padding: 16px; border: 1px solid var(--hairline); background: var(--surface); }
+.setup-card.is-locked { opacity: .55; }
+.setup-card h2 { margin: 0; color: var(--text); font: italic 900 22px/1.2 var(--font-ui); letter-spacing: -.03em; }
+.setup-card p { margin: 10px 0 0; color: var(--text-2); font-size: 12px; line-height: 1.6; }
+.setup-card h2 + p { margin-top: 8px; font-size: 13px; }
+.setup-card label { display: block; margin-top: 10px; color: var(--text-2); font-size: 13px; font-weight: 700; }
+.setup-card input { display: block; width: 100%; height: 50px; margin-top: 6px; padding: 0 14px; border: 1px solid #3a463a; border-radius: 0; background: var(--bg); color: var(--text); font: 500 16px/1 var(--font-ui); }
+.setup-card > .flow-primary, .setup-card > .flow-outline { margin-top: 12px; }
+.setup-row { display: flex; gap: 8px; margin-top: 10px; }
+.setup-row .flow-outline { flex: none; width: auto; padding: 0 14px; font-size: 14px; }
+.setup-row .flow-primary { flex: 1; min-height: 52px; font-size: 17px; }
+dialog.leave-sheet {
+  width: 100%; max-width: 430px; margin: auto auto 0; padding: 22px 20px calc(24px + var(--safe-bottom));
+  border: 0; border-top: 3px solid var(--green); border-radius: 0;
+  background: var(--surface); color: var(--text); font-family: var(--font-ui);
+}
+dialog.leave-sheet::backdrop { background: #000000b8; }
+.leave-sheet h2 { margin: 0; font: italic 900 26px/1.2 var(--font-ui); letter-spacing: -.03em; }
+.leave-sheet ul { margin: 14px 0 0; padding: 0 0 0 18px; font-size: 14px; line-height: 1.8; }
+.leave-confirm { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 54px; margin: 18px 0 10px; border: 2px solid #ffb4a1; border-radius: 0; background: none; color: #ffb4a1; font: italic 900 17px/1.2 var(--font-ui); }
+.leave-confirm:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ---- はじめての5枚 and the invitation: full-screen pages inside the green border ---- */
+.view.guide-view { padding: 0; min-height: 100%; }
+.guide-page {
+  display: flex; flex-direction: column;
+  min-height: 100svh; padding: var(--safe-top) 0 var(--safe-bottom);
+  border: var(--frame-w) solid var(--frame-color);
+  background: var(--bg); color: var(--text); font-family: var(--font-ui);
+}
+@supports (height: 1cqh) { .guide-page { min-height: 100cqh; } }
+.guide-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; }
+.guide-count, .guide-brand { color: var(--green); font: italic 900 13px/1.4 var(--font-ui); letter-spacing: .06em; }
+.guide-brand { margin: 0; padding: 20px 16px 0; }
+.guide-skip { min-height: 44px; padding: 0 0 0 16px; border: 0; background: none; color: var(--text-2); font: 700 13px/1.4 var(--font-ui); text-decoration: underline; text-underline-offset: 3px; }
+.guide-copy { padding: 10px 16px 0 4px; }
+.guide-copy h1 { margin: 0; color: var(--green); font: italic 900 min(11.8vw, 46px)/1.08 var(--font-ui); letter-spacing: -.04em; }
+@supports (width: 1cqw) { .guide-copy h1 { font-size: min(11.8cqw, 46px); } }
+.invited-page .guide-copy h1 { font-size: min(11.2vw, 44px); line-height: 1.1; overflow-wrap: anywhere; }
+.guide-copy p { margin: 18px 0 0 12px; font-size: 15px; font-weight: 500; line-height: 1.75; }
+.guide-small { margin: 12px 16px 0; color: var(--text-2); font-size: 12px; line-height: 1.6; }
+.guide-points { margin: 14px 16px 0; padding: 0 0 0 18px; color: var(--text-2); font-size: 13px; line-height: 1.8; }
+.guide-page > .flow-error { margin: 12px 16px 0; }
+.guide-actions { display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding: 22px 16px 20px; }
+.guide-actions .flow-primary { min-height: 58px; font-size: 19px; }
+.guide-actions .flow-outline { min-height: 48px; font-size: 15px; }
+.guide-actions .guide-small { margin: 0; }
+.guide-actions .flow-text { align-self: flex-start; }
+.guide-progress { display: flex; gap: 6px; }
+.guide-progress button { position: relative; width: 28px; height: 6px; padding: 0; border: 0; border-radius: 0; background: var(--hairline); }
+.guide-progress button::after { content: ""; position: absolute; inset: -14px -3px; }
+.guide-progress button.is-on { background: var(--green); }
+.guide-progress button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+/* Small illustrative frames: the same green border and edge-set words as the real one. */
+.guide-frame { position: relative; height: 250px; margin: 26px 16px 0; border: 6px solid var(--green); background: #2b3440; color: var(--green); overflow: hidden; }
+.guide-frame.is-camera { height: 290px; }
+.guide-frame i { position: absolute; display: block; }
+.guide-ground { left: 0; right: 0; bottom: 0; height: 40%; background: #1b232d; }
+.guide-sun { right: 26px; top: 96px; width: 84px; height: 84px; border-radius: 50%; background: #c9a24a; }
+.guide-block { bottom: 40%; background: #161d26; }
+.guide-block.one { left: 34px; width: 58px; height: 74px; }
+.guide-block.two { left: 110px; width: 70px; height: 112px; }
+.guide-verse { position: absolute; left: 0; top: -3px; right: 40px; font: italic 900 30px/1.06 var(--font-ui); letter-spacing: -.045em; }
+.guide-frame.is-camera .guide-verse { font-size: 26px; }
+.guide-modern { position: absolute; left: 3px; top: 106px; width: 62%; font: italic 900 12px/1.35 var(--font-ui); }
+.guide-date { position: absolute; right: 0; top: 0; writing-mode: vertical-rl; font: italic 900 26px/.95 var(--font-ui); }
+.guide-shutter { left: 50%; bottom: 14px; width: 60px; height: 60px; margin-left: -30px; border: 4px solid var(--green); border-radius: 50%; background: var(--green); box-shadow: inset 0 0 0 4px #0b0e0b; }
+.guide-records { left: 8px; bottom: 18px; width: 40px; height: 40px; border: 2px solid var(--green); border-radius: 50%; }
+.guide-send { display: flex; align-items: center; gap: 10px; margin: 24px 16px 0; }
+.guide-send .guide-frame { flex: 1; height: 190px; margin: 0; border-width: 5px; }
+.guide-send .guide-verse { font-size: 17px; right: 0; top: -2px; }
+.guide-caption { position: absolute; left: 2px; bottom: 3px; font: italic 900 12px/1.2 var(--font-ui); }
+.guide-arrow { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: var(--green-ink); }
+.guide-others { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.guide-send .guide-frame.is-other { flex: none; height: 91px; border-width: 4px; }
+.guide-frame.is-other.one { background: #3a3327; }
+.guide-frame.is-other.two { background: #263a33; }
+.guide-frame.is-other .guide-caption { font-size: 11px; bottom: 2px; }
+.guide-steps { display: flex; flex-direction: column; gap: 10px; margin: 22px 16px 0; padding: 0; list-style: none; }
+.guide-steps li { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1px solid var(--hairline); background: var(--surface); font-size: 14px; line-height: 1.6; }
+.guide-steps strong, .guide-times strong { display: block; font-size: 15px; font-weight: 900; }
+.guide-steps small, .guide-times small { color: var(--text-2); font-size: 14px; }
+.guide-times { display: flex; flex-direction: column; gap: 10px; margin: 22px 16px 0; }
+.guide-times > div { display: flex; align-items: center; gap: 14px; padding: 14px; border: 1px solid var(--hairline); background: var(--surface); font-size: 14px; line-height: 1.6; }
+.guide-times b { flex: none; width: 92px; color: var(--green); font: italic 900 34px/1 var(--font-ui); letter-spacing: -.04em; }
+.guide-callout { margin: 14px 16px 0; padding: 12px 14px; border: 1px solid var(--green); font-size: 13px; line-height: 1.7; }
+.guide-callout strong { font-weight: 900; }
+.invited-group { display: flex; align-items: center; gap: 12px; margin: 22px 16px 0; padding: 14px; border: 1px solid var(--hairline); background: var(--surface); font-size: 14px; line-height: 1.5; }
+.invited-group .avatar { width: 38px; height: 38px; font-size: 15px; }
+.invited-group strong { display: block; font-size: 15px; font-weight: 900; }
+.invited-group small { color: var(--text-2); font-size: 14px; }
+@media (max-width: 360px) {
+  .guide-times b { width: 78px; font-size: 28px; }
+  .notify-times dt { width: 74px; font-size: 26px; }
+  .flow-head h1, .friends-feature h1, .reading-mode-calendar .public-feed .feed-heading h1 { font-size: 26px; }
+  .guide-frame { height: 210px; } .guide-frame.is-camera { height: 240px; }
+  .feed-heading > .friends-release { display: none; }
+  .feed-heading h1 { flex: 1; white-space: nowrap; }
+  .setup-row .flow-primary { font-size: 15px; }
+  .guide-times small, .guide-steps small { font-size: 13px; }
+}

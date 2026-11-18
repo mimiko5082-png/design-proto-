@@ -16,7 +16,7 @@
         "members": {
           "$uid": {
             ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && $uid == auth.uid",
-            ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && $uid == auth.uid && !data.exists() && root.child('invites').child(newData.child('invite').val()).child('groupId').val() == $group && root.child('invites').child(newData.child('invite').val()).child('expiresAt').val() > now",
+            ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && $uid == auth.uid && ((!data.exists() && root.child('invites').child(newData.child('invite').val()).child('groupId').val() == $group && root.child('invites').child(newData.child('invite').val()).child('expiresAt').val() > now) || (data.exists() && !newData.exists()))",
             ".validate": "newData.hasChildren(['name','joinedAt']) && $uid == auth.uid",
             "name": {
               ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"

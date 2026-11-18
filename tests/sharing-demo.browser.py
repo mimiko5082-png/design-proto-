@@ -29,7 +29,7 @@ try:
   page.goto(origin+'/share.html?sharing=demo',wait_until='networkidle')
   expect(page.locator('.public-feed')).to_be_visible()
   expect(page.locator('.feed-post')).to_have_count(2)
-  expect(page.locator('.public-audience')).to_contain_text('体験用')
+  expect(page.locator('.public-retention')).to_contain_text('プレビューでは');expect(page.locator('.records-friends')).to_contain_text('＋ 招待')
   expect(page.locator('.feed-post-author').first).to_contain_text('サンプル')
   page.locator('.friend-photo-tile').first.click()
   expect(page.locator('[data-stamp=heart]')).to_be_visible()

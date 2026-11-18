@@ -136,7 +136,8 @@ try:
   expect(page.locator('.local-calendar-photo .postcard-caption')).to_have_text('いつもの道の光がきれい。')
   go(page,'friends')
   expect(page.locator('.friend-own-caption')).to_have_count(0)
-  expect(page.get_by_role('button',name='Googleでログインする',exact=True)).to_be_visible()
+  # Login now lives on the 友達 screen; the strip under the heading leads there.
+  expect(page.locator('.records-friends')).to_contain_text('友達とつながる');expect(page.locator('.records-friends')).to_have_attribute('data-nav','group')
   assert not errors,errors
   assert all(url.startswith('https://www.gstatic.com/firebasejs/') for url in external),external
   browser.close()

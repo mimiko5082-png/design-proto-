@@ -197,8 +197,18 @@ const state = {
   studyReflection: { stanceReason: "", placeMeaning: "" },
 };
 let perspectiveRequestId = 0;
+// はじめての5枚 (the guide) opens once on first launch and again from the ？ button.
+// guideMode says where it ends: "first" on the camera, "help" back on みんなの記録, "invite" back on the invitation.
+const GUIDE_KEY = "basho_guide_seen_v1";
+let guideMode = "first";
+let guideModeNext = "";
+function guideSeen() {
+  try { return localStorage.getItem(GUIDE_KEY) === "1"; } catch { return true; }
+}
 
 loadState();
+// Automated browsers skip the first-launch guide so existing checks start on the screen they expect.
+if (!guideSeen() && navigator.webdriver === false) state.view = "guide";
 ensureDaily();
 processIncomingManazashi();
 render();
@@ -254,6 +264,14 @@ tabbar.addEventListener("click", (event) => {
 
 window.addEventListener('basho-show-posts',()=>navigate('friends'));
 window.addEventListener('basho-show-calendar',()=>navigate('friends'));
+// An opened invitation gets its own screen; the screens in flow-screens.js ask for moves with basho-navigate.
+window.addEventListener('basho-show-invite',()=>{ if (state.view !== 'invited') navigate('invited'); });
+window.addEventListener('basho-navigate',(event)=>{
+  const view = typeof event.detail === "string" ? event.detail : event.detail?.view;
+  if (!["home","friends","notify","group","guide","invited"].includes(view)) return;
+  guideModeNext = ["first","help","invite"].includes(event.detail?.mode) ? event.detail.mode : "";
+  navigate(view);
+});
 
 function render() {
   const views = {
@@ -268,8 +286,12 @@ function render() {
     update: renderUpdate,
     receive: renderReceive,
     seeds: renderSeeds,
-    // 「みんなの記録」: その日の自分と友達の写真、日付を選ぶ暦、友達の招待、通知の設定を1画面にまとめる。
-    friends: () => `<div class="view"><basho-reading mode="calendar"></basho-reading>${window.BASHO_PHOTO_PREVIEW ? '' : '<details class="place-attach"><summary>通知の設定</summary><basho-fcm-settings></basho-fcm-settings></details>'}</div>${SCREEN_NAV}`,
+    // 「みんなの記録」: 友達の列、日付を選ぶ暦、その日の自分と友達の写真。通知・友達・使い方はそれぞれ別の画面。
+    friends: () => `<div class="view"><basho-reading mode="calendar"></basho-reading></div>${SCREEN_NAV}`,
+    notify: renderNotify,
+    group: () => `<div class="view flow-view"><basho-friends-screen></basho-friends-screen></div>`,
+    guide: () => `<div class="view guide-view"><basho-onboarding mode="${guideMode}"></basho-onboarding></div>`,
+    invited: () => `<div class="view guide-view"><basho-invited></basho-invited></div>`,
     entry: renderEntry,
     share: renderShare,
     book: renderBook,
@@ -277,6 +299,22 @@ function render() {
   screen.innerHTML = (views[state.view] || views.home)();
   updateTabs();
   updateTimer();
+}
+
+function renderNotify() {
+  // The state card is the live setting; the times and the troubleshooting notes are fixed text.
+  const card = window.BASHO_PHOTO_PREVIEW
+    ? '<section class="notify-card" aria-label="プッシュ通知の設定"><p class="notify-card-label">この端末</p><h2 class="notify-card-state">プレビューでは使えません</h2><p class="notify-card-status">通知の設定は、公開版のアプリで行います。</p></section>'
+    : '<basho-fcm-settings></basho-fcm-settings>';
+  return `<div class="view flow-view"><section class="flow-page notify-page">
+    <header class="flow-head"><button type="button" class="flow-back" data-nav="friends" aria-label="みんなの記録に戻る"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button><h1>通知</h1></header>
+    ${card}
+    <h2 class="flow-label">届く時間</h2>
+    <dl class="notify-times"><div><dt>8:00</dt><dd>今日のお題が届いたお知らせ</dd></div><div><dt>23:50</dt><dd>まだ撮っていない日のひと声と、振り返り</dd></div></dl>
+    <h2 class="flow-label">届かないとき</h2>
+    <ul class="notify-tips"><li>iPhone・iPadは、Safariの共有メニューから「ホーム画面に追加」したアイコンで開く。</li><li>集中モードや省電力のときは、遅れることがある。</li><li>端末の設定で、このアプリの通知が許可されているか確かめる。</li></ul>
+    <p class="flow-foot flow-note">通知は、Googleでログインした端末ごとに設定します。本文に写真やひとことは入りません。</p>
+  </section></div>`;
 }
 
 function renderHome() {
@@ -908,6 +946,8 @@ function logStudyEvent(action, view = state.view) {
 function navigate(view) {
   // The former calendar, notebook, garden and map screens all live in みんなの記録 now.
   if (["notebook", "garden", "map", "calendar"].includes(view)) view = "friends";
+  if (view === "guide") guideMode = guideModeNext || (state.view === "invited" ? "invite" : state.view === "friends" ? "help" : "first");
+  guideModeNext = "";
   if ((view === "note" && state.view === "pause") || (view === "update" && state.view === "revisit")) {
     if (timerRemaining() > 0) return;
     if (view === "note") state.observationSeconds = 30;
@@ -1309,7 +1349,8 @@ function loadState() {
     Object.assign(state, saved);
     state.entries = uniqueEntriesById([...(loadEntriesOnly() || []), ...(state.entries || [])]);
     if (["map", "notebook", "garden", "calendar"].includes(state.view)) state.view = "friends";
-    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "friends", "entry", "share", "book"];
+    // The guide and the invitation are decided at launch, so a saved one falls back to the camera.
+    const allowedViews = ["home", "classic", "pause", "note", "perspective", "revisit", "update", "encounter", "receive", "seeds", "calendar", "friends", "notify", "group", "entry", "share", "book"];
     if (!allowedViews.includes(state.view) && state.view !== "images") state.view = "home";
     if (!Array.isArray(state.entries)) state.entries = [];
     state.studySettings = normalizeStudy(state.studySettings);

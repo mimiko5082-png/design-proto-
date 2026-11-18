@@ -1,9 +1,10 @@
-import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=78';
-import {notificationEnvironment,notificationError,fcmSession,refreshFcmDevice,enableFcm,disableFcm,startFcmReceiver} from './fcm-service.js';
+import {friendsSession,friendsSignIn,friendsProfile} from './firebase-friends.js?v=83';
+import {notificationEnvironment,notificationError,fcmSession,refreshFcmDevice,enableFcm,disableFcm,startFcmReceiver} from './fcm-service.js?v=fcm8';
 class FcmSettings extends HTMLElement{
   connectedCallback(){
     this.revision=0;this.enabled=false;this.registered=false;this.busy=false;this.session=null;
-    this.innerHTML=`<section class="place-attach daily-notifications" aria-label="プッシュ通知の設定"><h2>写真のお題をプッシュ通知</h2><p>毎日8:00と23:50（日本時間）にお知らせします。アプリを閉じていても受信できます。</p><p data-fcm-ios-help>iPhone・iPadでは、Safariの共有メニューから「ホーム画面に追加」し、そのアイコンから開いてください（iOS/iPadOS 16.4以降）。</p><p>端末の省電力設定・集中モードや通信状況により、配信が遅れる場合があります。</p><p data-fcm-status role="status" aria-live="polite">通知設定を確認しています…</p><button class="outline-button" data-fcm-login hidden>Googleでログインする</button><button class="outline-button" data-fcm-enable disabled>通知を受け取る</button><button class="outline-button" data-fcm-disable hidden>この端末の通知を停止</button><button class="outline-button" data-fcm-test hidden>テスト通知を送る</button><button class="outline-button" data-fcm-retry>設定を再確認</button></section>`;
+    // 通知 screen: one card for this device. The state line is the headline; the message below explains it.
+    this.innerHTML=`<section class="notify-card" data-fcm-card aria-label="プッシュ通知の設定"><p class="notify-card-label">この端末</p><h2 class="notify-card-state" data-fcm-state>確認しています…</h2><button class="flow-primary" data-fcm-login hidden>Googleでログインする</button><button class="flow-primary" data-fcm-enable disabled>通知を受け取る</button><button class="flow-primary" data-fcm-test hidden>テスト通知を送る</button><button class="flow-quiet" data-fcm-disable hidden>この端末の通知を止める</button><p class="notify-card-status" data-fcm-status role="status" aria-live="polite">通知設定を確認しています…</p><button class="flow-text" data-fcm-retry>設定を再確認</button></section>`;
     this.querySelector('[data-fcm-enable]').onclick=()=>this.enable();
     this.querySelector('[data-fcm-disable]').onclick=()=>this.disable();
     this.querySelector('[data-fcm-test]').onclick=()=>this.test();
@@ -27,11 +28,13 @@ class FcmSettings extends HTMLElement{
     this.querySelector('[data-fcm-disable]').hidden=!this.registered;
     this.querySelector('[data-fcm-test]').hidden=!this.enabled;
     this.querySelector('[data-fcm-test]').textContent=this.testing?'送信中…':'テスト通知を送る';
+    const state=this.busy&&!this.session&&!this.unsupported?'確認しています…':this.enabled?'受け取っています':this.unsupported?(this.unsupported.includes('ホーム画面に追加')?'ホーム画面に追加が必要です':'この端末では使えません'):!friendsProfile()?'ログインが必要です':typeof Notification!=='undefined'&&Notification.permission==='denied'?'ブロックされています':'まだ受け取っていません';
+    this.querySelector('[data-fcm-state]').textContent=state;
+    this.querySelector('[data-fcm-card]').classList.toggle('is-on',!!this.enabled);
   }
   async initialize(){
     const revision=++this.revision;this.testing=false;this.busy=true;this.session=null;this.enabled=false;this.registered=false;
     this.unsupported=notificationEnvironment();
-    this.querySelector('[data-fcm-ios-help]').hidden=this.unsupported.includes('ホーム画面に追加');
     if(this.unsupported){this.busy=false;this.message(this.unsupported);this.paint();return;}
     this.message('通知設定を確認しています…');this.paint();
     try{
@@ -41,7 +44,7 @@ class FcmSettings extends HTMLElement{
       if(revision!==this.revision||!this.isConnected)return;
       this.session=session;this.enabled=enabled;this.registered=session.registered;
       startFcmReceiver(session);
-      this.message(this.enabled?'この端末は毎日8:00と23:50の通知を受け取ります。':Notification.permission==='denied'?'通知がブロックされています。端末・ブラウザの設定から許可してください。':'通知は任意です。「通知を受け取る」を押すと、通知の許可を確認します。');
+      this.message(this.enabled?'この端末は毎日8:00と23:50の通知を受け取ります。':Notification.permission==='denied'?'通知がブロックされています。端末・ブラウザの設定から許可してください。':'押すと、ブラウザが通知の許可をたずねます。');
     }catch(error){if(revision===this.revision)this.message(notificationError(error));}
     finally{if(revision===this.revision&&this.isConnected){this.busy=false;this.paint();}}
   }

@@ -1,4 +1,4 @@
-import './public-feed.js?v=82';
+import './public-feed.js?v=83';
 import { postcardMarkup } from './photo-postcard.js';
 import { FLOWER_COLORS, colorFromPhoto, flowerSvg } from './garden-colors.js';
 import { buildPhotoAlbums, makeAlbumImage } from './photo-albums.js';

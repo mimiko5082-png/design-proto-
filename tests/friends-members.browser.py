@@ -95,14 +95,15 @@ try:
   for width in [320,390]:
    page.set_viewport_size({'width':width,'height':844})
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-  expect(page.get_by_role('button',name='この招待で参加する',exact=True)).to_have_count(0)
-  expect(page.get_by_role('button',name='カレンダーの招待リンクを作る',exact=True)).to_have_count(0)
-  # みんなの記録 is the one screen now, so the calendar view also carries the friends invitation.
-  expect(page.get_by_role('button',name='友達の招待リンクを作る',exact=True)).to_have_count(1)
-  expect(page.locator('[data-public-action=join], [data-public-action=create-group], [data-invite-input]')).to_have_count(0)
-  page.get_by_role('button',name='友達の招待リンクを作る',exact=True).click()
-  expect(page.get_by_role('textbox',name='招待リンク',exact=True)).to_have_value(base+'/members-test#invite=test-invite')
-  assert page.evaluate('window.inviteArgs.length')==0
+  # みんなの記録 keeps invitations, the member list and logout on the 友達 screen; here a strip under the heading leads to it.
+  expect(page.locator('[data-public-action=join], [data-public-action=create-group], [data-public-action=invite], [data-public-action=signout], [data-public-action=members], [data-invite-input]')).to_have_count(0)
+  strip=page.locator('.records-friends')
+  expect(strip).to_contain_text('友達 2人');expect(strip).to_contain_text('＋ 招待');expect(strip).to_have_attribute('data-nav','group')
+  expect(strip.locator('.avatar')).to_have_count(2);expect(strip.locator('img')).to_have_count(0)
+  expect(page.locator('.records-help')).to_have_attribute('data-nav','guide')
+  expect(page.get_by_role('button',name='通知の設定',exact=True)).to_have_attribute('data-nav','notify')
+  # The month comes before the chosen day's photographs.
+  assert page.evaluate("document.querySelector('.shared-calendar').compareDocumentPosition(document.querySelector('.friend-photo-grid'))&Node.DOCUMENT_POSITION_FOLLOWING")
   assert page.evaluate('window.joinCount')==1
   assert not errors,errors
   browser.close()

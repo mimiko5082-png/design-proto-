@@ -145,6 +145,23 @@ test('Firebase: Google identity, invitation-only membership and private photo ow
     await assertSucceeds(remove(ref(alice,path)));
     await assertFails(set(ref(bob,`${path}/stamps/heart/bob`),true));
     await assertFails(set(ref(alice,'groups/smuggled'),{owner:'alice',createdAt:time(),members:{alice:{name:'Alice',joinedAt:time()},eve:{name:'Eve',joinedAt:time()}}}));
+    // Leaving: only one's own membership can be removed. The photographs stay with the group and close to the person who left.
+    await assertSucceeds(set(ref(bob,'groups/friends/photos/bob_left'),{...photo,author:'bob',name:'Bob',createdAt:time()}));
+    await assertFails(remove(ref(alice,'groups/friends/members/bob')));
+    await assertFails(remove(ref(eve,'groups/friends/members/bob')));
+    await assertFails(remove(ref(anon,'groups/friends/members/bob')));
+    await assertFails(update(ref(bob,'groups/friends/members/bob'),{name:'Robert'}));
+    await assertSucceeds(remove(ref(bob,'groups/friends/members/bob')));
+    await assertFails(get(ref(bob,'groups/friends/photos/bob_left')));
+    await assertFails(remove(ref(bob,'groups/friends/photos/bob_left')));
+    await assertFails(readFriendsMembers({db:bob,dbSDK:{ref,get}},'friends','bob'));
+    await assertFails(set(ref(bob,'userGroups/bob'),{groupId:'friends'}));
+    await assertSucceeds(remove(ref(bob,'userGroups/bob')));
+    assert.ok((await get(ref(alice,'groups/friends/photos/bob_left'))).exists());
+    assert.equal((await readFriendsMembers({db:alice,dbSDK:{ref,get}},'friends','alice')).length,1);
+    // Coming back needs a valid invitation again.
+    await assertFails(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time()}));
+    await assertSucceeds(set(ref(bob,'groups/friends/members/bob'),{name:'Bob',joinedAt:time(),invite:token}));
   }finally{
     const require=createRequire(new URL('../firebase/functions/package.json',import.meta.url));
     const {getApps,deleteApp}=require('firebase-admin/app');
