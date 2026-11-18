@@ -1,5 +1,5 @@
 """Historical calendar sharing and reactions, using isolated local sample data."""
-import subprocess,threading
+import os,subprocess,threading
 from datetime import datetime,timezone
 from functools import partial
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
@@ -13,7 +13,7 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'p
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with sync_playwright() as p:
-  browser=p.chromium.launch(args=['--no-sandbox'])
+  browser=p.chromium.launch(executable_path=os.environ.get('BASHO_TEST_CHROMIUM') or None,args=['--no-sandbox'])
   context=browser.new_context(viewport={'width':390,'height':844},service_workers='block')
   page=context.new_page();errors=[];external=[]
   base=f'http://127.0.0.1:{server.server_port}'
