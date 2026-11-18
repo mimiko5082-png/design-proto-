@@ -29,7 +29,7 @@ export const httpsCallable=(instance,name,options)=>async data=>{
  if(name==='fcmTestNotification'&&window.holdTest)await new Promise(resolve=>window.releaseTest=resolve);
  window.calls.push({name,data});
  if(window.callError)throw {code:window.callError,details:window.callDetails,message:'DO_NOT_SHOW_SECRET'};
- if(name==='fcmDeviceStatus')return {data:{enabled:window.serverEnabled||false,supportsDelayedTest:window.serverSupportsDelayedTest||false}};
+ if(name==='fcmDeviceStatus')return {data:{enabled:window.serverEnabled||false}};
  if(name==='fcmRegisterDevice'){window.serverEnabled=true;return {data:{enabled:true}};}
  if(name==='fcmDisableDevice'){window.serverEnabled=false;return {data:{enabled:false}};}
  return {data:{accepted:true}};
@@ -74,21 +74,7 @@ try:
   page.evaluate('window.releaseTest();window.holdTest=false')
   expect(page.locator('[data-fcm-status]')).to_contain_text('端末での受信を確認')
   assert page.evaluate('window.callOptions.timeout')==15000
-  # Do not offer a delayed test against a server that would silently ignore the delay.
-  background=page.get_by_role('button',name='10秒後にテスト通知を送る',exact=True)
-  expect(background).to_be_hidden()
-  page.evaluate('window.serverSupportsDelayedTest=true')
-  page.get_by_role('button',name='設定を再確認',exact=True).click()
-  expect(background).to_be_visible()
-  page.evaluate('window.holdTest=true;window.releaseTest=null')
-  background.click()
-  expect(page.locator('[data-fcm-status]')).to_contain_text('今すぐホーム画面へ戻り')
-  expect(background).to_be_disabled()
-  page.wait_for_function('typeof window.releaseTest==="function"')
-  page.evaluate('window.releaseTest();window.holdTest=false')
-  expect(page.locator('[data-fcm-status]')).to_contain_text('端末での受信を確認')
-  assert page.evaluate('window.calls.filter(c=>c.name==="fcmTestNotification").at(-1).data.delaySeconds')==10
-  assert page.evaluate('window.callOptions.timeout')==40000
+  expect(page.get_by_role('button',name='10秒後にテスト通知を送る',exact=True)).to_have_count(0)
   page.evaluate('window.callError="functions/deadline-exceeded"')
   page.get_by_role('button',name='テスト通知を送る',exact=True).click()
   expect(page.locator('[data-fcm-status]')).to_contain_text('15秒以内')

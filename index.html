@@ -37,8 +37,8 @@
     <script src="./perspective-config.js?v=20261014-reflection-v37"></script>
     <script src="./image-config.js?v=39"></script>
     <script src="./fcm-config.js?v=fcm1"></script>
-    <script type="module" src="./fcm-settings.js?v=fcm5"></script>
-    <script type="module" src="./fcm-bootstrap.js?v=fcm5"></script>
+    <script type="module" src="./fcm-settings.js?v=fcm6"></script>
+    <script type="module" src="./fcm-bootstrap.js?v=fcm6"></script>
     <script type="module" src="./image-tools.js?v=39"></script>
     <script type="module" src="./friends-feed.js?v=77"></script>
     <script type="module" src="./haiku-cards.js?v=77"></script>
@@ -52,7 +52,7 @@
           navigator.serviceWorker.addEventListener("controllerchange", () => {
             if (!refreshing) { refreshing = true; location.reload(); }
           });
-          navigator.serviceWorker.register("./sw.js?v=fcm5", { updateViaCache: "none" }).catch(() => {});
+          navigator.serviceWorker.register("./sw.js?v=fcm6", { updateViaCache: "none" }).catch(() => {});
         });
       }
     </script>

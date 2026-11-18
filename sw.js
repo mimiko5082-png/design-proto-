@@ -1,5 +1,5 @@
 importScripts("./firebase-messaging-sw.js");
-const CACHE_NAME = "basho-manazashi-fcm5-background-test";
+const CACHE_NAME = "basho-manazashi-fcm6-background-notifications";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -13,11 +13,15 @@ export function notificationData(kind,day){
     tag:`basho-fcm-${day}-${kind}`,url:APP_URL};
 }
 export function fcmMessage(token,kind,day,testId){
-  // Data-only: the foreground/background handlers each display exactly one notification.
+  // FCM's worker SDK displays notification payloads when no app window is visible.
   const data=notificationData(kind,day);
   // Separate test attempts must alert again rather than silently replace an old test.
   if(kind==='test'&&Number.isSafeInteger(testId))data.tag+=`-${testId}`;
-  return {token,data,webpush:{headers:{TTL:kind==='test'?'300':'3600',Urgency:'normal'}}};
+  return {token,data,notification:{title:data.title,body:data.body},webpush:{
+    headers:{TTL:kind==='test'?'300':'3600',Urgency:'high'},
+    notification:{tag:data.tag,renotify:false,icon:APP_URL+'assets/kotoba-icon-192.png',badge:APP_URL+'assets/kotoba-icon-192.png'},
+    fcmOptions:{link:APP_URL},
+  }};
 }
 export function terminalTokenError(error){return ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error?.code);}
 export async function deliverDevice(ref,record,kind,day,{send,clock=Date.now}){
