@@ -3,6 +3,7 @@ export const BASHO_SOURCE_URL = "https://ja.wikisource.org/wiki/芭蕉俳句全�
 export const BASHO_TOPICS = [
   {
     "id": "basho-shizukasa",
+    "season": "summer",
     "lines": [
       "閑さや",
       "岩にしみ入る",
@@ -17,6 +18,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-samidare",
+    "season": "summer",
     "lines": [
       "五月雨を",
       "あつめて早し",
@@ -31,6 +33,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-natsukusa",
+    "season": "summer",
     "lines": [
       "夏草や",
       "兵どもが",
@@ -45,6 +48,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-akaaka",
+    "season": "autumn",
     "lines": [
       "あかあかと",
       "日はつれなくも",
@@ -58,6 +62,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-togarashi",
+    "season": "autumn",
     "lines": [
       "青くても",
       "あるべきものを",
@@ -71,6 +76,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-aoyagi",
+    "season": "spring",
     "lines": [
       "青柳の",
       "泥にしだるる",
@@ -84,6 +90,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-harunare",
+    "season": "spring",
     "lines": [
       "春なれや",
       "名もなき山の",
@@ -97,6 +104,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-harusame-shizuku",
+    "season": "spring",
     "lines": [
       "春雨の",
       "木下に傳ふ",
@@ -110,6 +118,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-harusame-yomogi",
+    "season": "spring",
     "lines": [
       "春雨や",
       "蓬をのばす",
@@ -123,6 +132,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hibari-nagakihi",
+    "season": "spring",
     "lines": [
       "長き日を",
       "囀り足らぬ",
@@ -136,6 +146,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hibari-touge",
+    "season": "spring",
     "lines": [
       "雲雀より",
       "上に休らふ",
@@ -149,6 +160,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-chou-hikage",
+    "season": "spring",
     "lines": [
       "蝶のとぶ",
       "ばかり野中の",
@@ -162,6 +174,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-chou-hane",
+    "season": "spring",
     "lines": [
       "蝶の羽の",
       "幾度越ゆる",
@@ -175,6 +188,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-umegaka",
+    "season": "spring",
     "lines": [
       "梅が香に",
       "のつと日の出る",
@@ -188,6 +202,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-ume-tori",
+    "season": "spring",
     "lines": [
       "梅さいて",
       "喜ぶとりの",
@@ -201,6 +216,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-ippon-yanagi",
+    "season": "spring",
     "lines": [
       "野と山の",
       "中に一本",
@@ -214,6 +230,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-tsubaki-mizu",
+    "season": "spring",
     "lines": [
       "落ちさまに",
       "水こぼしけり",
@@ -227,6 +244,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-sakura-kazenaki",
+    "season": "spring",
     "lines": [
       "風なきに",
       "散るや若木の",
@@ -240,6 +258,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hatsuzakura",
+    "season": "spring",
     "lines": [
       "初櫻",
       "をりしもけふは",
@@ -253,6 +272,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hananoyama",
+    "season": "spring",
     "lines": [
       "山の名も",
       "きゝたし花の",
@@ -266,6 +286,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-sumire",
+    "season": "spring",
     "lines": [
       "山路來て",
       "何やらゆかし",
@@ -279,6 +300,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-furuike",
+    "season": "spring",
     "lines": [
       "古池や",
       "蛙とびこむ",
@@ -292,6 +314,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hotaru-kusanoha",
+    "season": "summer",
     "lines": [
       "草の葉を",
       "落ちるよりとぶ",
@@ -305,6 +328,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hotaru-hiru",
+    "season": "summer",
     "lines": [
       "晝見れば",
       "首筋赤き",
@@ -318,6 +342,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-katatsumuri",
+    "season": "summer",
     "lines": [
       "蝸牛",
       "角ふりわけよ",
@@ -331,6 +356,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-minakami",
+    "season": "spring",
     "lines": [
       "水上は",
       "鶯啼いて",
@@ -344,6 +370,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-sara-hachi",
+    "season": "summer",
     "lines": [
       "皿鉢の",
       "ほのかに響く",
@@ -357,6 +384,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kawakaze",
+    "season": "summer",
     "lines": [
       "川風や",
       "薄かき衣たる",
@@ -370,6 +398,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-natsuzashiki",
+    "season": "summer",
     "lines": [
       "山も庭も",
       "動き入るゝや",
@@ -383,6 +412,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-minazuki",
+    "season": "summer",
     "lines": [
       "六月や",
       "峰に雲置く",
@@ -396,6 +426,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kitsutsuki",
+    "season": "summer",
     "lines": [
       "木啄も",
       "庵は破らず",
@@ -409,6 +440,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-atsukihi",
+    "season": "summer",
     "lines": [
       "暑き日を",
       "海へ入れたり",
@@ -422,6 +454,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kumo-tsuki",
+    "season": "summer",
     "lines": [
       "雲の峰",
       "幾つ崩れて",
@@ -435,6 +468,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-akino-mizu",
+    "season": "autumn",
     "lines": [
       "あきの野や",
       "草の中ゆく",
@@ -448,6 +482,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-akifukaki",
+    "season": "autumn",
     "lines": [
       "秋深き",
       "隣は何を",
@@ -461,6 +496,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-konomichi",
+    "season": "autumn",
     "lines": [
       "此道や",
       "行く人なしに",
@@ -474,6 +510,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kareeda",
+    "season": "autumn",
     "lines": [
       "枯枝に",
       "烏のとまりけり",
@@ -487,6 +524,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-araumi",
+    "season": "autumn",
     "lines": [
       "荒海や",
       "佐渡に橫ふ",
@@ -500,6 +538,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-meigetsu-mado",
+    "season": "autumn",
     "lines": [
       "名月や",
       "西にもほしき",
@@ -513,6 +552,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-meigetsu-kage",
+    "season": "autumn",
     "lines": [
       "名月や",
       "我と筆架の",
@@ -526,6 +566,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-asagao-mizu",
+    "season": "autumn",
     "lines": [
       "朝顏や",
       "水ある方に",
@@ -539,6 +580,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-monoieba",
+    "season": "autumn",
     "lines": [
       "物いへば",
       "唇寒し",
@@ -552,6 +594,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kikunoka",
+    "season": "autumn",
     "lines": [
       "菊の香や",
       "奈良には古き",
@@ -565,6 +608,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-aki-shiroshi",
+    "season": "autumn",
     "lines": [
       "石山の",
       "石より白し",
@@ -578,6 +622,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hatsuyuki-suisen",
+    "season": "winter",
     "lines": [
       "初雪や",
       "水仙の葉の",
@@ -591,6 +636,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hatsuyuki-hashi",
+    "season": "winter",
     "lines": [
       "初雪や",
       "かけかゝりたる",
@@ -604,6 +650,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-yuki-asa",
+    "season": "winter",
     "lines": [
       "雪の朝",
       "ひとり乾鮭を",
@@ -617,6 +664,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-yukimi",
+    "season": "winter",
     "lines": [
       "いざさらば",
       "雪見にころぶ",
@@ -630,6 +678,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-suisen-shoji",
+    "season": "winter",
     "lines": [
       "水仙や",
       "白き障子の",
@@ -643,6 +692,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-fuyugare",
+    "season": "winter",
     "lines": [
       "冬枯や",
       "世は一色に",
@@ -656,6 +706,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-umikurete",
+    "season": "winter",
     "lines": [
       "海暮れて",
       "鴨の聲",
@@ -669,6 +720,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-hyakunen",
+    "season": "winter",
     "lines": [
       "百年の",
       "景色を庭の",
@@ -682,6 +734,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-tabiniyande",
+    "season": "winter",
     "lines": [
       "旅に病んで",
       "夢は枯野を",
@@ -695,6 +748,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-fuyunosora",
+    "season": "winter",
     "lines": [
       "我ために",
       "日はうらゝ也",
@@ -708,6 +762,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-chanohana",
+    "season": "winter",
     "lines": [
       "茶の花に",
       "人里ちかき",
@@ -721,6 +776,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kaitsuburi",
+    "season": "winter",
     "lines": [
       "かいつぶり",
       "顏見合せて",
@@ -734,6 +790,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-kamo-ukine",
+    "season": "winter",
     "lines": [
       "己が身を",
       "枕に鴨の",
@@ -747,6 +804,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-tsukitoume",
+    "season": "spring",
     "lines": [
       "春もやゝ",
       "景色とゝのふ",
@@ -760,6 +818,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-neko-oboro",
+    "season": "spring",
     "lines": [
       "猫の戀",
       "やむ時閨の",
@@ -773,6 +832,7 @@ export const BASHO_TOPICS = [
   },
   {
     "id": "basho-chanoha-aki",
+    "season": "autumn",
     "lines": [
       "秋風の",
       "吹いても靑し",
@@ -786,11 +846,24 @@ export const BASHO_TOPICS = [
   }
 ];
 export const topicById = id => BASHO_TOPICS.find(topic => topic.id === id);
-// Existing six-topic dates are immutable; the expanded selection starts on 2026-10-30 JST.
+// Dates already shown keep their verse: six topics before 2026-10-30, the whole anthology in order until 2026-11-18.
+// From 2026-11-19 the verse follows the season of the date, by month: 3-5 spring, 6-8 summer, 9-11 autumn, 12-2 winter.
+// Each topic's season is the season of its 季語. Within a season the verses run in order from the season's first day
+// and start over when they run out, so the same day shows everyone the same verse and no verse repeats before the rest.
 const EXPANDED_START = Date.parse('2026-10-30T00:00:00Z') / 86400000;
+const SEASONAL_START = Date.parse('2026-11-19T00:00:00Z') / 86400000;
+const SEASON_OF_MONTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
+const SEASON_FIRST_MONTH = { spring: 2, summer: 5, autumn: 8, winter: 11 };
+export const seasonOf = day => SEASON_OF_MONTH[Number(String(day).slice(5, 7)) - 1];
 export function dailyTopic(day) {
   const n = Date.parse(`${day}T00:00:00Z`) / 86400000;
   if (!Number.isInteger(n)) throw new Error('Invalid topic date');
+  if (n >= SEASONAL_START) {
+    const season = seasonOf(day), pool = BASHO_TOPICS.filter(topic => topic.season === season);
+    const year = Number(day.slice(0, 4)), month = Number(day.slice(5, 7)) - 1;
+    const start = Date.UTC(season === 'winter' && month < 2 ? year - 1 : year, SEASON_FIRST_MONTH[season], 1) / 86400000;
+    return pool[(n - start) % pool.length];
+  }
   const index = n < EXPANDED_START ? ((n % 6) + 6) % 6 : (6 + n - EXPANDED_START) % BASHO_TOPICS.length;
   return BASHO_TOPICS[index];
 }

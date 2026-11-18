@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BASHO_TOPICS, dailyTopic } from '../haiku-catalog.js';
+import { BASHO_TOPICS, dailyTopic, seasonOf } from '../haiku-catalog.js';
 import { makeCard, normalizeReflection, normalizeCaption } from '../haiku-store.js';
 import { photoShareFile } from '../photo-sharing.js';
 const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
@@ -45,10 +45,32 @@ test('expanded anthology topics retain verified originals and source, and cover 
     assert.equal(topic.original, excerpts.excerpts.find(item => item.id === topic.id)?.original);
     assert.equal(topic.sourceUrl, 'https://ja.wikisource.org/wiki/芭蕉俳句全集');
   }
-  const ids = Array.from({length:60},(_,i)=>dailyTopic(new Date(Date.UTC(2026,9,30)+i*86400000).toISOString().slice(0,10)).id);
-  assert.equal(new Set(ids).size,60);
-  assert.notEqual(dailyTopic('2026-10-29').id,ids[0]);
+  // Dates that were already shown keep their verse.
   assert.equal(dailyTopic('2026-10-29').id,'basho-samidare');
+  assert.equal(dailyTopic('2026-10-30').id,'basho-harunare');
+  assert.equal(dailyTopic('2026-11-18').id,'basho-minakami');
+});
+
+test('from 2026-11-19 the daily verse belongs to the season of its date and a season does not repeat early', () => {
+  const day = offset => new Date(Date.UTC(2026,10,19)+offset*86400000).toISOString().slice(0,10);
+  const expected = month => month>=3&&month<=5?'spring':month>=6&&month<=8?'summer':month>=9&&month<=11?'autumn':'winter';
+  const seen = new Set();
+  for (let offset = 0; offset < 366; offset++) {
+    const date = day(offset), topic = dailyTopic(date);
+    assert.equal(seasonOf(date), expected(Number(date.slice(5,7))), date);
+    assert.equal(topic.season, seasonOf(date), `${date} ${topic.id}`);
+    seen.add(topic.id);
+  }
+  assert.equal(seen.size, 60);
+  assert.deepEqual(Object.fromEntries(['spring','summer','autumn','winter'].map(season => [season, BASHO_TOPICS.filter(topic => topic.season === season).length])), { spring: 20, summer: 13, autumn: 14, winter: 13 });
+  // December shows winter verses, each of the thirteen once before any returns; the new year continues the same run.
+  const december = Array.from({ length: 13 }, (_, index) => dailyTopic(`2026-12-${String(index + 1).padStart(2, '0')}`).id);
+  assert.equal(new Set(december).size, 13);
+  assert.equal(dailyTopic('2026-12-01').id, 'basho-hatsuyuki-suisen');
+  assert.equal(dailyTopic('2026-12-14').id, december[0]);
+  assert.notEqual(dailyTopic('2026-12-31').id, dailyTopic('2027-01-01').id);
+  assert.equal(dailyTopic('2027-01-01').season, 'winter');
+  assert.equal(dailyTopic('2027-03-01').season, 'spring');
 });
 
 test('optional reflection accepts empty/short notes and validates storage size', () => {
